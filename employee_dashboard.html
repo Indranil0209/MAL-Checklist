@@ -1,0 +1,2238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>No name</title>
+<style>
+  :root{
+    --bg: #12181f;
+    --panel: #1a222b;
+    --card: #202b36;
+    --line: #2c3a47;
+    --amber: #f5a623;
+    --amber-dim: #8a651f;
+    --teal: #3fb8a8;
+    --red: #e5566d;
+    --red-dim: #7a3140;
+    --text: #e8ecef;
+    --text-dim: #93a1ac;
+    --text-faint: #5c6b78;
+    --done: #3fb8a8;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --mono: 'Consolas', 'SF Mono', monospace;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); color:var(--text); font-family:var(--font);
+    padding: 16px 16px 24px;
+  }
+  .wrap{ max-width:960px; margin:0 auto; }
+
+  .masthead{
+    display:flex; justify-content:space-between; align-items:center;
+    border-bottom: 1px solid var(--line); padding-bottom:10px; margin-bottom:12px;
+  }
+  .masthead h1{ font-size:16px; font-weight:600; margin:0; letter-spacing:.2px; }
+  .masthead h1[contenteditable]{ cursor:text; outline:none; border-radius:4px; padding:1px 5px; margin-left:-5px; }
+  .masthead h1[contenteditable]:hover{ background:var(--panel); }
+  .masthead h1[contenteditable]:focus{ background:var(--card); box-shadow:0 0 0 1px var(--line); }
+  .masthead p{ margin:2px 0 0; font-size:11px; color:var(--text-dim); }
+  .masthead .grid-mark{ font-family:var(--mono); font-size:10px; color:var(--amber-dim); text-align:right; line-height:1.4; }
+  .grid-mark-label{ font-size:8.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.05em; margin-bottom:2px; }
+  .grid-mark-select{
+    display:block; margin-top:2px; margin-left:auto;
+    background:none; border:1px solid var(--amber-dim); color:var(--amber-dim);
+    font-family:var(--mono); font-size:9.5px; padding:2px 5px; border-radius:5px;
+    cursor:pointer; color-scheme: dark;
+  }
+  .grid-mark-select:hover{ color:var(--amber); border-color:var(--amber); }
+
+  .top-row{ display:flex; gap:10px; margin-bottom:10px; align-items:stretch; flex-wrap:wrap; }
+
+  .overall{
+    display:flex; flex-direction:column; justify-content:center; gap:6px;
+    background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 14px;
+    min-width:140px;
+  }
+  .overall .num{ font-family:var(--mono); font-size:22px; color:var(--amber); font-weight:600; line-height:1; }
+  .overall .bar-track{ height:6px; background:var(--card); border-radius:3px; overflow:hidden; }
+  .overall .bar-fill{ height:100%; background:var(--teal); width:0%; transition:width .3s ease; }
+  .overall .lbl{ font-size:10px; color:var(--text-dim); white-space:nowrap; }
+  .overall .streak-lbl{ font-size:9.5px; color:var(--text-faint); white-space:nowrap; }
+  .overall .streak-lbl.good{ color:var(--teal); }
+  .overall .streak-lbl.bad{ color:var(--red); }
+
+  .side-controls{
+    display:flex; flex-direction:column; gap:6px; justify-content:center; min-width:150px;
+  }
+  .week-select, .filter-select{
+    background:var(--panel); border:1px solid var(--line); color:var(--text);
+    font-size:11px; padding:6px 8px; border-radius:6px; font-family:var(--font);
+    color-scheme: dark;
+  }
+  .date-lbl{ font-size:10px; color:var(--text-dim); }
+  #exportWorkReportBtn{
+    background:var(--teal); border:none; color:#0c1116; padding:7px 10px; border-radius:6px;
+    font-weight:600; font-size:11px; cursor:pointer; font-family:var(--font);
+  }
+  #exportWorkReportBtn:hover{ opacity:.88; }
+
+  .report-presets{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .report-presets .reset-btn.active{ border-color:var(--teal); color:var(--teal); }
+  .report-days{
+    display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:4px 12px;
+    max-height:220px; overflow-y:auto; border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    padding:8px 2px; margin-bottom:10px;
+  }
+  .report-day-row{ display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--text-dim); cursor:pointer; padding:2px 0; }
+  .report-day-row input{ accent-color:var(--teal); }
+  .report-add-row{ display:flex; gap:6px; align-items:center; margin-bottom:10px; }
+  .report-add-row input[type=date]{
+    background:var(--card); border:1px solid var(--line); color:var(--text);
+    font-size:11px; padding:6px 8px; border-radius:6px; font-family:var(--font); color-scheme:dark;
+  }
+  #doExportReportBtn{
+    background:var(--teal); border:none; color:#0c1116; padding:7px 14px; border-radius:6px;
+    font-weight:600; font-size:11px; cursor:pointer; font-family:var(--font);
+  }
+  #doExportReportBtn:hover{ opacity:.88; }
+  .report-hint{ font-size:10px; color:var(--text-faint); margin:-4px 0 10px; }
+
+  .chart-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:8px 12px 4px; flex:1; min-width:180px;
+  }
+  .chart-card h3{
+    margin:0 0 2px; font-size:10px; font-weight:600; color:var(--text-dim);
+    text-transform:uppercase; letter-spacing:.06em;
+  }
+  .chart-card canvas{ max-height:88px; }
+  .chart-card.pie-card{ flex:0 0 110px; display:flex; flex-direction:column; align-items:center; }
+  .chart-card.pie-card canvas{ max-height:78px; max-width:78px; }
+  .legend{ display:flex; gap:10px; margin-top:2px; font-size:10px; color:var(--text-dim); }
+  .legend span{ display:inline-flex; align-items:center; gap:4px; }
+  .legend i{ width:8px; height:8px; border-radius:2px; display:inline-block; }
+
+  .toolbar{ display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
+  .active-filter-row{ display:flex; gap:6px; flex-wrap:wrap; margin:-4px 0 10px; }
+  .filter-chip{
+    display:inline-flex; align-items:center; gap:5px; background:rgba(63,184,168,.1);
+    border:1px solid #1f5f56; color:var(--teal); font-size:10.5px; padding:3px 5px 3px 9px;
+    border-radius:20px; font-family:var(--font);
+  }
+  .filter-chip button{
+    background:none; border:none; color:var(--teal); cursor:pointer; font-size:12px; line-height:1;
+    padding:2px 4px; border-radius:50%; font-family:var(--font);
+  }
+  .filter-chip button:hover{ background:rgba(63,184,168,.2); }
+  .toolbar input[type=text]{
+    background:var(--panel); border:1px solid var(--line); color:var(--text);
+    font-size:11px; padding:6px 9px; border-radius:6px; font-family:var(--font);
+    flex:1; min-width:140px;
+  }
+
+  .dayhead{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .dayhead h2{ font-size:13px; margin:0; font-weight:600; color:var(--text); }
+  .dayhead .sub{ font-size:10.5px; color:var(--text-dim); font-weight:400; margin-top:2px; }
+  .reset-btn{
+    font-size:10px; color:var(--text-faint); background:none; border:1px solid var(--line);
+    border-radius:6px; padding:3px 8px; cursor:pointer; font-family:var(--font);
+  }
+  .reset-btn:hover{ border-color:var(--text-dim); color:var(--text-dim); }
+
+  .site-grid{
+    display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:5px;
+  }
+  .site-row{
+    display:flex; align-items:center; gap:8px; padding:6px 9px; background:var(--card);
+    border:1px solid var(--line); border-left:3px solid var(--line); border-radius:7px; cursor:pointer; min-width:0;
+  }
+  .site-row.checked{ opacity:.55; }
+  .site-row.checked .site-name{ text-decoration: line-through; text-decoration-color: var(--text-faint); }
+  .site-row:focus{ outline:2px solid var(--teal); outline-offset:1px; }
+  .site-row:focus:not(:focus-visible){ outline:none; }
+  .site-row.prio-high:not(.checked){ border-left-color:var(--amber-dim); }
+  .site-row.prio-highest:not(.checked){ border-left-color:var(--red); background:linear-gradient(90deg, rgba(229,86,109,.06), rgba(229,86,109,0) 40%) var(--card); }
+  .chk{
+    width:15px; height:15px; border-radius:4px; border:1.5px solid var(--text-faint);
+    flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  }
+  .site-row.checked .chk{ background:var(--done); border-color:var(--done); }
+  .chk svg{ width:10px; height:10px; display:none; }
+  .site-row.checked .chk svg{ display:block; }
+  .site-text{ flex:1; min-width:0; }
+  .site-name{ font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .site-meta{ font-size:9px; color:var(--text-faint); display:flex; gap:6px; }
+  .site-time{ font-size:9px; color:var(--text-faint); }
+  .badge-row{ display:flex; flex-direction:column; gap:2px; align-items:flex-end; flex-shrink:0; }
+  .copy-btn{
+    flex-shrink:0; width:22px; height:22px; padding:0; display:flex; align-items:center; justify-content:center;
+    background:none; border:1px solid var(--line); border-radius:5px; color:var(--text-faint); cursor:pointer;
+  }
+  .copy-btn svg{ width:12px; height:12px; }
+  .copy-btn:hover{ color:var(--text-dim); border-color:var(--text-dim); }
+  .copy-btn.copied{ color:var(--done); border-color:var(--done); }
+  .badge{
+    font-family:var(--mono); font-size:9px; padding:1px 6px; border-radius:20px;
+    border:1px solid var(--line); color:var(--text-dim); white-space:nowrap;
+  }
+  .badge.alt{ color:var(--amber); border-color:var(--amber-dim); }
+  .badge.everyday{ color:var(--teal); border-color:#1f5f56; }
+  .badge.prio-high{ color:var(--amber); border-color:var(--amber-dim); }
+  .badge.prio-highest{ color:var(--red); border-color:var(--red-dim); }
+  .badge.prio-normal{ color:var(--text-dim); border-color:var(--line); }
+
+  .pending-toggle{ flex-shrink:0; display:flex; align-items:center; cursor:pointer; }
+  .pending-toggle input{ display:none; }
+  .pending-toggle .toggle-track{
+    width:26px; height:15px; background:var(--card); border:1.5px solid var(--line);
+    border-radius:20px; position:relative; transition:background .15s, border-color .15s;
+  }
+  .pending-toggle .toggle-thumb{
+    position:absolute; top:1px; left:1px; width:10px; height:10px; border-radius:50%;
+    background:var(--text-faint); transition:transform .15s, background .15s;
+  }
+  .pending-toggle input:checked + .toggle-track{ background:var(--red-dim); border-color:var(--red); }
+  .pending-toggle input:checked + .toggle-track .toggle-thumb{ transform:translateX(11px); background:var(--red); }
+  .pending-toggle-lbl{ font-size:8.5px; color:var(--text-faint); text-align:center; margin-top:1px; }
+
+  .remark-input{
+    width:100%; margin-top:4px; background:var(--panel); border:1px solid var(--line); border-radius:5px;
+    color:var(--text-dim); font-size:10.5px; font-family:var(--font); padding:3px 6px; outline:none;
+  }
+  .remark-input::placeholder{ color:var(--text-faint); font-style:italic; }
+  .remark-input:hover{ border-color:var(--text-faint); }
+  .remark-input:focus{ border-color:var(--teal); color:var(--text); background:var(--card); }
+  .remark-input:not(:placeholder-shown){ color:var(--amber); border-color:var(--amber-dim); background:rgba(245,166,35,.05); }
+
+  .site-row.is-pending{ border-color:var(--red-dim); background:linear-gradient(0deg, rgba(229,86,109,.07), rgba(229,86,109,.07)) var(--card); }
+
+  .pending-panel{
+    background:var(--panel); border:1px solid var(--red-dim); border-radius:10px;
+    padding:10px 12px; margin-bottom:10px;
+  }
+  .pending-panel h3{
+    margin:0; font-size:11px; font-weight:600; color:var(--red); text-transform:uppercase;
+    letter-spacing:.05em; display:flex; align-items:center; gap:6px;
+  }
+  .pending-panel h3 .pending-caret{ font-size:8px; transition:transform .12s; }
+  .pending-panel.collapsed h3 .pending-caret{ transform:rotate(-90deg); }
+  .pending-panel .pending-list{ margin-top:8px; }
+  .pending-panel.collapsed .pending-list{ display:none; }
+  .pending-panel .count-pill{
+    background:var(--red-dim); color:var(--text); border-radius:20px; font-family:var(--mono);
+    font-size:10px; padding:1px 7px;
+  }
+  .pending-list{ display:flex; flex-direction:column; gap:5px; }
+  .pending-item{
+    display:flex; align-items:center; gap:8px; padding:6px 9px; background:var(--card);
+    border:1px solid var(--red-dim); border-radius:7px;
+  }
+  .pending-item .p-text{ flex:1; min-width:0; }
+  .pending-item .p-name{ font-size:12px; }
+  .pending-item .p-meta{ font-size:9px; color:var(--text-faint); margin-top:1px; }
+  .pending-item .p-remark{ font-size:10.5px; color:var(--amber); margin-top:2px; font-style:italic; }
+  .pending-item .p-since{ font-size:9px; color:var(--text-faint); flex-shrink:0; white-space:nowrap; }
+  .resolve-btn{
+    flex-shrink:0; font-size:10px; padding:4px 9px; border-radius:6px; cursor:pointer; font-family:var(--font);
+    background:none; border:1px solid var(--line); color:var(--text-dim);
+  }
+  .resolve-btn:hover{ border-color:var(--done); color:var(--done); }
+  .pending-empty{ font-size:11px; color:var(--text-faint); }
+
+  .empty-day{
+    background:var(--panel); border:1px dashed var(--line); border-radius:10px;
+    padding:22px; text-align:center; color:var(--text-dim); font-size:12px;
+  }
+
+  .foot-note{ margin-top:12px; font-size:10.5px; color:var(--text-faint); line-height:1.5; }
+
+  .confirm-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.55); display:none;
+    align-items:center; justify-content:center; z-index:100; padding:20px;
+  }
+  .confirm-overlay.open{ display:flex; }
+  .confirm-box{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:18px 20px; max-width:360px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,.4);
+  }
+  .confirm-box h4{ margin:0 0 8px; font-size:13px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:6px; }
+  .confirm-box p{ margin:0 0 16px; font-size:11.5px; color:var(--text-dim); line-height:1.5; }
+  .confirm-actions{ display:flex; justify-content:flex-end; gap:8px; }
+  .confirm-actions button{
+    font-size:11.5px; padding:7px 14px; border-radius:6px; cursor:pointer; font-family:var(--font); border:1px solid var(--line);
+  }
+  .confirm-no{ background:none; color:var(--text-dim); }
+  .confirm-no:hover{ border-color:var(--text-dim); color:var(--text); }
+  .confirm-yes{ background:var(--red); color:#12181f; border-color:var(--red); font-weight:600; }
+  .confirm-yes:hover{ opacity:.88; }
+
+  .work-popup-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.55); display:none;
+    align-items:center; justify-content:center; z-index:110; padding:20px;
+  }
+  .work-popup-overlay.open{ display:flex; }
+  .work-popup{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:18px 20px; max-width:360px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,.4);
+  }
+  .work-popup h4{ margin:0 0 4px; font-size:13px; font-weight:600; color:var(--text); }
+  .work-popup .wp-sub-heading{ margin:0 0 12px; font-size:10.5px; color:var(--text-faint); }
+  .work-cat-row{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+  .work-cat-row label{
+    display:flex; align-items:center; gap:5px; font-size:11.5px; color:var(--text);
+    background:var(--card); border:1px solid var(--line); border-radius:6px; padding:6px 10px; cursor:pointer;
+  }
+  .work-cat-row input[type=checkbox]{ accent-color:var(--teal); cursor:pointer; }
+  .work-sub{
+    margin:0 0 10px; padding:8px 10px; background:var(--card); border:1px solid var(--line); border-radius:8px;
+  }
+  .work-sub-label{ font-size:10px; color:var(--text-faint); margin-bottom:6px; text-transform:uppercase; letter-spacing:.05em; }
+  .work-sub label{
+    display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text);
+    padding:3px 0; cursor:pointer;
+  }
+  .work-sub input{ accent-color:var(--teal); cursor:pointer; }
+  .work-error{
+    font-size:11px; color:var(--red); background:var(--red-dim); border-radius:6px;
+    padding:6px 9px; margin-bottom:10px;
+  }
+  .work-popup-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:4px; }
+  .work-popup-actions button{
+    font-size:11.5px; padding:7px 14px; border-radius:6px; cursor:pointer; font-family:var(--font); border:1px solid var(--line);
+  }
+  .wp-cancel{ background:none; color:var(--text-dim); }
+  .wp-cancel:hover{ border-color:var(--text-dim); color:var(--text); }
+  .wp-confirm{ background:var(--teal); color:#0c1116; border-color:var(--teal); font-weight:600; }
+  .wp-confirm:hover{ opacity:.88; }
+
+  .manage-panel{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:12px 14px; margin-bottom:12px;
+  }
+  .manage-add h3{ margin:0 0 8px; font-size:11px; font-weight:600; color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em; }
+  .manage-add-row{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .manage-add-row input, .manage-add-row select{
+    background:var(--card); border:1px solid var(--line); color:var(--text);
+    font-size:11px; padding:6px 8px; border-radius:6px; font-family:var(--font);
+    color-scheme: dark;
+  }
+  .manage-add-row input[type=text]{ flex:1; min-width:120px; }
+  #addPssBtn{
+    background:var(--teal); border:none; color:#0c1116; padding:6px 12px; border-radius:6px;
+    font-weight:600; font-size:11px; cursor:pointer; font-family:var(--font);
+  }
+  #addPssBtn:hover{ opacity:.88; }
+  .manage-search{
+    width:100%; box-sizing:border-box; background:var(--card); border:1px solid var(--line); color:var(--text);
+    font-size:11px; padding:6px 9px; border-radius:6px; font-family:var(--font); margin-bottom:8px;
+  }
+  .manage-list{ max-height:260px; overflow-y:auto; border-top:1px solid var(--line); padding-top:8px; }
+  .manage-row{
+    display:flex; align-items:center; gap:8px; padding:5px 4px; font-size:11.5px;
+    border-bottom:1px solid var(--line);
+  }
+  .manage-row.blocked{ opacity:.5; }
+  .manage-row.blocked .m-name{ text-decoration:line-through; text-decoration-color:var(--text-faint); }
+  .manage-row .m-name{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .manage-row .m-meta{ font-size:9.5px; color:var(--text-faint); font-family:var(--mono); flex-shrink:0; }
+  .manage-row-edit{ background:var(--card); border-radius:6px; }
+  .manage-row.is-dupe{ border-left:2px solid var(--amber); }
+  .dupe-badge{
+    flex-shrink:0; font-size:8.5px; font-family:var(--mono); color:var(--amber);
+    border:1px solid var(--amber-dim); border-radius:20px; padding:1px 6px; white-space:nowrap;
+  }
+  .dupe-banner{
+    font-size:10.5px; color:var(--amber); background:rgba(245,166,35,.08); border:1px solid var(--amber-dim);
+    border-radius:7px; padding:6px 9px; margin-bottom:8px;
+  }
+
+  .schedule-grid{
+    display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:6px; margin:10px 0 14px;
+  }
+  .schedule-col{
+    background:var(--card); border:1px solid var(--line); border-radius:8px; padding:6px;
+    min-height:70px; transition:border-color .12s, background .12s;
+  }
+  .schedule-col.drag-over{ border-color:var(--teal); background:rgba(63,184,168,.08); }
+  .schedule-col h4{
+    margin:0 0 6px; font-size:9.5px; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--text-dim); text-align:center; font-weight:600;
+  }
+  .schedule-col .col-count{ color:var(--text-faint); font-weight:400; }
+  .schedule-chip{
+    background:var(--panel); border:1px solid var(--line); border-radius:5px; padding:3px 6px; margin-bottom:4px;
+    font-size:9.5px; cursor:grab; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .schedule-chip:active{ cursor:grabbing; }
+  .schedule-chip.dragging{ opacity:.35; }
+  .schedule-hint{ font-size:10px; color:var(--text-faint); margin:0 0 6px; }
+  @media (max-width: 480px){
+    .schedule-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+  }
+  .manage-edit-select{
+    flex-shrink:0; background:var(--panel); border:1px solid var(--line); color:var(--text);
+    font-size:10.5px; padding:3px 6px; border-radius:6px; font-family:var(--font); color-scheme: dark;
+  }
+  .block-toggle-btn{
+    flex-shrink:0; font-size:10px; padding:3px 9px; border-radius:6px; cursor:pointer; font-family:var(--font);
+    background:none; border:1px solid var(--line); color:var(--text-faint);
+  }
+  .block-toggle-btn.is-blocked{ color:var(--red); border-color:var(--red-dim); }
+  .block-toggle-btn:hover{ border-color:var(--text-dim); color:var(--text-dim); }
+  .del-custom-btn{
+    flex-shrink:0; font-size:10px; padding:3px 8px; border-radius:6px; cursor:pointer; font-family:var(--font);
+    background:none; border:1px solid var(--line); color:var(--text-faint);
+  }
+  .del-custom-btn:hover{ border-color:var(--red); color:var(--red); }
+
+  @media (max-width: 480px){
+    .site-grid{ grid-template-columns: 1fr; }
+    .top-row{ flex-wrap:wrap; }
+    .chart-card.pie-card{ flex:1 1 100%; }
+  }
+
+  .role-badge-wrap{ display:flex; align-items:center; gap:8px; }
+  .role-badge{
+    font-family:var(--mono); font-size:9.5px; padding:2px 8px; border-radius:20px;
+    border:1px solid var(--line); color:var(--text-dim); white-space:nowrap;
+  }
+  .role-badge.is-admin{ color:var(--teal); border-color:#1f5f56; }
+  #roleToggleBtn{
+    background:none; border:1px solid var(--line); color:var(--text-dim);
+    font-size:10px; padding:4px 9px; border-radius:6px; cursor:pointer; font-family:var(--font);
+  }
+  #roleToggleBtn:hover{ border-color:var(--text-dim); color:var(--text); }
+  #roleToggleBtn.is-admin{ border-color:var(--teal); color:var(--teal); }
+  .admin-only.role-hidden{ display:none !important; }
+  .admin-menu-wrap{ position:relative; }
+  #adminMenuBtn{
+    background:none; border:1px solid var(--line); color:var(--text-dim);
+    font-size:10px; padding:6px 10px; border-radius:6px; cursor:pointer; font-family:var(--font);
+    display:flex; align-items:center; gap:5px;
+  }
+  #adminMenuBtn:hover{ border-color:var(--text-dim); color:var(--text); }
+  #adminMenuBtn .caret{ font-size:8px; transition:transform .12s; }
+  #adminMenuBtn.open .caret{ transform:rotate(180deg); }
+  .admin-dropdown{
+    position:absolute; top:calc(100% + 4px); right:0; z-index:20; min-width:200px;
+    background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:5px; display:none; flex-direction:column; gap:2px;
+    box-shadow:0 8px 24px rgba(0,0,0,.35);
+  }
+  .admin-dropdown.open{ display:flex; }
+  .admin-dropdown button{
+    background:none; border:none; color:var(--text-dim); text-align:left;
+    font-size:11.5px; padding:7px 9px; border-radius:5px; cursor:pointer; font-family:var(--font);
+  }
+  .admin-dropdown button:hover{ background:var(--card); color:var(--text); }
+  .admin-dropdown button.danger:hover{ background:rgba(229,86,109,.12); color:var(--red); }
+  .admin-dropdown hr{ border:none; border-top:1px solid var(--line); margin:3px 2px; }
+  #appLoadingOverlay{
+    position:fixed; inset:0; z-index:9999; background:var(--bg);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+    transition:opacity .35s ease, visibility .35s ease;
+  }
+  #appLoadingOverlay.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+  #appLoadingOverlay .loading-spinner{
+    width:40px; height:40px; border-radius:50%;
+    border:3px solid var(--line); border-top-color:var(--teal);
+    animation:app-spin .8s linear infinite;
+  }
+  #appLoadingOverlay .loading-text{
+    font-size:12.5px; color:var(--text-dim); letter-spacing:.02em;
+  }
+  @keyframes app-spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div id="appLoadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading your checklist&hellip;</div>
+  </div>
+<div class="wrap">
+
+  <div class="masthead">
+    <div>
+      <h1 id="checklistName">PSS Checklist</h1>
+      <p id="masthead-sub"></p>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+      <div class="role-badge-wrap">
+        <span class="role-badge" id="roleBadge">Employee</span>
+        <button id="roleToggleBtn" type="button">Logout</button>
+      </div>
+      <div class="grid-mark" id="gridMark">
+        <div class="grid-mark-label admin-only role-hidden" id="satScheduleLabel">Saturday schedule</div>
+        <select id="saturdayOffSelect" class="grid-mark-select admin-only role-hidden">
+          <option value="firstThird">1st &amp; 3rd Sat Off</option>
+          <option value="secondFourth">2nd &amp; 4th Sat Off</option>
+          <option value="none">No Saturday Off</option>
+        </select>
+        <div class="grid-mark-label" id="satScheduleStatic" style="text-align:right;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="top-row">
+    <div class="overall">
+      <div class="num" id="overall-num">0%</div>
+      <div class="bar-track"><div class="bar-fill" id="overall-bar"></div></div>
+      <div class="lbl" id="overall-lbl">loading&hellip;</div>
+      <div class="streak-lbl" id="streak-lbl"></div>
+      <div class="streak-lbl" id="assigned-count-lbl" style="margin-top:2px;"></div>
+    </div>
+    <div class="side-controls">
+      <input type="date" id="dateInput" class="week-select">
+      <div class="date-lbl" id="dateLbl"></div>
+      <select id="stateFilter" class="filter-select">
+        <option value="">All states</option>
+      </select>
+      <button id="exportWorkReportBtn">Export Work Report</button>
+    </div>
+    <div class="chart-card pie-card">
+      <h3>Completion</h3>
+      <canvas id="pieChart"></canvas>
+    </div>
+    <div class="chart-card pie-card">
+      <h3 id="monthChartTitle">Monthly Tracker</h3>
+      <canvas id="monthPieChart"></canvas>
+    </div>
+  </div>
+
+  <div id="extraWorkPanel" style="background:var(--panel); border:1px solid var(--amber-dim); border-left:4px solid var(--amber); border-radius:10px; padding:14px 16px; margin-bottom:16px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <h3 style="margin:0; font-size:13px; color:var(--amber);">&#128221; Extra Work &mdash; <span id="extraWorkDateLbl"></span></h3>
+      <span id="extraWorkSavedLbl" style="font-size:10px; color:var(--text-faint);"></span>
+    </div>
+    <p style="margin:6px 0 10px; font-size:11px; color:var(--text-dim);">Log any work you did today that isn't covered by a PSS in the checklist above. This resets automatically each day \u2014 today's notes stay under today's date in the report.</p>
+    <textarea id="extraWorkText" placeholder="e.g. Helped troubleshoot SCADA connectivity at site X&#10;Attended vendor call re: meter replacement" style="width:100%; min-height:80px; background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:7px; padding:10px; font-family:var(--font); font-size:12.5px; resize:vertical; box-sizing:border-box;"></textarea>
+  </div>
+
+  <div id="pendingPanel" class="pending-panel collapsed" style="display:none;">
+    <h3 id="pendingPanelHead" style="cursor:pointer; user-select:none;">
+      <span class="pending-caret" id="pendingCaret">&#9660;</span>
+      Pending Tasks <span class="count-pill" id="pendingCount">0</span>
+    </h3>
+    <div class="pending-list" id="pendingList"></div>
+  </div>
+
+  <div id="reportPanel" class="manage-panel" style="display:none;">
+    <h3 style="margin:0 0 8px; font-size:11px; font-weight:600; color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em;">Export Work Report</h3>
+    <div class="report-presets">
+      <button id="presetTueBtn" class="reset-btn" type="button">Tue submission (Fri&ndash;Tue)</button>
+      <button id="presetThuBtn" class="reset-btn" type="button">Thu submission (Wed&ndash;Thu)</button>
+      <button id="presetTodayBtn" class="reset-btn" type="button">Today only</button>
+      <button id="presetClearBtn" class="reset-btn" type="button">Clear</button>
+    </div>
+    <div class="report-hint">Tick any days below, or add an older date manually. Only PSS that have a remark for that day are included; days with none are skipped.</div>
+    <div class="report-days" id="reportDaysList"></div>
+    <div class="report-add-row">
+      <input type="date" id="reportAddDate">
+      <button id="reportAddDateBtn" class="reset-btn" type="button">Add date</button>
+    </div>
+    <button id="doExportReportBtn" type="button">Export .txt</button>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="searchBox" placeholder="Search site name&hellip;">
+  </div>
+  <div class="date-lbl" id="sheetInfoLbl" style="margin:-4px 0 10px;"></div>
+  <div id="activeFilterRow" class="active-filter-row" style="display:none;"></div>
+
+  <div id="daypanel"></div>
+
+  <div class="date-lbl" id="absentBanner" style="display:none; color:var(--red); font-weight:600; margin-bottom:8px;"></div>
+  <div class="foot-note" id="foot-note">Loading your saved progress&hellip;</div>
+</div>
+
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h4 id="confirmTitle">Are you sure?</h4>
+    <p id="confirmMessage"></p>
+    <div class="confirm-actions">
+      <button type="button" class="confirm-no" id="confirmNoBtn">No</button>
+      <button type="button" class="confirm-yes" id="confirmYesBtn">Yes</button>
+    </div>
+  </div>
+</div>
+
+<div class="work-popup-overlay" id="workPopupOverlay">
+  <div class="work-popup">
+    <h4 id="workPopupTitle">Work completed</h4>
+    <p class="wp-sub-heading">Select what was done for this PSS.</p>
+    <div class="work-cat-row">
+      <label><input type="checkbox" id="wpLC"> LC</label>
+      <label><input type="checkbox" id="wpRT"> RT</label>
+      <label><input type="checkbox" id="wpAM"> AM</label>
+      <label><input type="checkbox" id="wpMAPE"> MAPE</label>
+      <label><input type="checkbox" id="wpDaySkip"> Day Skip</label>
+      <label><input type="checkbox" id="wpENC"> EN Combination Change</label>
+      <label><input type="checkbox" id="wpPref"> Preference Change</label>
+      <label><input type="checkbox" id="wpOthers"> Others</label>
+      <label><input type="checkbox" id="wpNone"> None</label>
+    </div>
+    <div class="work-sub" id="wpENCSub" style="display:none;">
+      <div class="work-sub-label">EN Combination Change</div>
+    </div>
+    <div class="work-sub" id="wpPrefSub" style="display:none;">
+      <div class="work-sub-label">Preference Change</div>
+    </div>
+    <div class="work-sub" id="wpLCSub" style="display:none;">
+      <div class="work-sub-label">LC type (select at least one)</div>
+      <label><input type="checkbox" name="wpLCType" value="NCM"> NCM</label>
+      <label><input type="checkbox" name="wpLCType" value="ECM"> ECM</label>
+      <label><input type="checkbox" name="wpLCType" value="MICO"> MICO</label>
+      <label><input type="checkbox" name="wpLCType" value="SD"> SD</label>
+    </div>
+    <div class="work-sub" id="wpRTSub" style="display:none;">
+      <div class="work-sub-label">RT Correction</div>
+    </div>
+    <div class="work-sub" id="wpAMSub" style="display:none;">
+      <div class="work-sub-label">AM correction(s)</div>
+      <label><input type="checkbox" id="wpAMProfile"> Profile Correction</label>
+      <label><input type="checkbox" id="wpAMT21"> T21 Correction</label>
+      <label><input type="checkbox" id="wpAMSTB"> STB Correction</label>
+      <label><input type="checkbox" id="wpAMETB"> ETB Correction</label>
+    </div>
+    <div class="work-sub" id="wpDaySkipSub" style="display:none;">
+      <div class="work-sub-label">Day Skip</div>
+      <label><input type="checkbox" id="wpDaySkipT1"> T1</label>
+      <label><input type="checkbox" id="wpDaySkipT21"> T21</label>
+    </div>
+    <div class="work-sub" id="wpOthersSub" style="display:none;">
+      <div class="work-sub-label">Remarks</div>
+      <div id="wpOthersList" style="display:flex; flex-direction:column; gap:6px;"></div>
+    </div>
+    <div class="work-error" id="wpError" style="display:none;">Please select at least one LC type (NCM / ECM / MICO / SD).</div>
+    <div class="work-popup-actions">
+      <button type="button" class="wp-cancel" id="wpCancelBtn">Cancel</button>
+      <button type="button" class="wp-confirm" id="wpConfirmBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// ---- Firebase ----
+const firebaseConfig = {
+  apiKey: "AIzaSyAHzVTjMA0ErfhEhP7a1kQJBCNEV9yMxRo",
+  authDomain: "pss-checklist.firebaseapp.com",
+  projectId: "pss-checklist",
+  storageBucket: "pss-checklist.firebasestorage.app",
+  messagingSenderId: "66873555979",
+  appId: "1:66873555979:web:ddd15dacbb8f003e529b0e",
+  measurementId: "G-HFZK8BXFMC"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ---- default source data (from Intimation_Sheet.xlsx, POC 1) ----
+// This template starts blank. Upload a monthly intimation sheet via the
+// "Upload Intimation Sheet" button, or add PSS entries manually via
+// "Manage PSS", to populate the checklist.
+
+const ALT_GROUPS = [["Mon","Wed","Fri"], ["Tue","Thu","Sat"]];
+const TWICE_PAIRS = [["Mon","Thu"], ["Tue","Fri"], ["Wed","Sat"]];
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat"];
+
+// Auto-generated day assignment: Everyday -> all 6 days;
+// Alt -> alternating Mon/Wed/Fri or Tue/Thu/Sat by list order;
+// Twice in week -> round-robin across Mon+Thu / Tue+Fri / Wed+Sat.
+function buildScheduleFromSites(sites){
+  const sched = {}; DAYS.forEach(d=>{ sched[d] = []; });
+  const everyday = sites.filter(s=>s.freq === 'E');
+  const alt = sites.filter(s=>s.freq === 'Alt');
+  const twice = sites.filter(s=>s.freq !== 'E' && s.freq !== 'Alt');
+  everyday.forEach(s=>{ DAYS.forEach(d=>sched[d].push(s.id)); });
+  alt.forEach((s,i)=>{ ALT_GROUPS[i % 2].forEach(d=>sched[d].push(s.id)); });
+  twice.forEach((s,i)=>{ TWICE_PAIRS[i % 3].forEach(d=>sched[d].push(s.id)); });
+  return sched;
+}
+
+const JS_DAY_TO_NAME = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const FULL_DAY_NAME = { Sun:"Sunday", Mon:"Monday", Tue:"Tuesday", Wed:"Wednesday", Thu:"Thursday", Fri:"Friday", Sat:"Saturday" };
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+let SITES = [];
+let SCHEDULE_IDS = buildScheduleFromSites(SITES);
+let sheetInfo = { sourceName: null, uploadedAt: null };
+
+let SITE_BY_ID = {};
+function rebuildSiteIndex(){
+  SITE_BY_ID = {};
+  SITES.forEach(s=>{ SITE_BY_ID[s.id] = s; });
+}
+rebuildSiteIndex();
+
+let customSites = [];   // [{ id, name, state, freq, priority, days:[...], custom:true }, ...]
+let blockedNames = new Set();   // blocking is by NAME so it survives re-uploading a new sheet
+let dayOverrides = {};  // { siteId: ['Mon','Wed',...] } — manual drag-and-drop day changes, take precedence over the auto-generated schedule
+let pendingMap = {};            // { siteId: { remark, since: 'YYYY-MM-DD', auto: bool } } — persists across dates until marked done
+let autoResolvedUntil = {};     // { siteId: 'YYYY-MM-DD' } — suppresses auto-pending re-detection for dates on/before this once resolved
+let extraItemsByDate = {};      // { 'YYYY-MM-DD': [siteId, ...] } — tasks completed via "Mark Done" on a day they weren't normally scheduled, so they still show in that day's list
+let extraWorkByDate = {};       // { 'YYYY-MM-DD': 'free text' } — the "Extra Work" sticky note, one entry per calendar day
+
+function escapeHtml(str){
+  return String(str == null ? '' : str).replace(/[&<>"']/g, c=>({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[c]));
+}
+
+let allDatesState = {};   // { "2026-07-13": { "s001": true, "s001_time": "..." }, ... }
+let currentDate = new Date();
+let searchTerm = "";
+let stateFilterVal = "";
+let pieChart, monthChart;
+
+// ---- Session gate ----
+// Login.html sets these on successful login. Admins are sent to the Admin
+// Dashboard instead — this file is employee-only from here on.
+const ROLE_SESSION_KEY = "intimation-tracker-role";
+const ID_SESSION_KEY = "intimation-tracker-userid";
+const NAME_SESSION_KEY = "intimation-tracker-loginname";
+const LOGIN_PAGE = "index.html";
+const ADMIN_DASHBOARD_PAGE = "Admin_Dashboard.html";
+
+const employeeId = sessionStorage.getItem(ID_SESSION_KEY);
+const employeeName = sessionStorage.getItem(NAME_SESSION_KEY) || employeeId;
+
+if(!sessionStorage.getItem(ROLE_SESSION_KEY) || !employeeId){
+  window.location.replace(LOGIN_PAGE);
+} else if(sessionStorage.getItem(ROLE_SESSION_KEY) === 'admin'){
+  window.location.replace(ADMIN_DASHBOARD_PAGE);
+}
+
+function applyRoleUI(){
+  const badge = document.getElementById('roleBadge');
+  if(badge){
+    badge.textContent = employeeName;
+  }
+  const nameEl = document.getElementById('checklistName');
+  if(nameEl) nameEl.textContent = employeeName;
+  document.title = employeeName;
+}
+
+// Tracks whether a debounced save (e.g. the Extra Work note) is still
+// waiting to fire. Logout paths check this and force an immediate save
+// first, so navigating away doesn't race a save that hasn't happened yet.
+let pendingSaveFlush = null;
+
+async function flushPendingSaves(){
+  if(pendingSaveFlush){
+    clearTimeout(pendingSaveFlush.timer);
+    pendingSaveFlush = null;
+    await saveState();
+  }
+}
+
+async function handleLogoutClick(){
+  await flushPendingSaves();
+  sessionStorage.removeItem(ROLE_SESSION_KEY);
+  sessionStorage.removeItem(ID_SESSION_KEY);
+  sessionStorage.removeItem(NAME_SESSION_KEY);
+  window.location.href = LOGIN_PAGE;
+}
+document.getElementById('roleToggleBtn').addEventListener('click', handleLogoutClick);
+
+// ---- Idle auto-logout ----
+// If nobody touches the page for 60 minutes, log out automatically so a
+// shared/unattended device doesn't stay signed in.
+const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
+let idleTimer = null;
+async function handleIdleLogout(){
+  await flushPendingSaves();
+  sessionStorage.removeItem(ROLE_SESSION_KEY);
+  sessionStorage.removeItem(ID_SESSION_KEY);
+  sessionStorage.removeItem(NAME_SESSION_KEY);
+  window.location.href = LOGIN_PAGE + '?timeout=1';
+}
+function resetIdleTimer(){
+  if(idleTimer) clearTimeout(idleTimer);
+  idleTimer = setTimeout(handleIdleLogout, IDLE_TIMEOUT_MS);
+}
+['mousemove','mousedown','keydown','scroll','touchstart','click'].forEach(evt=>{
+  document.addEventListener(evt, resetIdleTimer, { passive: true });
+});
+resetIdleTimer();
+
+// A tab/window close can't be awaited, but this is the best-effort safety
+// net: if a save is still pending when the page is about to unload, kick
+// off the write anyway. Not guaranteed to finish, but better than nothing.
+window.addEventListener('beforeunload', ()=>{
+  if(pendingSaveFlush){
+    clearTimeout(pendingSaveFlush.timer);
+    saveState();
+  }
+});
+
+function dateKey(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return y + '-' + m + '-' + day;
+}
+function weekdayName(d){ return JS_DAY_TO_NAME[d.getDay()]; }
+
+// Saturday-off mode is configurable per checklist (not everyone has the
+// same off Saturdays). One of: 'firstThird', 'secondFourth', 'none'.
+let saturdayOffMode = 'firstThird';
+
+// ---- Reusable styled Yes/No confirm modal (replaces native confirm() for anything destructive) ----
+function showConfirm(title, message){
+  return new Promise(resolve=>{
+    const overlay = document.getElementById('confirmOverlay');
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    const yesBtn = document.getElementById('confirmYesBtn');
+    const noBtn = document.getElementById('confirmNoBtn');
+
+    function cleanup(result){
+      overlay.classList.remove('open');
+      yesBtn.removeEventListener('click', onYes);
+      noBtn.removeEventListener('click', onNo);
+      overlay.removeEventListener('click', onOverlayClick);
+      document.removeEventListener('keydown', onKeydown);
+      resolve(result);
+    }
+    function onYes(){ cleanup(true); }
+    function onNo(){ cleanup(false); }
+    function onOverlayClick(e){ if(e.target === overlay) cleanup(false); }
+    function onKeydown(e){
+      if(e.key === 'Escape') cleanup(false);
+      if(e.key === 'Enter') cleanup(true);
+    }
+
+    yesBtn.addEventListener('click', onYes);
+    noBtn.addEventListener('click', onNo);
+    overlay.addEventListener('click', onOverlayClick);
+    document.addEventListener('keydown', onKeydown);
+    overlay.classList.add('open');
+    yesBtn.focus();
+  });
+}
+
+// ---- Work-type popup: shown whenever a PSS is ticked, to record what work was done ----
+let workPopupKey = null;
+// When the popup was opened from the Pending Tasks "Done" button, this holds the
+// original pending id so confirmWorkPopup can do the pending-specific bookkeeping
+// (clearing it from pendingMap, marking it resolved, etc.) and so the popup always
+// reads/writes *today's* state regardless of which date is currently being viewed.
+let workPopupPendingId = null;
+
+function workPopupTargetState(){
+  if(workPopupPendingId){
+    const todayKey = dateKey(new Date());
+    return allDatesState[todayKey] || (allDatesState[todayKey] = {});
+  }
+  return state();
+}
+
+const OTHERS_LINE_COUNT = 10;
+function buildOthersInputs(){
+  const wrap = document.getElementById('wpOthersList');
+  if(!wrap || wrap.childElementCount) return;
+  for(let i=1;i<=OTHERS_LINE_COUNT;i++){
+    const row = document.createElement('label');
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
+    row.style.gap = '6px';
+    const num = document.createElement('span');
+    num.textContent = i + '.';
+    num.style.width = '16px';
+    num.style.color = 'var(--text-faint)';
+    num.style.fontSize = '11px';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = 'wpOthersLine' + i;
+    input.placeholder = '\u2014';
+    input.style.flex = '1';
+    row.appendChild(num);
+    row.appendChild(input);
+    wrap.appendChild(row);
+  }
+}
+buildOthersInputs();
+
+function clearOthersInputs(){
+  for(let i=1;i<=OTHERS_LINE_COUNT;i++){
+    const el = document.getElementById('wpOthersLine'+i);
+    if(el) el.value = '';
+  }
+}
+
+function updateWorkPopupSubVisibility(){
+  document.getElementById('wpLCSub').style.display = document.getElementById('wpLC').checked ? 'block' : 'none';
+  document.getElementById('wpRTSub').style.display = document.getElementById('wpRT').checked ? 'block' : 'none';
+  document.getElementById('wpAMSub').style.display = document.getElementById('wpAM').checked ? 'block' : 'none';
+  document.getElementById('wpDaySkipSub').style.display = document.getElementById('wpDaySkip').checked ? 'block' : 'none';
+  document.getElementById('wpENCSub').style.display = document.getElementById('wpENC').checked ? 'block' : 'none';
+  document.getElementById('wpPrefSub').style.display = document.getElementById('wpPref').checked ? 'block' : 'none';
+  document.getElementById('wpOthersSub').style.display = document.getElementById('wpOthers').checked ? 'block' : 'none';
+  document.getElementById('wpError').style.display = 'none';
+}
+
+// "None" means no correction was needed for this PSS -- it's mutually exclusive
+// with LC/RT/AM/MAPE. Picking None clears the others; picking any of the others
+// clears None.
+function onWorkCatChange(changedId){
+  if(changedId === 'wpNone'){
+    if(document.getElementById('wpNone').checked){
+      ['wpLC','wpRT','wpAM','wpMAPE','wpDaySkip','wpENC','wpPref','wpOthers'].forEach(id=>{ document.getElementById(id).checked = false; });
+      clearOthersInputs();
+    }
+  } else {
+    if(document.getElementById(changedId).checked){
+      document.getElementById('wpNone').checked = false;
+    }
+    if(changedId === 'wpAM' && !document.getElementById('wpAM').checked){
+      document.getElementById('wpAMProfile').checked = false;
+      document.getElementById('wpAMT21').checked = false;
+      document.getElementById('wpAMSTB').checked = false;
+      document.getElementById('wpAMETB').checked = false;
+    }
+    if(changedId === 'wpDaySkip' && !document.getElementById('wpDaySkip').checked){
+      document.getElementById('wpDaySkipT1').checked = false;
+      document.getElementById('wpDaySkipT21').checked = false;
+    }
+    if(changedId === 'wpOthers' && !document.getElementById('wpOthers').checked){
+      clearOthersInputs();
+    }
+  }
+  updateWorkPopupSubVisibility();
+}
+
+function openWorkPopup(id, key, site, pendingId){
+  workPopupKey = key;
+  workPopupPendingId = pendingId || null;
+  document.getElementById('workPopupTitle').textContent = 'Work completed \u2014 ' + site.name;
+
+  document.getElementById('wpLC').checked = false;
+  document.getElementById('wpRT').checked = false;
+  document.getElementById('wpAM').checked = false;
+  document.getElementById('wpMAPE').checked = false;
+  document.getElementById('wpDaySkip').checked = false;
+  document.getElementById('wpENC').checked = false;
+  document.getElementById('wpPref').checked = false;
+  document.getElementById('wpOthers').checked = false;
+  document.getElementById('wpNone').checked = false;
+  document.getElementById('wpAMProfile').checked = false;
+  document.getElementById('wpAMT21').checked = false;
+  document.getElementById('wpAMSTB').checked = false;
+  document.getElementById('wpAMETB').checked = false;
+  document.getElementById('wpDaySkipT1').checked = false;
+  document.getElementById('wpDaySkipT21').checked = false;
+  clearOthersInputs();
+  document.querySelectorAll('input[name="wpLCType"]').forEach(r=>{ r.checked = false; });
+
+  // Pre-fill from this PSS's last recorded work-type selection on this date, if any
+  // (e.g. re-opening after an uncheck/recheck).
+  const existing = workPopupTargetState()[key+"_work"];
+  if(existing){
+    if(existing.RT) document.getElementById('wpRT').checked = true;
+    if(existing.MAPE) document.getElementById('wpMAPE').checked = true;
+    if(existing.ENC) document.getElementById('wpENC').checked = true;
+    if(existing.Pref) document.getElementById('wpPref').checked = true;
+    if(existing.LC){
+      document.getElementById('wpLC').checked = true;
+      const lcTypes = Array.isArray(existing.LC) ? existing.LC : [existing.LC];
+      lcTypes.forEach(v=>{
+        const r = document.querySelector('input[name="wpLCType"][value="'+v+'"]');
+        if(r) r.checked = true;
+      });
+    }
+    if(existing.AM){
+      document.getElementById('wpAM').checked = true;
+      document.getElementById('wpAMProfile').checked = !!existing.AM.ProfileCorrection;
+      document.getElementById('wpAMT21').checked = !!existing.AM.T21Correction;
+      document.getElementById('wpAMSTB').checked = !!existing.AM.STBCorrection;
+      document.getElementById('wpAMETB').checked = !!existing.AM.ETBCorrection;
+    }
+    if(existing.DaySkip){
+      document.getElementById('wpDaySkip').checked = true;
+      document.getElementById('wpDaySkipT1').checked = !!existing.DaySkip.T1;
+      document.getElementById('wpDaySkipT21').checked = !!existing.DaySkip.T21;
+    }
+    if(existing.Others && existing.Others.length){
+      document.getElementById('wpOthers').checked = true;
+      existing.Others.forEach((val, i)=>{
+        const el = document.getElementById('wpOthersLine'+(i+1));
+        if(el) el.value = val;
+      });
+    }
+  }
+
+  updateWorkPopupSubVisibility();
+  document.getElementById('workPopupOverlay').classList.add('open');
+}
+
+// Opens the same work-type popup for a Pending Tasks "Done" click. Mirrors the
+// same-name merge logic that used to live in markPendingDone: if a PSS with the
+// same name already sits in today's list under a different id, the popup targets
+// that id instead of creating a duplicate entry by name.
+function openWorkPopupForPendingDone(pendingId){
+  const site = getSite(pendingId);
+  if(!site) return;
+  const todaysRaw = scheduledIdsForDateRaw(new Date());
+  let targetId = pendingId;
+  const sameNameId = todaysRaw.find(rid=>{
+    const rsite = getSite(rid);
+    return rsite && rsite.name === site.name;
+  });
+  if(sameNameId) targetId = sameNameId;
+  openWorkPopup(targetId, siteKey(targetId), site, pendingId);
+}
+
+function closeWorkPopup(){
+  document.getElementById('workPopupOverlay').classList.remove('open');
+  workPopupKey = null;
+  workPopupPendingId = null;
+}
+
+async function confirmWorkPopup(){
+  const key = workPopupKey;
+  if(!key) return;
+
+  const s = workPopupTargetState();
+  const pendingId = workPopupPendingId;
+  const pendingRemark = pendingId ? pendingEntryRemark(pendingMap[pendingId]).trim() : '';
+
+  // After writing today's entry, clear the source item off the Pending Tasks list
+  // and stop it from re-appearing via auto-detection -- same bookkeeping
+  // markPendingDone used to do directly.
+  const finalizePending = async ()=>{
+    if(!pendingId) return;
+    const todayKey = dateKey(new Date());
+    autoResolvedUntil[pendingId] = todayKey;
+    if(key !== pendingId) autoResolvedUntil[key] = todayKey;
+    delete pendingMap[pendingId];
+    const todaysRaw = scheduledIdsForDateRaw(new Date());
+    if(!todaysRaw.includes(key)){
+      const list = extraItemsByDate[todayKey] || (extraItemsByDate[todayKey] = []);
+      if(!list.includes(key)) list.push(key);
+    }
+    await saveConfig();
+  };
+
+  // "None" -- no correction needed. Just mark it done with a blank remark.
+  if(document.getElementById('wpNone').checked){
+    s[key] = true;
+    s[key+"_time"] = new Date().toLocaleString();
+    delete s[key+"_work"];
+    if(pendingRemark) s[key+"_remark"] = pendingRemark;
+    else delete s[key+"_remark"];
+    await saveState();
+    await finalizePending();
+    closeWorkPopup();
+    renderAll();
+    return;
+  }
+
+  const lc = document.getElementById('wpLC').checked;
+  const rt = document.getElementById('wpRT').checked;
+  const am = document.getElementById('wpAM').checked;
+  const mape = document.getElementById('wpMAPE').checked;
+  const daySkip = document.getElementById('wpDaySkip').checked;
+  const enc = document.getElementById('wpENC').checked;
+  const pref = document.getElementById('wpPref').checked;
+  const others = document.getElementById('wpOthers').checked;
+
+  let lcTypes = [];
+  if(lc){
+    lcTypes = [...document.querySelectorAll('input[name="wpLCType"]:checked')].map(el=>el.value);
+    if(!lcTypes.length){
+      document.getElementById('wpError').style.display = 'block';
+      return;
+    }
+  }
+
+  const amProfile = document.getElementById('wpAMProfile').checked;
+  const amT21 = document.getElementById('wpAMT21').checked;
+  const amSTB = document.getElementById('wpAMSTB').checked;
+  const amETB = document.getElementById('wpAMETB').checked;
+  const daySkipT1 = document.getElementById('wpDaySkipT1').checked;
+  const daySkipT21 = document.getElementById('wpDaySkipT21').checked;
+
+  const parts = [];
+  const work = {};
+  if(pendingRemark) parts.push(pendingRemark);
+  if(rt){ parts.push('RT Correction'); work.RT = true; }
+  if(am){
+    const amParts = [];
+    if(amProfile) amParts.push('Profile Correction');
+    if(amT21) amParts.push('T21 Correction');
+    if(amSTB) amParts.push('STB Correction');
+    if(amETB) amParts.push('ETB Correction');
+    work.AM = { ProfileCorrection: amProfile, T21Correction: amT21, STBCorrection: amSTB, ETBCorrection: amETB };
+    if(amParts.length) parts.push('AM: ' + amParts.join(', '));
+  }
+  if(mape){ parts.push('MAPE'); work.MAPE = true; }
+  if(lc){ parts.push('LC: ' + lcTypes.join('/')); work.LC = lcTypes; }
+  if(daySkip){
+    const dsParts = [];
+    if(daySkipT1) dsParts.push('T1');
+    if(daySkipT21) dsParts.push('T21');
+    work.DaySkip = { T1: daySkipT1, T21: daySkipT21 };
+    if(dsParts.length) parts.push('Day Skip: ' + dsParts.join(', '));
+  }
+  if(enc){ parts.push('EN Combination Change'); work.ENC = true; }
+  if(pref){ parts.push('Preference Change'); work.Pref = true; }
+  if(others){
+    const othersVals = [];
+    for(let i=1;i<=OTHERS_LINE_COUNT;i++){
+      const el = document.getElementById('wpOthersLine'+i);
+      const v = el ? el.value.trim() : '';
+      if(v) othersVals.push(v);
+    }
+    if(othersVals.length){
+      work.Others = othersVals;
+      parts.push('Others: ' + othersVals.join(', '));
+    }
+  }
+
+  s[key] = true;
+  s[key+"_time"] = new Date().toLocaleString();
+  if(parts.length){
+    s[key+"_remark"] = parts.join('; ');
+    s[key+"_work"] = work;
+  } else {
+    delete s[key+"_remark"];
+    delete s[key+"_work"];
+  }
+  await saveState();
+  await finalizePending();
+  closeWorkPopup();
+  renderAll();
+}
+
+document.getElementById('wpLC').addEventListener('change', ()=>onWorkCatChange('wpLC'));
+document.getElementById('wpRT').addEventListener('change', ()=>onWorkCatChange('wpRT'));
+document.getElementById('wpAM').addEventListener('change', ()=>onWorkCatChange('wpAM'));
+document.getElementById('wpMAPE').addEventListener('change', ()=>onWorkCatChange('wpMAPE'));
+document.getElementById('wpDaySkip').addEventListener('change', ()=>onWorkCatChange('wpDaySkip'));
+document.getElementById('wpENC').addEventListener('change', ()=>onWorkCatChange('wpENC'));
+document.getElementById('wpPref').addEventListener('change', ()=>onWorkCatChange('wpPref'));
+document.getElementById('wpOthers').addEventListener('change', ()=>onWorkCatChange('wpOthers'));
+document.getElementById('wpNone').addEventListener('change', ()=>onWorkCatChange('wpNone'));
+document.getElementById('wpCancelBtn').addEventListener('click', closeWorkPopup);
+document.getElementById('wpConfirmBtn').addEventListener('click', confirmWorkPopup);
+document.getElementById('workPopupOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'workPopupOverlay') closeWorkPopup();
+});
+document.addEventListener('keydown', (e)=>{
+  if(!document.getElementById('workPopupOverlay').classList.contains('open')) return;
+  if(e.key === 'Escape') closeWorkPopup();
+});
+
+function isOffSaturday(d){
+  if(weekdayName(d) !== 'Sat') return false;
+  if(saturdayOffMode === 'none') return false;
+  const weekOfMonth = Math.ceil(d.getDate() / 7);
+  if(saturdayOffMode === 'secondFourth') return weekOfMonth === 2 || weekOfMonth === 4;
+  return weekOfMonth === 1 || weekOfMonth === 3; // 'firstThird' (default)
+}
+
+function saturdayOffLabel(){
+  if(saturdayOffMode === 'secondFourth') return '2nd & 4th Sat off';
+  if(saturdayOffMode === 'none') return 'No Saturday off';
+  return '1st & 3rd Sat off';
+}
+
+function updateGridMark(){
+  const sel = document.getElementById('saturdayOffSelect');
+  if(sel) sel.value = saturdayOffMode;
+  const staticLbl = document.getElementById('satScheduleStatic');
+  if(staticLbl) staticLbl.textContent = saturdayOffLabel();
+}
+
+function updateFootNote(){
+  const offPart = saturdayOffMode === 'none' ? '' : (saturdayOffLabel() + ' of the month. ');
+  document.getElementById('foot-note').textContent =
+    '';
+}
+
+function state(){
+  const k = dateKey(currentDate);
+  return allDatesState[k] || (allDatesState[k] = {});
+}
+function siteKey(id){ return id; }
+
+function getSite(id){ return SITE_BY_ID[id] || customSites.find(c=>c.id===id); }
+function allSites(){ return [...SITES, ...customSites]; }
+
+async function copyToClipboard(text){
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+  }catch(e){ /* fall through to legacy method */ }
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }catch(e){
+    console.error('copy failed', e);
+  }
+}
+
+// Which weekdays a given PSS runs on: a manual drag-and-drop override takes
+// precedence; otherwise custom PSS use their assigned .days, and uploaded-sheet
+// PSS fall back to whatever the auto-generated round-robin schedule gave them.
+function siteDaysFor(id){
+  if(dayOverrides[id]) return dayOverrides[id];
+  const site = getSite(id);
+  if(site && site.custom) return site.days || [];
+  return DAYS.filter(d => (SCHEDULE_IDS[d] || []).includes(id));
+}
+
+// If the uploaded sheet includes an "Employee" column, each employee only
+// sees PSS assigned to them by name. If the sheet has no such column at all
+// (nothing has assignedTo set), everyone sees the full shared list as before.
+function sheetHasAssignments(){
+  return SITES.some(s => s.assignedTo);
+}
+
+// Live map of every employee's marked absence days: { employeeId: { dateKey: 'absent'|'half'|'present' } }.
+// Populated so a secondary (POC 2) can automatically pick up a PSS on any day
+// its primary (POC 1) is marked absent in the Admin Dashboard.
+let employeeAbsences = {};
+db.collection('employees').onSnapshot(snap=>{
+  employeeAbsences = {};
+  snap.docs.forEach(doc=>{
+    const d = doc.data();
+    if(d.absences) employeeAbsences[doc.id] = d.absences;
+  });
+  if(typeof renderAll === 'function') renderAll();
+});
+
+function isPrimaryAbsentOn(primaryEmpId, d){
+  const abs = employeeAbsences[primaryEmpId];
+  if(!abs) return false;
+  const status = abs[dateKey(d)];
+  return status === 'absent' || status === 'half';
+}
+
+// ---- Tracking which of a primary's PSS are already checked off ----
+// When I'm someone's secondary, I need to know which of *their* PSS are
+// already done that day, so only the ones they haven't gotten to yet move
+// to my checklist -- work they already finished before going on leave stays
+// credited to them, not duplicated onto mine.
+let primaryStateSubs = {};   // { primaryEmployeeId: unsubscribeFn }
+let primaryDoneMap = {};     // { primaryEmployeeId: { dateKey: { siteId: true } } }
+
+function ensurePrimarySubscriptions(){
+  const needed = new Set(
+    SITES.filter(s => s.secondaryToId === employeeId && s.assignedToId).map(s => s.assignedToId)
+  );
+  needed.forEach(pid=>{
+    if(primaryStateSubs[pid]) return; // already subscribed
+    primaryStateSubs[pid] = db.collection('employees').doc(pid).collection('state').doc('main')
+      .onSnapshot(doc=>{
+        primaryDoneMap[pid] = (doc.exists && doc.data().allDatesState && typeof doc.data().allDatesState === 'object')
+          ? doc.data().allDatesState : {};
+        renderAll();
+      }, err=>console.error('primary state subscription failed', pid, err));
+  });
+  Object.keys(primaryStateSubs).forEach(pid=>{
+    if(!needed.has(pid)){
+      primaryStateSubs[pid](); // unsubscribe -- no longer their secondary for anything
+      delete primaryStateSubs[pid];
+      delete primaryDoneMap[pid];
+    }
+  });
+}
+
+function isPrimaryDoneWithSite(primaryEmpId, d, siteId){
+  const dayState = primaryDoneMap[primaryEmpId] && primaryDoneMap[primaryEmpId][dateKey(d)];
+  return !!(dayState && dayState[siteId]);
+}
+
+function isAssignedToMe(site, d){
+  if(!sheetHasAssignments()) return true;
+  const useDate = d || currentDate;
+  if(site.assignedToId === employeeId){
+    // On a day I'm marked absent/half-day, my PSS moves to my secondary --
+    // except anything I'd already checked off myself before leaving, which
+    // stays visible (and credited) on my own checklist.
+    if(isPrimaryAbsentOn(employeeId, useDate)){
+      return !!(allDatesState[dateKey(useDate)] && allDatesState[dateKey(useDate)][site.id]);
+    }
+    return true;
+  }
+  if(site.secondaryToId === employeeId && site.assignedToId){
+    if(isPrimaryAbsentOn(site.assignedToId, useDate)){
+      // Only pick up what the primary hasn't finished yet.
+      return !isPrimaryDoneWithSite(site.assignedToId, useDate, site.id);
+    }
+  }
+  return false;
+}
+
+// Raw schedule for a date, ignoring pending status (used for auto-pending detection and
+// anywhere we need to know what *would* be scheduled regardless of pending state).
+function scheduledIdsForDateRaw(d){
+  if(isOffSaturday(d)) return [];
+  const wd = weekdayName(d);
+  const ids = allSites()
+    .filter(site => !blockedNames.has(site.name) && isAssignedToMe(site, d) && siteDaysFor(site.id).includes(wd))
+    .map(site => site.id);
+  const extra = extraItemsByDate[dateKey(d)] || [];
+  extra.forEach(id=>{
+    const site = getSite(id);
+    if(site && !blockedNames.has(site.name) && isAssignedToMe(site, d) && !ids.includes(id)) ids.push(id);
+  });
+  return ids;
+}
+
+// Move a PSS from one scheduled day to another (drag-and-drop). Materializes an
+// explicit override on first use so it survives independent of the auto schedule.
+function moveSiteDay(id, fromDay, toDay){
+  if(fromDay === toDay) return;
+  let days = [...siteDaysFor(id)];
+  const idx = days.indexOf(fromDay);
+  if(idx !== -1) days.splice(idx, 1);
+  if(!days.includes(toDay)) days.push(toDay);
+  dayOverrides[id] = days;
+  const site = getSite(id);
+  if(site && site.custom) site.days = days;
+  saveConfig();
+}
+
+// Names currently sitting in the Pending Tasks list (manually flagged or auto-detected).
+function pendingNameSet(){
+  const names = new Set();
+  Object.keys(pendingMap).forEach(id=>{
+    const site = getSite(id);
+    if(site) names.add(site.name);
+  });
+  return names;
+}
+
+// Schedule for a date, with any PSS that's currently on the pending list removed —
+// a pending PSS is prioritised in the Pending Tasks panel instead of showing again
+// in the day-to-day list under the same name. (scheduledIdsForDateRaw already folds
+// in anything completed via "Mark Done" that wasn't natively scheduled that day.)
+// Also: once a missed task has been resolved via "Mark Done" on a later day, it's
+// hidden from the original day it was missed on too (rather than sitting there
+// forever as unchecked) — it now lives only on the day it was actually completed.
+function allItemsForDate(d){
+  const raw = scheduledIdsForDateRaw(d);
+  const pendingNames = pendingNameSet();
+  const dKey = dateKey(d);
+  const todayKey = dateKey(new Date());
+  const dayState = allDatesState[dKey] || {};
+  return raw.filter(id=>{
+    const site = getSite(id);
+    if(!site) return false;
+    if(pendingNames.has(site.name)) return false;
+    if(dKey < todayKey && !dayState[siteKey(id)]){
+      const resolvedUntil = autoResolvedUntil[id];
+      if(resolvedUntil && dKey <= resolvedUntil) return false;
+    }
+    return true;
+  });
+}
+
+function visibleItemsForDate(d){
+  return allItemsForDate(d).filter(id=>{
+    const site = getSite(id);
+    if(stateFilterVal && site.state !== stateFilterVal) return false;
+    if(searchTerm && !site.name.toLowerCase().includes(searchTerm)) return false;
+    return true;
+  });
+}
+
+function priorityClass(p){
+  if(!p) return 'prio-normal';
+  const low = p.toLowerCase();
+  if(low.startsWith('highest') || low.startsWith('higher')) return 'prio-highest';
+  if(low.startsWith('high')) return 'prio-high';
+  return 'prio-normal';
+}
+
+function freqBadge(freq){
+  if(freq === 'E') return { cls:'everyday', txt:'everyday' };
+  if(freq === 'Alt') return { cls:'alt', txt:'alt' };
+  return { cls:'', txt:'2x/wk' };
+}
+
+function populateStateFilter(){
+  const sel = document.getElementById('stateFilter');
+  const visible = allSites().filter(s => s.custom || isAssignedToMe(s));
+  const states = [...new Set(visible.map(s=>s.state))].sort();
+  sel.innerHTML = '<option value="">All states</option>' + states.map(s=>'<option value="'+s+'">'+s+'</option>').join('');
+  sel.value = stateFilterVal;
+}
+
+function renderPanel(){
+  const wrap = document.getElementById('daypanel');
+  wrap.innerHTML = '';
+  const s = state();
+  const wd = weekdayName(currentDate);
+  const allItems = allItemsForDate(currentDate);
+  const items = visibleItemsForDate(currentDate);
+
+  const panel = document.createElement('div');
+
+  const head = document.createElement('div');
+  head.className = 'dayhead';
+  const titleWrap = document.createElement('div');
+  if(isOffSaturday(currentDate)){
+    titleWrap.innerHTML = '<h2>'+FULL_DAY_NAME[wd]+'</h2><div class="sub">'+dateKey(currentDate)+' &middot; day off</div>';
+  } else {
+    titleWrap.innerHTML = '<h2>'+FULL_DAY_NAME[wd]+'</h2><div class="sub">'+dateKey(currentDate)+' &middot; '+items.length+' of '+allItems.length+' shown</div>';
+  }
+  head.appendChild(titleWrap);
+  if(allItems.length){
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'reset-btn';
+    resetBtn.textContent = 'Reset day';
+    resetBtn.onclick = async ()=>{
+      allItems.forEach(id=>{ delete s[siteKey(id)]; delete s[siteKey(id)+"_time"]; delete s[siteKey(id)+"_remark"]; delete s[siteKey(id)+"_work"]; });
+      await saveState();
+      renderAll();
+    };
+    head.appendChild(resetBtn);
+  }
+  panel.appendChild(head);
+
+  if(!allItems.length){
+    const empty = document.createElement('div');
+    empty.className = 'empty-day';
+    empty.textContent = isOffSaturday(currentDate)
+      ? saturdayOffLabel() + ' \u2014 no checks scheduled.'
+      : 'No checks scheduled for ' + FULL_DAY_NAME[wd] + '.';
+    panel.appendChild(empty);
+    wrap.appendChild(panel);
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'site-grid';
+  items.forEach(id=>{
+    const site = getSite(id);
+    const key = siteKey(id);
+    const isChecked = !!s[key];
+    const isPending = Object.prototype.hasOwnProperty.call(pendingMap, id);
+    const fb = freqBadge(site.freq);
+    const row = document.createElement('div');
+    row.className = 'site-row' + (isChecked ? ' checked' : '') + (isPending ? ' is-pending' : '') + ' ' + priorityClass(site.priority);
+    row.title = site.name;
+    const timeStr = s[key+"_time"] ? '<div class="site-time">'+s[key+"_time"]+'</div>' : '';
+    const remarkVal = s[key+"_remark"] || '';
+    row.innerHTML =
+      '<div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="#12181f" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>' +
+      '<button type="button" class="copy-btn" title="Copy name" aria-label="Copy name">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5a1.5 1.5 0 0 1 1.5-1.5H15"/></svg>' +
+      '</button>' +
+      '<div class="site-text"><div class="site-name">'+site.name+'</div>' +
+        '<div class="site-meta"><span>'+site.state+'</span></div>' + timeStr +
+        '<input type="text" class="remark-input" placeholder="Add remark&hellip;" value="'+escapeHtml(remarkVal)+'">' +
+      '</div>' +
+      '<div class="badge-row">' +
+        '<span class="badge '+fb.cls+'">'+fb.txt+'</span>' +
+        '<span class="badge '+priorityClass(site.priority)+'">'+site.priority+'</span>' +
+      '</div>' +
+      '<label class="pending-toggle" title="Mark as pending">' +
+        '<input type="checkbox" class="pending-chk"' + (isPending ? ' checked' : '') + '>' +
+        '<span class="toggle-track"><span class="toggle-thumb"></span></span>' +
+      '</label>';
+    row.tabIndex = 0;
+    const copyBtn = row.querySelector('.copy-btn');
+    copyBtn.onclick = async (e)=>{
+      e.stopPropagation();
+      await copyToClipboard(site.name);
+      copyBtn.classList.add('copied');
+      setTimeout(()=>copyBtn.classList.remove('copied'), 1000);
+    };
+    const remarkInput = row.querySelector('.remark-input');
+    remarkInput.addEventListener('click', e=> e.stopPropagation());
+    remarkInput.addEventListener('keydown', e=>{
+      e.stopPropagation(); // typing (incl. spacebar) inside the remark box must never trigger row shortcuts
+      if(e.key === 'Enter'){ e.preventDefault(); remarkInput.blur(); }
+    });
+    remarkInput.addEventListener('blur', async ()=>{
+      if(remarkInput.value.trim()) s[key+"_remark"] = remarkInput.value;
+      else delete s[key+"_remark"];
+      await saveState();
+    });
+    const pendingChk = row.querySelector('.pending-chk');
+    const pendingLabel = row.querySelector('.pending-toggle');
+    pendingLabel.addEventListener('click', e=> e.stopPropagation());
+    pendingLabel.addEventListener('keydown', e=> e.stopPropagation());
+    pendingChk.addEventListener('change', async ()=>{
+      if(pendingChk.checked) pendingMap[id] = { remark: remarkInput.value || '', since: dateKey(currentDate) };
+      else delete pendingMap[id];
+      await saveConfig();
+      renderAll();
+    });
+    // Keyboard: Space/Enter toggles the focused row's check; Up/Down moves focus
+    // between rows so a whole day can be worked through without a mouse.
+    row.addEventListener('keydown', (e)=>{
+      if(e.key === ' ' || e.key === 'Enter'){
+        e.preventDefault();
+        row.click();
+        return;
+      }
+      if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+        e.preventDefault();
+        const rows = [...grid.querySelectorAll('.site-row')];
+        const idx = rows.indexOf(row);
+        const next = e.key === 'ArrowDown' ? rows[idx+1] : rows[idx-1];
+        if(next) next.focus();
+      }
+    });
+    row.onclick = async ()=>{
+      if(s[key]){
+        delete s[key];
+        delete s[key+"_time"];
+        await saveState();
+        renderAll();
+      } else {
+        openWorkPopup(id, key, site);
+      }
+    };
+    grid.appendChild(row);
+  });
+  panel.appendChild(grid);
+  wrap.appendChild(panel);
+}
+
+function renderOverall(){
+  const s = state();
+  const items = allItemsForDate(currentDate);
+  const total = items.length;
+  const done = items.filter(id=>s[siteKey(id)]).length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('overall-num').textContent = pct + '%';
+  document.getElementById('overall-bar').style.width = pct + '%';
+  document.getElementById('overall-lbl').textContent = done + ' / ' + total + ' done';
+
+  const assignedLbl = document.getElementById('assigned-count-lbl');
+  if(assignedLbl){
+    if(sheetHasAssignments()){
+      const myTotal = SITES.filter(s2 => s2.assignedToId === employeeId).length;
+      assignedLbl.textContent = myTotal + ' PSS assigned to you';
+    } else {
+      assignedLbl.textContent = '';
+    }
+  }
+
+  const streak = computeStreak();
+  const streakEl = document.getElementById('streak-lbl');
+  if(streak > 0){
+    streakEl.textContent = '\u{1F525} ' + streak + '-day streak';
+    streakEl.className = 'streak-lbl good';
+  } else {
+    streakEl.textContent = 'No streak yet \u2014 complete a full day to start one';
+    streakEl.className = 'streak-lbl';
+  }
+}
+
+// Consecutive fully-completed past days (strictly before today), walking backward.
+// Days with nothing scheduled (offs, or before the sheet existed) are skipped
+// without breaking the streak; a day with items left undone stops it.
+function computeStreak(){
+  let streak = 0;
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  for(let i=0; i<120; i++){
+    const items = allItemsForDate(d);
+    if(items.length){
+      const dayState = allDatesState[dateKey(d)] || {};
+      const doneCount = items.filter(id=>dayState[id]).length;
+      if(doneCount === items.length) streak++;
+      else break;
+    }
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+function chartData(){
+  const s = state();
+  const items = allItemsForDate(currentDate);
+  const total = items.length;
+  const done = items.filter(id=>s[siteKey(id)]).length;
+  return { total, done };
+}
+
+function monthlyChartData(){
+  const y = currentDate.getFullYear();
+  const m = currentDate.getMonth();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  let total = 0, done = 0;
+  for(let d=1; d<=daysInMonth; d++){
+    const dt = new Date(y, m, d);
+    const items = allItemsForDate(dt);
+    if(!items.length) continue;
+    total += items.length;
+    const dayState = allDatesState[dateKey(dt)] || {};
+    done += items.filter(id=>dayState[id]).length;
+  }
+  return { total, done };
+}
+
+function renderCharts(){
+  if(typeof Chart === 'undefined') return;
+  const { total, done } = chartData();
+  const remaining = total - done;
+
+  if(pieChart){
+    pieChart.data.datasets[0].data = [done, remaining];
+    pieChart.update();
+  } else {
+    pieChart = new Chart(document.getElementById('pieChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Completed', 'Remaining'],
+        datasets: [{ data: [done, remaining], backgroundColor: ['#3fb8a8', '#2c3a47'], borderWidth: 0 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        cutout: '68%',
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  const { total: mTotal, done: mDone } = monthlyChartData();
+  const mRemaining = mTotal - mDone;
+  document.getElementById('monthChartTitle').textContent = MONTH_NAMES[currentDate.getMonth()] + ' ' + currentDate.getFullYear();
+  if(monthChart){
+    monthChart.data.datasets[0].data = [mDone, mRemaining];
+    monthChart.update();
+  } else {
+    monthChart = new Chart(document.getElementById('monthPieChart'), {
+      type: 'pie',
+      data: {
+        labels: ['Completed', 'Remaining'],
+        datasets: [{ data: [mDone, mRemaining], backgroundColor: ['#3fb8a8', '#2c3a47'], borderWidth: 0 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+}
+
+function pendingEntryRemark(entry){
+  return (entry && typeof entry === 'object') ? (entry.remark || '') : (entry || '');
+}
+
+
+function renderPendingPanel(){
+  const panel = document.getElementById('pendingPanel');
+  const list = document.getElementById('pendingList');
+  const countEl = document.getElementById('pendingCount');
+  const ids = Object.keys(pendingMap);
+  countEl.textContent = ids.length;
+  if(!ids.length){
+    panel.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+  panel.style.display = 'block';
+  list.innerHTML = '';
+  ids.forEach(id=>{
+    const site = getSite(id);
+    if(!site){ delete pendingMap[id]; return; }
+    const entry = pendingMap[id];
+    const remark = pendingEntryRemark(entry);
+    const since = (entry && typeof entry === 'object') ? entry.since : '';
+    const item = document.createElement('div');
+    item.className = 'pending-item';
+    item.innerHTML =
+      '<div class="p-text">' +
+        '<div class="p-name">'+escapeHtml(site.name)+'</div>' +
+        '<div class="p-meta">'+escapeHtml(site.state)+' &middot; '+escapeHtml(site.freq)+'</div>' +
+        '<input type="text" class="remark-input p-remark-input" placeholder="Add remark&hellip;" value="'+escapeHtml(remark)+'">' +
+      '</div>' +
+      (since ? '<div class="p-since">since '+since+'</div>' : '');
+    const remarkInput = item.querySelector('.p-remark-input');
+    remarkInput.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); remarkInput.blur(); } });
+    remarkInput.addEventListener('blur', async ()=>{
+      const cur = pendingMap[id];
+      if(cur && typeof cur === 'object') cur.remark = remarkInput.value;
+      else pendingMap[id] = { remark: remarkInput.value, since: since || dateKey(new Date()) };
+      await saveConfig();
+    });
+    const doneBtn = document.createElement('button');
+    doneBtn.className = 'resolve-btn';
+    doneBtn.textContent = 'Mark Done';
+    doneBtn.onclick = ()=> openWorkPopupForPendingDone(id);
+    item.appendChild(doneBtn);
+    list.appendChild(item);
+  });
+}
+
+document.getElementById('pendingPanelHead').addEventListener('click', ()=>{
+  document.getElementById('pendingPanel').classList.toggle('collapsed');
+});
+
+function renderAll(){
+  renderPanel();
+  renderOverall();
+  renderCharts();
+  renderPendingPanel();
+  renderActiveFilterRow();
+  renderExtraWorkPanel();
+}
+
+let extraWorkLoaded = false;
+function renderExtraWorkPanel(){
+  const dateLbl = document.getElementById('extraWorkDateLbl');
+  const textarea = document.getElementById('extraWorkText');
+  if(!dateLbl || !textarea) return;
+  const k = dateKey(currentDate);
+  dateLbl.textContent = currentDate.toLocaleDateString(undefined, { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+  // Don't touch the textarea until the real saved data has arrived from
+  // Firestore -- otherwise the very first render (which fires before that
+  // fetch completes) stamps today's date as "already shown" with blank
+  // text, and the real data gets silently skipped when it arrives.
+  if(!extraWorkLoaded) return;
+  // Only overwrite the textarea if the date actually changed, so we don't
+  // stomp on what the person is mid-typing if renderAll fires from an
+  // unrelated update (e.g. a Firestore snapshot for something else).
+  if(textarea.dataset.boundDate !== k){
+    textarea.value = extraWorkByDate[k] || '';
+    textarea.dataset.boundDate = k;
+  }
+}
+
+let extraWorkSaveTimer = null;
+document.getElementById('extraWorkText').addEventListener('input', (e)=>{
+  const k = dateKey(currentDate);
+  extraWorkByDate[k] = e.target.value;
+  const savedLbl = document.getElementById('extraWorkSavedLbl');
+  if(savedLbl) savedLbl.textContent = 'Saving\u2026';
+  clearTimeout(extraWorkSaveTimer);
+  extraWorkSaveTimer = setTimeout(async ()=>{
+    pendingSaveFlush = null;
+    await saveState();
+    if(savedLbl) savedLbl.textContent = 'Saved';
+  }, 600);
+  pendingSaveFlush = { timer: extraWorkSaveTimer };
+});
+
+// ---- persistence ----
+// ---- Firestore-backed storage ----
+// Each employee's checklist state (ticks, pending items, personal settings)
+// lives at employees/{employeeId}/state/main so it syncs across that
+// employee's own devices and is readable by the Admin Dashboard for progress
+// reporting. The PSS site list itself is shared and admin-managed, read live
+// from sheet/current below.
+const EMP_STATE_DOC = () => db.collection('employees').doc(employeeId).collection('state').doc('main');
+const EMP_DOC = () => db.collection('employees').doc(employeeId);
+const SHEET_DOC = db.collection('sheet').doc('current');
+
+let stateSaveTimer = null;
+async function saveState(){
+  try{
+    await EMP_STATE_DOC().set({
+      allDatesState, pendingMap, autoResolvedUntil, extraItemsByDate, extraWorkByDate, saturdayOffMode,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+  }catch(e){
+    console.error('saveState failed', e);
+  }
+  // Debounce the progress-summary write slightly so rapid ticks don't spam it.
+  clearTimeout(stateSaveTimer);
+  stateSaveTimer = setTimeout(updateProgressSummary, 400);
+}
+
+// saveConfig is kept as an alias so the rest of the app (pending/report logic
+// written before this Firestore migration) can call either name.
+async function saveConfig(){ await saveState(); }
+
+async function updateProgressSummary(){
+  try{
+    const items = allItemsForDate(currentDate);
+    const s = state();
+    const total = items.length;
+    const doneItems = items.filter(id=>s[siteKey(id)]);
+    const done = doneItems.length;
+    const pendingCount = Object.keys(pendingMap).length;
+    const k = dateKey(currentDate);
+    // Only include a PSS in the detailed work log if it actually has a
+    // remark logged (matches the same "worth reporting" rule the Work
+    // Report export already uses) — ticked-with-no-remark items are still
+    // counted in total/done above, just not itemised here.
+    const workItems = doneItems
+      .map(id=>{
+        const site = getSite(id);
+        const remark = s[siteKey(id)+"_remark"];
+        const work = s[siteKey(id)+"_work"] || null;
+        return (site && remark) ? { name: site.name, remark, work } : null;
+      })
+      .filter(Boolean);
+    const extraWorkText = (extraWorkByDate[k] || '').trim();
+    await EMP_DOC().set({
+      name: employeeName,
+      progress: { [k]: { total, done, pendingCount, workItems, extraWork: extraWorkText, updatedAt: new Date().toISOString() } }
+    }, { merge: true });
+  }catch(e){
+    console.error('updateProgressSummary failed', e);
+  }
+}
+
+let sheetLoadedOnceForOverlay = false;
+let stateLoadedOnceForOverlay = false;
+function maybeHideLoadingOverlay(){
+  if(!sheetLoadedOnceForOverlay || !stateLoadedOnceForOverlay) return;
+  const overlay = document.getElementById('appLoadingOverlay');
+  if(overlay) overlay.classList.add('hidden');
+}
+setTimeout(()=>{
+  const overlay = document.getElementById('appLoadingOverlay');
+  if(overlay) overlay.classList.add('hidden');
+}, 8000);
+
+async function loadState(){
+  try{
+    const doc = await EMP_STATE_DOC().get();
+    if(doc.exists){
+      const d = doc.data();
+      allDatesState = (d.allDatesState && typeof d.allDatesState === 'object') ? d.allDatesState : {};
+      pendingMap = (d.pendingMap && typeof d.pendingMap === 'object') ? d.pendingMap : {};
+      autoResolvedUntil = (d.autoResolvedUntil && typeof d.autoResolvedUntil === 'object') ? d.autoResolvedUntil : {};
+      extraItemsByDate = (d.extraItemsByDate && typeof d.extraItemsByDate === 'object') ? d.extraItemsByDate : {};
+      extraWorkByDate = (d.extraWorkByDate && typeof d.extraWorkByDate === 'object') ? d.extraWorkByDate : {};
+      saturdayOffMode = ['firstThird','secondFourth','none'].includes(d.saturdayOffMode) ? d.saturdayOffMode : 'firstThird';
+    }
+    extraWorkLoaded = true;
+  }catch(e){
+    console.error('loadState failed', e);
+    extraWorkLoaded = true; // don't leave the note box permanently frozen if the fetch fails
+  }
+  populateStateFilter();
+  const satSel = document.getElementById('saturdayOffSelect');
+  if(satSel) satSel.value = saturdayOffMode;
+  updateGridMark();
+  document.getElementById('foot-note').textContent =
+    'Tap a site to mark it checked \u2014 you\'ll be asked what work was done. Progress is saved to your account and visible to your admin. Pick a different date above to jump to that day\'s PSS list.';
+  // One-time cleanup: drop any auto-detected pending entries saved under the old
+  // per-day key shape (from before pending was tracked separately).
+  autoDetectOverduePending();
+  await saveState();
+  applyRoleUI();
+  renderAll();
+  stateLoadedOnceForOverlay = true;
+  maybeHideLoadingOverlay();
+}
+
+// The shared PSS site list is admin-managed and read-only here. We listen
+// live so if admin uploads a new sheet or edits a site mid-day, it updates
+// without needing a refresh.
+function subscribeSheet(){
+  SHEET_DOC.onSnapshot(doc=>{
+    if(doc.exists){
+      const d = doc.data();
+      if(Array.isArray(d.sites) && d.sites.length){
+        SITES = d.sites;
+        dayOverrides = (d.dayOverrides && typeof d.dayOverrides === 'object') ? d.dayOverrides : {};
+        blockedNames = new Set(Array.isArray(d.blocked) ? d.blocked : []);
+        SCHEDULE_IDS = buildScheduleFromSites(SITES);
+        sheetInfo = { sourceName: d.sourceName || null, uploadedAt: d.uploadedAt || null };
+        rebuildSiteIndex();
+        populateStateFilter();
+        updateMastheadSubtitle();
+        ensurePrimarySubscriptions();
+        renderAll();
+      } else {
+        SITES = [];
+        blockedNames = new Set();
+        SCHEDULE_IDS = buildScheduleFromSites(SITES);
+        sheetInfo = { sourceName: null, uploadedAt: null };
+        rebuildSiteIndex();
+        populateStateFilter();
+        updateMastheadSubtitle();
+        ensurePrimarySubscriptions();
+        renderAll();
+      }
+    }
+    sheetLoadedOnceForOverlay = true;
+    maybeHideLoadingOverlay();
+  }, err=>{
+    console.error('sheet subscription failed', err);
+    sheetLoadedOnceForOverlay = true;
+    maybeHideLoadingOverlay();
+  });
+}
+
+function updateMastheadSubtitle(){
+  const mySites = sheetHasAssignments() ? SITES.filter(isAssignedToMe) : SITES;
+  const states = [...new Set(mySites.map(s=>s.state).filter(Boolean))].sort();
+  document.getElementById('masthead-sub').textContent = mySites.length
+    ? mySites.length + ' sites' + (states.length ? ' \u00b7 ' + states.join(' / ') : '') + ' \u00b7 check-in intimation schedule'
+    : (SITES.length ? 'No PSS assigned to you yet \u2014 ask your admin' : 'No PSS yet \u2014 ask your admin to upload the intimation sheet');
+}
+
+// Any scheduled task from a past day that was never checked off is treated as
+// pending too, even if nobody flagged it by hand. Only considers days on/after the
+// current intimation sheet was uploaded — days before that never had these PSS
+// tracked, so they're never backdated into a false backlog. A task stays
+// suppressed once its pending entry has been marked done (see autoResolvedUntil).
+function autoDetectOverduePending(){
+  let changed = false;
+  const pendingNames = pendingNameSet();
+  const todayKey = dateKey(new Date());
+  const sheetStartKey = (sheetInfo && sheetInfo.uploadedAt) ? dateKey(new Date(sheetInfo.uploadedAt)) : null;
+  // Only look at dates that actually have saved state — i.e. days you had the
+  // checklist open on. Days before you started using this tool are never
+  // guessed at, so it won't invent a backlog out of history that doesn't exist.
+  Object.keys(allDatesState).forEach(dKey=>{
+    if(dKey >= todayKey) return; // skip today/future — only past days count as overdue
+    if(sheetStartKey && dKey < sheetStartKey) return; // predates the current sheet — skip
+    const [y,m,day] = dKey.split('-').map(Number);
+    const d = new Date(y, m-1, day);
+    if(isOffSaturday(d)) return;
+    const dayState = allDatesState[dKey] || {};
+    const raw = scheduledIdsForDateRaw(d);
+    raw.forEach(id=>{
+      const site = getSite(id);
+      if(!site) return;
+      if(dayState[siteKey(id)]) return; // was checked done that day
+      if(Object.prototype.hasOwnProperty.call(pendingMap, id)) return; // already pending
+      if(pendingNames.has(site.name)) return; // another entry with same name already pending
+      const resolvedUntil = autoResolvedUntil[id];
+      if(resolvedUntil && dKey <= resolvedUntil) return; // resolved through this date already
+      pendingMap[id] = { remark: dayState[siteKey(id)+"_remark"] || '', since: dKey, auto: true };
+      pendingNames.add(site.name);
+      changed = true;
+    });
+  });
+  if(changed) saveConfig();
+  return changed;
+}
+
+// ---- Work report export (Tue: Fri+Sat+Mon+Tue / Thu: Wed+Thu, or any custom day selection) ----
+function addDays(d, n){
+  const nd = new Date(d);
+  nd.setDate(nd.getDate() + n);
+  return nd;
+}
+
+function reportDateLabel(d){
+  // Matches the template's "10 July" style: day number + full month name, no year.
+  return d.getDate() + ' ' + MONTH_NAMES[d.getMonth()];
+}
+
+let reportPanelOpen = false;
+let reportSelectedDates = new Set(); // set of dateKey strings
+
+function mostRecentWeekday(baseDate, targetDow){
+  // targetDow: 0=Sun ... 6=Sat. Returns the most recent date on/before baseDate with that weekday.
+  const d = new Date(baseDate);
+  const diff = (d.getDay() - targetDow + 7) % 7;
+  d.setDate(d.getDate() - diff);
+  return d;
+}
+
+function applyPresetTue(){
+  const tue = mostRecentWeekday(new Date(), 2);
+  reportSelectedDates = new Set([
+    dateKey(addDays(tue, -4)), // Fri
+    dateKey(addDays(tue, -3)), // Sat
+    dateKey(addDays(tue, -1)), // Mon
+    dateKey(tue)               // Tue
+  ]);
+  renderReportDaysList();
+}
+
+function applyPresetThu(){
+  const thu = mostRecentWeekday(new Date(), 4);
+  reportSelectedDates = new Set([
+    dateKey(addDays(thu, -1)), // Wed
+    dateKey(thu)               // Thu
+  ]);
+  renderReportDaysList();
+}
+
+function applyPresetToday(){
+  reportSelectedDates = new Set([dateKey(new Date())]);
+  renderReportDaysList();
+}
+
+function renderReportDaysList(){
+  const list = document.getElementById('reportDaysList');
+  list.innerHTML = '';
+  const today = new Date();
+  const keys = [];
+  for(let i=0; i<14; i++){
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    keys.push(dateKey(d));
+  }
+  // keep any manually-added dates that fall outside the last-14-days window too
+  [...reportSelectedDates].forEach(k=>{ if(!keys.includes(k)) keys.push(k); });
+  keys.sort();
+  keys.reverse();
+  keys.forEach(k=>{
+    const [y,m,day] = k.split('-').map(Number);
+    const d = new Date(y, m-1, day);
+    const row = document.createElement('label');
+    row.className = 'report-day-row';
+    const wd = weekdayName(d);
+    row.innerHTML = '<input type="checkbox" data-key="'+k+'"' + (reportSelectedDates.has(k) ? ' checked' : '') + '> ' +
+      wd + ', ' + reportDateLabel(d);
+    const chk = row.querySelector('input');
+    chk.addEventListener('change', ()=>{
+      if(chk.checked) reportSelectedDates.add(k);
+      else reportSelectedDates.delete(k);
+    });
+    list.appendChild(row);
+  });
+}
+
+function buildWorkReportText(dateKeys){
+  const sortedKeys = [...dateKeys].sort();
+  const blocks = [];
+  const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  sortedKeys.forEach(k=>{
+    const [y,m,day] = k.split('-').map(Number);
+    const d = new Date(y, m-1, day);
+    const dayState = allDatesState[k] || {};
+    const items = allItemsForDate(d);
+
+    const lc = [], rt = [], am = [], mape = [], daySkip = [], enc = [], pref = [], others = [];
+    items.forEach(id=>{
+      const site = getSite(id);
+      if(!site) return;
+      const work = dayState[id+"_work"];
+      if(!work) return;
+      if(work.LC){
+        const lcTypes = Array.isArray(work.LC) ? work.LC : [work.LC];
+        if(lcTypes.length) lc.push(site.name + '(' + lcTypes.join('/') + ')');
+      }
+      if(work.RT) rt.push(site.name);
+      if(work.AM){
+        const parts = [];
+        if(work.AM.ProfileCorrection) parts.push('Profile');
+        if(work.AM.T21Correction) parts.push('T21');
+        if(work.AM.STBCorrection) parts.push('STB');
+        if(work.AM.ETBCorrection) parts.push('ETB');
+        if(parts.length) am.push(site.name + ' ' + parts.join('/') + ' Correct');
+      }
+      if(work.MAPE) mape.push(site.name);
+      if(work.DaySkip){
+        const parts = [];
+        if(work.DaySkip.T1) parts.push('T1');
+        if(work.DaySkip.T21) parts.push('T21');
+        if(parts.length) daySkip.push(site.name + ' ' + parts.join('/'));
+      }
+      if(work.ENC) enc.push(site.name);
+      if(work.Pref) pref.push(site.name);
+      if(work.Others && work.Others.length){
+        work.Others.forEach(remark=>{
+          others.push(remark + ' (' + site.name + ')');
+        });
+      }
+    });
+
+    const cats = [];
+    if(lc.length) cats.push(['LC', lc]);
+    if(rt.length) cats.push(['RT', rt]);
+    if(am.length) cats.push(['AM', am]);
+    if(mape.length) cats.push(['MAPE', mape]);
+    if(daySkip.length) cats.push(['Day Skip', daySkip]);
+    if(enc.length) cats.push(['EN Combination Change', enc]);
+    if(pref.length) cats.push(['Preference Change', pref]);
+    if(others.length) cats.push(['Remarks (PSS Name)', others]);
+
+    const extraWorkText = (extraWorkByDate[k] || '').trim();
+    const extraWorkLines = extraWorkText ? extraWorkText.split('\n').map(s=>s.trim()).filter(Boolean) : [];
+
+    if(!cats.length && !extraWorkLines.length) return; // truly nothing this day -- skip it
+
+    const lines = [reportDateLabel(d)];
+    cats.forEach(([label, entries], ci)=>{
+      lines.push('\t' + (ci+1) + '.' + label);
+      entries.forEach((entry, ei)=>{
+        lines.push('\t   ' + LETTERS[ei] + '.' + entry);
+      });
+      lines.push('');
+    });
+    if(extraWorkLines.length){
+      lines.push('\tExtra Work');
+      extraWorkLines.forEach(t=>lines.push('\t   - ' + t));
+    }
+    blocks.push(lines.join('\n'));
+  });
+  return blocks.join('\n\n');
+}
+
+function exportWorkReport(){
+  if(!reportSelectedDates.size){
+    alert('Pick at least one day to export (use a preset or tick a date).');
+    return;
+  }
+  const text = buildWorkReportText(reportSelectedDates);
+  if(!text.trim()){
+    alert('None of the selected days have any PSS work or Extra Work logged yet — nothing to export.');
+    return;
+  }
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const sorted = [...reportSelectedDates].sort();
+  a.download = 'Work_Report_' + sorted[0] + '_to_' + sorted[sorted.length-1] + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ---- Panel exclusivity: only the report panel is toggleable now ----
+function closeAllPanels(except){
+  if(except !== 'report'){
+    reportPanelOpen = false;
+    document.getElementById('reportPanel').style.display = 'none';
+  }
+}
+
+document.getElementById('exportWorkReportBtn').addEventListener('click', ()=>{
+  reportPanelOpen = !reportPanelOpen;
+  closeAllPanels(reportPanelOpen ? 'report' : null);
+  document.getElementById('reportPanel').style.display = reportPanelOpen ? 'block' : 'none';
+  if(reportPanelOpen){
+    if(reportSelectedDates.size === 0){
+      const dow = new Date().getDay(); // 0 Sun .. 6 Sat
+      if(dow === 2) applyPresetTue();
+      else if(dow === 4) applyPresetThu();
+    }
+    renderReportDaysList();
+  }
+});
+document.getElementById('presetTueBtn').addEventListener('click', applyPresetTue);
+document.getElementById('presetThuBtn').addEventListener('click', applyPresetThu);
+document.getElementById('presetTodayBtn').addEventListener('click', applyPresetToday);
+document.getElementById('presetClearBtn').addEventListener('click', ()=>{ reportSelectedDates = new Set(); renderReportDaysList(); });
+document.getElementById('reportAddDateBtn').addEventListener('click', ()=>{
+  const val = document.getElementById('reportAddDate').value;
+  if(!val) return;
+  reportSelectedDates.add(val);
+  renderReportDaysList();
+});
+document.getElementById('doExportReportBtn').addEventListener('click', exportWorkReport);
+
+
+populateStateFilter();
+document.getElementById('stateFilter').addEventListener('change', (e)=>{
+  stateFilterVal = e.target.value;
+  renderAll();
+});
+document.getElementById('searchBox').addEventListener('input', (e)=>{
+  searchTerm = e.target.value.trim().toLowerCase();
+  renderAll();
+});
+
+function renderActiveFilterRow(){
+  const row = document.getElementById('activeFilterRow');
+  const chips = [];
+  if(searchTerm){
+    chips.push({ label: 'Search: "' + searchTerm + '"', clear: ()=>{
+      searchTerm = '';
+      document.getElementById('searchBox').value = '';
+    }});
+  }
+  if(stateFilterVal){
+    chips.push({ label: 'State: ' + stateFilterVal, clear: ()=>{
+      stateFilterVal = '';
+      document.getElementById('stateFilter').value = '';
+    }});
+  }
+  if(!chips.length){
+    row.style.display = 'none';
+    row.innerHTML = '';
+    return;
+  }
+  row.style.display = 'flex';
+  row.innerHTML = '';
+  chips.forEach(c=>{
+    const chip = document.createElement('span');
+    chip.className = 'filter-chip';
+    chip.innerHTML = escapeHtml(c.label) + ' <button type="button" aria-label="Clear filter">&times;</button>';
+    chip.querySelector('button').addEventListener('click', ()=>{
+      c.clear();
+      renderAll();
+    });
+    row.appendChild(chip);
+  });
+}
+document.getElementById('saturdayOffSelect').addEventListener('change', async (e)=>{
+  saturdayOffMode = e.target.value;
+  updateGridMark();
+  updateFootNote();
+  await saveConfig();
+  renderAll();
+});
+
+const dateInput = document.getElementById('dateInput');
+const dateLbl = document.getElementById('dateLbl');
+
+function updateDateLbl(){
+  const wd = weekdayName(currentDate);
+  let lbl = FULL_DAY_NAME[wd] + ', ' + currentDate.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+  if(isOffSaturday(currentDate)) lbl += ' (off)';
+  dateLbl.textContent = lbl;
+}
+
+let myAbsences = {};
+function updateAbsentBanner(){
+  const banner = document.getElementById('absentBanner');
+  const v = myAbsences[dateKey(currentDate)];
+  const isAbsent = v === true || v === 'absent';
+  const isHalf = v === 'half';
+  banner.style.display = (isAbsent || isHalf) ? 'block' : 'none';
+  banner.textContent = isAbsent
+    ? 'You are marked absent for this date by your admin \u2014 your PSS have been handed to your secondary today.'
+    : isHalf
+      ? 'You are marked half day for this date by your admin \u2014 your PSS have been handed to your secondary today.'
+      : '';
+}
+
+function applyDate(date){
+  currentDate = date;
+  dateInput.value = dateKey(date);
+  updateDateLbl();
+  autoDetectOverduePending();
+  updateAbsentBanner();
+  renderAll();
+}
+
+dateInput.addEventListener('change', ()=>{
+  if(!dateInput.value) return;
+  const [y,m,d] = dateInput.value.split('-').map(Number);
+  applyDate(new Date(y, m-1, d));
+});
+
+// Always default to today's date whenever the file is opened or refreshed.
+applyDate(new Date());
+
+EMP_DOC().onSnapshot(doc=>{
+  if(doc.exists){
+    const d = doc.data();
+    myAbsences = (d.absences && typeof d.absences === 'object') ? d.absences : {};
+    updateAbsentBanner();
+  }
+}, err=>console.error('absence listener failed', err));
+
+subscribeSheet();
+loadState();
+</script>
+</body>
+</html>

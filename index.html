@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Checklist || Auth</title>
+<style>
+  :root{
+    --bg: #12181f;
+    --panel: #1a222b;
+    --card: #202b36;
+    --line: #2c3a47;
+    --amber: #f5a623;
+    --amber-dim: #8a651f;
+    --teal: #3fb8a8;
+    --red: #e5566d;
+    --red-dim: #7a3140;
+    --text: #e8ecef;
+    --text-dim: #93a1ac;
+    --text-faint: #5c6b78;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --mono: 'Consolas', 'SF Mono', monospace;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; min-height:100vh; background:var(--bg); color:var(--text); font-family:var(--font);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .card{
+    width:100%; max-width:360px; background:var(--panel); border:1px solid var(--line);
+    border-radius:14px; padding:28px 26px; box-shadow:0 16px 48px rgba(0,0,0,.35);
+  }
+  .card h1{ margin:0 0 4px; font-size:17px; font-weight:600; }
+  .card p.sub{ margin:0 0 22px; font-size:11.5px; color:var(--text-dim); line-height:1.5; }
+
+  label{ display:block; font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px; }
+  input[type=text], input[type=password]{
+    width:100%; background:var(--card); border:1px solid var(--line); color:var(--text);
+    font-size:13px; padding:10px 11px; border-radius:7px; font-family:var(--font); margin-bottom:14px;
+    color-scheme: dark;
+  }
+  input[type=text]:focus, input[type=password]:focus{ outline:none; border-color:var(--teal); }
+
+  #loginBtn{
+    width:100%; background:var(--teal); border:none; color:#0c1116; padding:11px 0;
+    border-radius:7px; font-weight:600; font-size:13px; cursor:pointer; font-family:var(--font);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  #loginBtn:hover{ opacity:.9; }
+  #loginBtn:disabled{ opacity:.6; cursor:default; }
+
+  .spinner{
+    width:14px; height:14px; border-radius:50%; border:2px solid rgba(12,17,22,.35);
+    border-top-color:#0c1116; animation:spin .7s linear infinite; display:none;
+  }
+  #loginBtn.loading .spinner{ display:inline-block; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .error-msg{
+    display:none; font-size:11.5px; color:var(--red); background:rgba(229,86,109,.1);
+    border:1px solid var(--red-dim); border-radius:7px; padding:8px 10px; margin-bottom:14px;
+  }
+  .error-msg.show{ display:block; }
+
+  .foot{ margin-top:16px; font-size:10px; color:var(--text-faint); text-align:center; line-height:1.5; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>LOGIN</h1>
+    <p class="sub"></p>
+
+    <div class="error-msg" id="errorMsg">Incorrect ID or PIN.</div>
+
+    <label for="idInput">User ID</label>
+    <input type="text" id="idInput" placeholder="Enter EMP ID" autocomplete="off">
+
+    <label for="pinInput">PIN</label>
+    <input type="password" id="pinInput" placeholder="Enter PIN" autocomplete="off">
+
+    <button id="loginBtn" type="button"><span class="spinner"></span><span id="loginBtnLabel">Login</span></button>
+
+    <div style="text-align:center; margin-top:12px;">
+      <a href="#" id="forgotPinLink" style="font-size:11px; color:var(--text-dim); text-decoration:underline;">Forgot PIN?</a>
+    </div>
+
+    <div id="forgotPinPanel" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid var(--line);">
+      <p style="margin:0 0 10px; font-size:11px; color:var(--text-dim); line-height:1.5;">Enter your User ID and we'll send a reset request to your admin. They'll set a new PIN for you.</p>
+      <label for="forgotIdInput">User ID</label>
+      <input type="text" id="forgotIdInput" placeholder="e.g. emp1" autocomplete="off">
+      <button id="forgotSubmitBtn" type="button" style="width:100%; background:var(--card); border:1px solid var(--line); color:var(--text); padding:10px 0; border-radius:7px; font-weight:600; font-size:12.5px; cursor:pointer; font-family:var(--font);">Send Reset Request</button>
+      <div id="forgotStatusMsg" style="display:none; font-size:11px; margin-top:10px; text-align:center;"></div>
+    </div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  // ---- Firebase ----
+  const firebaseConfig = {
+    apiKey: "AIzaSyAHzVTjMA0ErfhEhP7a1kQJBCNEV9yMxRo",
+    authDomain: "pss-checklist.firebaseapp.com",
+    projectId: "pss-checklist",
+    storageBucket: "pss-checklist.firebasestorage.app",
+    messagingSenderId: "66873555979",
+    appId: "1:66873555979:web:ddd15dacbb8f003e529b0e",
+    measurementId: "G-HFZK8BXFMC"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // ---- Fixed admin credential ----
+  // Kept out of Firestore on purpose so admin access can never be locked out
+  // or accidentally deleted through the employee-management UI. Change this
+  // PIN here if needed — it only lives in this file.
+  const ADMIN_ID = "admin";
+  const ADMIN_PIN = "1111";
+
+  const ROLE_SESSION_KEY = "intimation-tracker-role";
+  const ID_SESSION_KEY = "intimation-tracker-userid";
+  const NAME_SESSION_KEY = "intimation-tracker-loginname";
+  const CHECKLIST_PAGE = "Employee_Dashboard.html";
+  const ADMIN_DASHBOARD_PAGE = "Admin_Dashboard.html";
+
+  const idInput = document.getElementById('idInput');
+  const pinInput = document.getElementById('pinInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginBtnLabel = document.getElementById('loginBtnLabel');
+  const errorMsg = document.getElementById('errorMsg');
+
+  function setLoading(loading){
+    loginBtn.disabled = loading;
+    loginBtn.classList.toggle('loading', loading);
+    loginBtnLabel.textContent = loading ? 'Checking\u2026' : 'Login';
+  }
+
+  function showError(msg){
+    errorMsg.textContent = msg;
+    errorMsg.classList.add('show');
+  }
+
+  async function doLogin(){
+    errorMsg.classList.remove('show');
+    const enteredId = idInput.value.trim().toLowerCase();
+    const enteredPin = pinInput.value;
+
+    if(!enteredId || !enteredPin){
+      showError('Please enter both an ID and a PIN.');
+      return;
+    }
+
+    // Fixed admin account — checked locally, no Firestore round trip needed.
+    if(enteredId === ADMIN_ID){
+      if(enteredPin === ADMIN_PIN){
+        sessionStorage.setItem(ROLE_SESSION_KEY, 'admin');
+        sessionStorage.setItem(ID_SESSION_KEY, ADMIN_ID);
+        sessionStorage.setItem(NAME_SESSION_KEY, 'Admin');
+        window.location.href = ADMIN_DASHBOARD_PAGE;
+        return;
+      }
+      showError('Incorrect ID or PIN.');
+      pinInput.value = '';
+      pinInput.focus();
+      return;
+    }
+
+    // Employee accounts live in Firestore so admin can add/remove them from
+    // the Admin Dashboard and it takes effect on every device immediately.
+    setLoading(true);
+    try{
+      const doc = await db.collection('employees').doc(enteredId).get();
+      if(!doc.exists || doc.data().pin !== enteredPin || doc.data().active === false){
+        showError('Incorrect ID or PIN.');
+        pinInput.value = '';
+        pinInput.focus();
+        return;
+      }
+      const data = doc.data();
+      sessionStorage.setItem(ROLE_SESSION_KEY, 'employee');
+      sessionStorage.setItem(ID_SESSION_KEY, enteredId);
+      sessionStorage.setItem(NAME_SESSION_KEY, data.name || enteredId);
+      window.location.href = CHECKLIST_PAGE;
+    }catch(e){
+      console.error('login failed', e);
+      showError('Could not reach the server. Check your connection and try again.');
+    }finally{
+      setLoading(false);
+    }
+  }
+
+  loginBtn.addEventListener('click', doLogin);
+  idInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') pinInput.focus(); });
+  pinInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') doLogin(); });
+
+  // ---- Forgot PIN ----
+  // Since this app has no email/SMS backend, "forgot PIN" is request-based:
+  // the employee submits their ID, it's logged in Firestore, and the admin
+  // sees it in the Admin Dashboard to reset the PIN from there.
+  const forgotPinLink = document.getElementById('forgotPinLink');
+  const forgotPinPanel = document.getElementById('forgotPinPanel');
+  const forgotIdInput = document.getElementById('forgotIdInput');
+  const forgotSubmitBtn = document.getElementById('forgotSubmitBtn');
+  const forgotStatusMsg = document.getElementById('forgotStatusMsg');
+
+  forgotPinLink.addEventListener('click', (e)=>{
+    e.preventDefault();
+    const opening = forgotPinPanel.style.display === 'none';
+    forgotPinPanel.style.display = opening ? 'block' : 'none';
+    forgotStatusMsg.style.display = 'none';
+    if(opening) forgotIdInput.focus();
+  });
+
+  function setForgotStatus(msg, isError){
+    forgotStatusMsg.textContent = msg;
+    forgotStatusMsg.style.color = isError ? 'var(--red)' : 'var(--teal)';
+    forgotStatusMsg.style.display = 'block';
+  }
+
+  async function submitForgotPin(){
+    const id = forgotIdInput.value.trim().toLowerCase();
+    if(!id){
+      setForgotStatus('Please enter your User ID.', true);
+      return;
+    }
+    forgotSubmitBtn.disabled = true;
+    forgotSubmitBtn.textContent = 'Sending\u2026';
+    try{
+      const empDoc = await db.collection('employees').doc(id).get();
+      if(!empDoc.exists){
+        setForgotStatus('No account found with that ID. Check with your admin.', true);
+        return;
+      }
+      await db.collection('pinResetRequests').doc(id).set({
+        employeeId: id,
+        employeeName: empDoc.data().name || id,
+        requestedAt: new Date().toISOString(),
+        resolved: false
+      });
+      setForgotStatus('Request sent \u2014 your admin will reset your PIN shortly.', false);
+      forgotIdInput.value = '';
+    }catch(e){
+      console.error('forgot pin request failed', e);
+      setForgotStatus('Could not send the request. Check your connection and try again.', true);
+    }finally{
+      forgotSubmitBtn.disabled = false;
+      forgotSubmitBtn.textContent = 'Send Reset Request';
+    }
+  }
+  forgotSubmitBtn.addEventListener('click', submitForgotPin);
+  forgotIdInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') submitForgotPin(); });
+</script>
+</body>
+</html>

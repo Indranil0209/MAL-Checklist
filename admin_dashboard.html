@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+<style>
+  :root{
+    --bg: #12181f;
+    --panel: #1a222b;
+    --card: #202b36;
+    --line: #2c3a47;
+    --amber: #f5a623;
+    --amber-dim: #8a651f;
+    --teal: #3fb8a8;
+    --red: #e5566d;
+    --red-dim: #7a3140;
+    --text: #e8ecef;
+    --text-dim: #93a1ac;
+    --text-faint: #5c6b78;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --mono: 'Consolas', 'SF Mono', monospace;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); color:var(--text); font-family:var(--font);
+    padding:16px 16px 32px;
+  }
+  .wrap{ max-width:980px; margin:0 auto; }
+
+  .masthead{
+    display:flex; justify-content:space-between; align-items:center;
+    border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:16px;
+  }
+  .masthead h1{ font-size:16px; font-weight:600; margin:0; }
+  .masthead p{ margin:2px 0 0; font-size:11px; color:var(--text-dim); }
+  .header-right{ display:flex; align-items:center; gap:10px; }
+  .role-badge{
+    font-size:10.5px; padding:4px 10px; border-radius:20px; background:var(--panel);
+    border:1px solid var(--line); color:var(--amber); font-family:var(--mono);
+  }
+  #logoutBtn{
+    background:none; border:1px solid var(--line); color:var(--text-dim);
+    font-size:11px; padding:6px 12px; border-radius:6px; cursor:pointer; font-family:var(--font);
+  }
+  #logoutBtn:hover{ border-color:var(--text-dim); color:var(--text); }
+
+  .section{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:16px 18px; margin-bottom:16px;
+  }
+  .section h2{ font-size:13px; font-weight:600; margin:0 0 3px; }
+  .section .section-sub{ font-size:10.5px; color:var(--text-dim); margin:0 0 14px; }
+
+  .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+  input[type=text], input[type=password], input[type=date], input[type=month], select{
+    background:var(--card); border:1px solid var(--line); color:var(--text);
+    font-size:12px; padding:8px 10px; border-radius:7px; font-family:var(--font);
+    color-scheme: dark;
+  }
+  .btn{
+    background:var(--teal); border:none; color:#0c1116; padding:8px 14px;
+    border-radius:7px; font-weight:600; font-size:12px; cursor:pointer; font-family:var(--font);
+  }
+  .btn:hover{ opacity:.88; }
+  .btn-outline{
+    background:none; border:1px solid var(--line); color:var(--text-dim);
+    padding:7px 13px; border-radius:7px; font-size:11.5px; cursor:pointer; font-family:var(--font);
+  }
+  .btn-outline:hover{ border-color:var(--text-dim); color:var(--text); }
+  .btn-danger{ border-color:var(--red-dim); color:var(--red); }
+  .btn-danger:hover{ border-color:var(--red); color:var(--red); }
+
+  /* ---- Employees ---- */
+  .add-emp-row{ margin-bottom:16px; }
+  .add-emp-row input{ flex:1; min-width:110px; }
+
+  .emp-table{ width:100%; border-collapse:collapse; }
+  .emp-table th{
+    text-align:left; font-size:9.5px; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--text-faint); font-weight:600; padding:6px 8px; border-bottom:1px solid var(--line);
+  }
+  .emp-table td{ padding:9px 8px; border-bottom:1px solid var(--line); font-size:12px; vertical-align:middle; }
+  .emp-table tr:last-child td{ border-bottom:none; }
+  .emp-name{ font-weight:600; }
+  .emp-id{ font-family:var(--mono); font-size:10px; color:var(--text-faint); }
+
+  .progress-cell{ min-width:150px; }
+  .bar-track{ height:6px; background:var(--card); border-radius:3px; overflow:hidden; margin-bottom:4px; width:120px; }
+  .bar-fill{ height:100%; background:var(--teal); }
+  .progress-lbl{ font-size:10px; color:var(--text-dim); font-family:var(--mono); }
+  .pending-lbl{ font-size:10px; color:var(--amber); }
+  .no-data-lbl{ font-size:10px; color:var(--text-faint); font-style:italic; }
+
+  .absent-toggle{
+    display:inline-flex; align-items:center; gap:5px; cursor:pointer; font-size:11px;
+    padding:5px 10px; border-radius:20px; border:1px solid var(--line); color:var(--text-dim);
+  }
+  .absent-toggle.is-absent{ color:var(--red); border-color:var(--red-dim); background:rgba(229,86,109,.08); }
+  .attendance-select{
+    font-size:11px; padding:5px 8px; border-radius:20px; border:1px solid var(--line);
+    background:var(--card); color:var(--text-dim); font-family:var(--font); cursor:pointer;
+    color-scheme: dark;
+  }
+  .attendance-select.st-absent{ color:var(--red); border-color:var(--red-dim); background:rgba(229,86,109,.08); }
+  .attendance-select.st-half{ color:var(--amber); border-color:var(--amber-dim); background:rgba(245,166,35,.08); }
+
+  .del-emp-btn{
+    background:none; border:1px solid var(--line); color:var(--text-faint);
+    font-size:10.5px; padding:5px 10px; border-radius:6px; cursor:pointer; font-family:var(--font);
+  }
+  .del-emp-btn:hover{ border-color:var(--red); color:var(--red); }
+
+  .empty-state{ font-size:11.5px; color:var(--text-faint); padding:10px 4px; }
+
+  /* ---- Sheet / Manage PSS ---- */
+  .sheet-info-lbl{ font-size:11px; color:var(--text-dim); margin:8px 0 14px; }
+  .manage-search{
+    width:100%; box-sizing:border-box; background:var(--card); border:1px solid var(--line); color:var(--text);
+    font-size:11px; padding:7px 10px; border-radius:6px; font-family:var(--font); margin:10px 0;
+  }
+  .manage-add-row{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
+  .manage-add-row input[type=text]{ flex:1; min-width:120px; }
+  .manage-list{ max-height:320px; overflow-y:auto; border-top:1px solid var(--line); padding-top:6px; }
+  .manage-row{
+    display:flex; align-items:center; gap:8px; padding:6px 4px; font-size:11.5px;
+    border-bottom:1px solid var(--line);
+  }
+  .manage-row.blocked{ opacity:.5; }
+  .manage-row.blocked .m-name{ text-decoration:line-through; }
+  .manage-row .m-name{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .manage-row .m-meta{ font-size:9.5px; color:var(--text-faint); font-family:var(--mono); flex-shrink:0; }
+  .assign-unmatched{ color:var(--red); }
+  .manage-edit-select{
+    flex-shrink:0; background:var(--panel); border:1px solid var(--line); color:var(--text);
+    font-size:10.5px; padding:3px 6px; border-radius:6px; font-family:var(--font);
+  }
+  .m-btn{
+    flex-shrink:0; font-size:10px; padding:3px 9px; border-radius:6px; cursor:pointer; font-family:var(--font);
+    background:none; border:1px solid var(--line); color:var(--text-faint);
+  }
+  .m-btn:hover{ border-color:var(--text-dim); color:var(--text-dim); }
+  .m-btn.is-blocked{ color:var(--red); border-color:var(--red-dim); }
+  .m-btn.danger:hover{ border-color:var(--red); color:var(--red); }
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--card); border:1px solid var(--line); color:var(--text);
+    font-size:12px; padding:10px 18px; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.4);
+    opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .toast.show{ opacity:1; }
+
+  .confirm-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.55); display:none;
+    align-items:center; justify-content:center; z-index:110; padding:20px;
+  }
+  .confirm-overlay.open{ display:flex; }
+  .confirm-box{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:18px 20px; max-width:340px; width:100%;
+  }
+  .confirm-box h4{ margin:0 0 8px; font-size:13px; }
+  .confirm-box p{ margin:0 0 16px; font-size:11.5px; color:var(--text-dim); line-height:1.5; }
+  .confirm-actions{ display:flex; justify-content:flex-end; gap:8px; }
+  .confirm-actions button{ font-size:11.5px; padding:7px 14px; border-radius:6px; cursor:pointer; font-family:var(--font); border:1px solid var(--line); }
+  .confirm-no{ background:none; color:var(--text-dim); }
+  .confirm-yes{ background:var(--red); color:#12181f; border-color:var(--red); font-weight:600; }
+
+  @media (max-width: 640px){
+    .emp-table, .emp-table thead, .emp-table tbody, .emp-table tr, .emp-table td{ display:block; }
+    .emp-table thead{ display:none; }
+    .emp-table tr{ border-bottom:1px solid var(--line); padding:10px 0; }
+    .emp-table td{ border-bottom:none; padding:4px 0; }
+  }
+
+  #appLoadingOverlay{
+    position:fixed; inset:0; z-index:9999; background:var(--bg);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+    transition:opacity .35s ease, visibility .35s ease;
+  }
+  #appLoadingOverlay.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+  #appLoadingOverlay .loading-spinner{
+    width:40px; height:40px; border-radius:50%;
+    border:3px solid var(--line); border-top-color:var(--teal);
+    animation:app-spin .8s linear infinite;
+  }
+  #appLoadingOverlay .loading-text{
+    font-size:12.5px; color:var(--text-dim); letter-spacing:.02em;
+  }
+  @keyframes app-spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div id="appLoadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading dashboard&hellip;</div>
+  </div>
+<div class="wrap">
+
+  <div class="masthead">
+    <div>
+      <h1>Admin Dashboard</h1>
+      <p>Employees &middot; live progress &middot; intimation sheet</p>
+    </div>
+    <div class="header-right">
+      <span class="role-badge" id="roleBadge">Admin</span>
+      <button id="logoutBtn" type="button">Logout</button>
+    </div>
+  </div>
+
+  <div class="section" id="pinResetSection" style="display:none;">
+    <h2>PIN Reset Requests</h2>
+    <p class="section-sub">Employees who tapped "Forgot PIN?" on the login page show up here. Reset their PIN below, then dismiss the request.</p>
+    <div id="pinResetList"></div>
+  </div>
+
+  <div class="section">
+    <h2>Employees</h2>
+    <p class="section-sub">Add or remove employee accounts, and see live check-in progress for the selected date.</p>
+
+    <div class="row add-emp-row">
+      <input type="text" id="newEmpName" placeholder="Name">
+      <input type="text" id="newEmpId" placeholder="Login ID (e.g. emp3)">
+      <input type="password" id="newEmpPin" placeholder="PIN">
+      <button class="btn" id="addEmpBtn" type="button">Add Employee</button>
+      <button class="btn-outline" id="cancelEmpEditBtn" type="button" style="display:none;">Cancel</button>
+    </div>
+    <div class="row" style="margin-bottom:12px;">
+      <label style="font-size:10.5px; color:var(--text-faint);">Viewing progress for:</label>
+      <input type="date" id="progressDateInput">
+    </div>
+
+    <table class="emp-table">
+      <thead>
+        <tr><th>Employee</th><th>Today's Progress</th><th>Pending</th><th>Attendance</th><th>Saturday Off</th><th></th></tr>
+      </thead>
+      <tbody id="empTableBody"></tbody>
+    </table>
+    <div class="empty-state" id="empEmptyState" style="display:none;">No employees yet — add one above.</div>
+
+    <div class="row" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line);">
+      <label style="font-size:10.5px; color:var(--text-faint);">From:</label>
+      <input type="date" id="summaryFromDate">
+      <label style="font-size:10.5px; color:var(--text-faint);">To:</label>
+      <input type="date" id="summaryToDate">
+      <button class="btn" id="downloadAllBtn" type="button">Download All Employee Summaries (.txt)</button>
+    </div>
+    <p class="section-sub" style="margin-top:8px; margin-bottom:0;">One .txt file with every employee — their name, each date in range, and the PSS work completed that day.</p>
+  </div>
+
+  <div class="section">
+    <h2>Attendance Summary</h2>
+    <p class="section-sub">Present/absent day counts per employee for a month, based on the attendance marks above.</p>
+    <div class="row" style="margin-bottom:12px;">
+      <label style="font-size:10.5px; color:var(--text-faint);">Month:</label>
+      <input type="month" id="attendanceMonthInput">
+    </div>
+    <table class="emp-table">
+      <thead>
+        <tr><th>Employee</th><th>Present</th><th>Half Day</th><th>Absent</th><th>Attendance %</th></tr>
+      </thead>
+      <tbody id="attendanceTableBody"></tbody>
+    </table>
+    <div class="empty-state" id="attendanceEmptyState" style="display:none;">No employees yet.</div>
+  </div>
+
+  <div class="section">
+    <h2>Intimation Sheet</h2>
+    <p class="section-sub">Upload the monthly intimation sheet — this updates every employee's checklist live. Add, block, edit, or delete individual PSS below.</p>
+    <div class="row">
+      <button class="btn-outline" id="uploadSheetBtn" type="button">Upload Intimation Sheet</button>
+      <input type="file" id="sheetFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+      <button class="btn-outline btn-danger" id="clearSheetBtn" type="button">Clear All PSS</button>
+    </div>
+    <div class="sheet-info-lbl" id="sheetInfoLbl">No sheet loaded.</div>
+
+    <div style="margin-top:10px; padding:10px; border:1px solid var(--line); border-radius:8px;">
+      <div class="row" style="align-items:center;">
+        <input type="text" id="linkedFileNameInput" placeholder="Display name, e.g. RAAA Sheet Index" style="flex:1; min-width:160px;">
+        <input type="text" id="linkedFilePathInput" placeholder="Full local path, e.g. D:\Reports\Sheet.xlsx" style="flex:1; min-width:220px;">
+        <button class="btn-outline" id="addLinkedFileBtn" type="button">Add File Link</button>
+      </div>
+      <div id="linkedFilesList" style="display:flex; flex-direction:column; gap:6px; margin-top:10px;"></div>
+      <p class="section-sub" style="margin-top:6px; margin-bottom:0;">Saved only on this computer/browser &mdash; each name becomes a clickable link that opens that Excel file directly. Doesn't sync to other devices.</p>
+    </div>
+
+    <div class="manage-add-row">
+      <input type="text" id="newPssName" placeholder="PSS name">
+      <input type="text" id="newPssState" placeholder="State (e.g. GJ)">
+      <select id="newPssFreq">
+        <option value="E">Everyday</option>
+        <option value="Alt">Alt</option>
+        <option value="Twice in week" selected>Twice in week</option>
+      </select>
+      <select id="newPssPriority">
+        <option>Normal</option><option>High</option><option>Higher</option><option>Highest</option>
+      </select>
+      <select id="newPssAssign">
+        <option value="">Primary (optional)</option>
+      </select>
+      <select id="newPssSecondary">
+        <option value="">Secondary (optional)</option>
+      </select>
+      <button class="btn" id="addPssBtn" type="button">Add PSS</button>
+    </div>
+    <div class="row" style="margin:10px 0 0;">
+      <input type="text" id="manageSearchBox" class="manage-search" style="margin:0; flex:1; min-width:180px; width:auto;" placeholder="Search PSS to block, edit, or delete&hellip;">
+      <select id="manageAssignFilter" style="background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:6px; padding:7px 10px; font-size:11px;">
+        <option value="">All employees</option>
+        <option value="__unassigned__">Unassigned</option>
+        <option value="__unmatched__">Unmatched names</option>
+      </select>
+    </div>
+    <div class="manage-list" id="manageList"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h4 id="confirmTitle">Are you sure?</h4>
+    <p id="confirmMessage"></p>
+    <div class="confirm-actions">
+      <button type="button" class="confirm-no" id="confirmNoBtn">Cancel</button>
+      <button type="button" class="confirm-yes" id="confirmYesBtn">Yes</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ---- Firebase ----
+const firebaseConfig = {
+  apiKey: "AIzaSyAHzVTjMA0ErfhEhP7a1kQJBCNEV9yMxRo",
+  authDomain: "pss-checklist.firebaseapp.com",
+  projectId: "pss-checklist",
+  storageBucket: "pss-checklist.firebasestorage.app",
+  messagingSenderId: "66873555979",
+  appId: "1:66873555979:web:ddd15dacbb8f003e529b0e",
+  measurementId: "G-HFZK8BXFMC"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ---- Session gate: admin only ----
+const ROLE_SESSION_KEY = "intimation-tracker-role";
+const ID_SESSION_KEY = "intimation-tracker-userid";
+const NAME_SESSION_KEY = "intimation-tracker-loginname";
+const LOGIN_PAGE = "index.html";
+const CHECKLIST_PAGE = "Employee_Dashboard.html";
+
+if(sessionStorage.getItem(ROLE_SESSION_KEY) !== 'admin'){
+  window.location.replace(sessionStorage.getItem(ROLE_SESSION_KEY) === 'employee' ? CHECKLIST_PAGE : LOGIN_PAGE);
+}
+
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  sessionStorage.removeItem(ROLE_SESSION_KEY);
+  sessionStorage.removeItem(ID_SESSION_KEY);
+  sessionStorage.removeItem(NAME_SESSION_KEY);
+  window.location.href = LOGIN_PAGE;
+});
+
+// ---- Idle auto-logout ----
+// If nobody touches the dashboard for 60 minutes, log out automatically so
+// an unattended admin session doesn't stay open indefinitely.
+const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
+let idleTimer = null;
+function handleIdleLogout(){
+  sessionStorage.removeItem(ROLE_SESSION_KEY);
+  sessionStorage.removeItem(ID_SESSION_KEY);
+  sessionStorage.removeItem(NAME_SESSION_KEY);
+  window.location.href = LOGIN_PAGE + '?timeout=1';
+}
+function resetIdleTimer(){
+  if(idleTimer) clearTimeout(idleTimer);
+  idleTimer = setTimeout(handleIdleLogout, IDLE_TIMEOUT_MS);
+}
+['mousemove','mousedown','keydown','scroll','touchstart','click'].forEach(evt=>{
+  document.addEventListener(evt, resetIdleTimer, { passive: true });
+});
+resetIdleTimer();
+
+function escapeHtml(str){
+  return String(str == null ? '' : str).replace(/[&<>"']/g, c => (
+    { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+  ));
+}
+
+function dateKey(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return y + '-' + m + '-' + day;
+}
+
+let toastTimer = null;
+function showToast(msg, durationMs){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), durationMs || 2200);
+}
+
+// ---- Reusable Yes/No confirm modal ----
+function showConfirm(title, message){
+  return new Promise(resolve=>{
+    const overlay = document.getElementById('confirmOverlay');
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    const yesBtn = document.getElementById('confirmYesBtn');
+    const noBtn = document.getElementById('confirmNoBtn');
+    function cleanup(){
+      overlay.classList.remove('open');
+      yesBtn.removeEventListener('click', onYes);
+      noBtn.removeEventListener('click', onNo);
+      overlay.removeEventListener('click', onOverlayClick);
+      document.removeEventListener('keydown', onKeydown);
+    }
+    function onYes(){ cleanup(); resolve(true); }
+    function onNo(){ cleanup(); resolve(false); }
+    function onOverlayClick(e){ if(e.target === overlay){ cleanup(); resolve(false); } }
+    function onKeydown(e){ if(e.key === 'Escape'){ cleanup(); resolve(false); } }
+    yesBtn.addEventListener('click', onYes);
+    noBtn.addEventListener('click', onNo);
+    overlay.addEventListener('click', onOverlayClick);
+    document.addEventListener('keydown', onKeydown);
+    overlay.classList.add('open');
+  });
+}
+
+let currentProgressDate = new Date();
+const progressDateInput = document.getElementById('progressDateInput');
+progressDateInput.value = dateKey(currentProgressDate);
+progressDateInput.addEventListener('change', ()=>{
+  if(!progressDateInput.value) return;
+  const [y,m,d] = progressDateInput.value.split('-').map(Number);
+  currentProgressDate = new Date(y, m-1, d);
+  renderEmployees();
+});
+
+// ---- PIN reset requests (from Login.html's "Forgot PIN?") ----
+db.collection('pinResetRequests').where('resolved', '==', false).onSnapshot(snap=>{
+  const section = document.getElementById('pinResetSection');
+  const list = document.getElementById('pinResetList');
+  list.innerHTML = '';
+  const requests = snap.docs.map(doc=>({ id: doc.id, ...doc.data() }));
+  section.style.display = requests.length ? 'block' : 'none';
+  requests
+    .sort((a,b)=>(a.requestedAt||'').localeCompare(b.requestedAt||''))
+    .forEach(req=>{
+      const row = document.createElement('div');
+      row.className = 'manage-row';
+      const when = req.requestedAt ? new Date(req.requestedAt).toLocaleString() : '';
+      row.innerHTML =
+        '<div class="m-name">'+escapeHtml(req.employeeName || req.employeeId)+'</div>' +
+        '<div class="m-meta">ID: '+escapeHtml(req.employeeId)+(when ? ' &middot; requested '+escapeHtml(when) : '')+'</div>';
+      const resetBtn = document.createElement('button');
+      resetBtn.className = 'm-btn';
+      resetBtn.textContent = 'Reset PIN';
+      resetBtn.onclick = async ()=>{
+        const emp = employees.find(e=>e.id === req.employeeId);
+        if(emp) startEditEmployee(emp);
+        else {
+          document.getElementById('newEmpId').value = req.employeeId;
+          document.getElementById('newEmpName').value = req.employeeName || req.employeeId;
+        }
+        await db.collection('pinResetRequests').doc(req.id).set({ resolved: true }, { merge: true });
+      };
+      const dismissBtn = document.createElement('button');
+      dismissBtn.className = 'del-emp-btn';
+      dismissBtn.textContent = 'Dismiss';
+      dismissBtn.onclick = async ()=>{
+        await db.collection('pinResetRequests').doc(req.id).set({ resolved: true }, { merge: true });
+      };
+      row.appendChild(resetBtn);
+      row.appendChild(dismissBtn);
+      list.appendChild(row);
+    });
+}, err=>console.error('pin reset requests listener failed', err));
+
+
+let employees = [];
+let employeesLoadedOnce = false;
+let employeesLoadedOnceForOverlay = false;
+let sheetLoadedOnceForOverlay = false;
+function maybeHideLoadingOverlay(){
+  if(!employeesLoadedOnceForOverlay || !sheetLoadedOnceForOverlay) return;
+  const overlay = document.getElementById('appLoadingOverlay');
+  if(overlay) overlay.classList.add('hidden');
+}
+setTimeout(()=>{
+  const overlay = document.getElementById('appLoadingOverlay');
+  if(overlay) overlay.classList.add('hidden');
+}, 8000);
+
+db.collection('employees').onSnapshot(snap=>{
+  employees = snap.docs.map(doc=>({ id: doc.id, ...doc.data() }));
+  renderEmployees();
+  renderAttendanceSummary();
+  populateNewPssAssignSelect();
+  populateManageAssignFilter();
+  renderManageList();
+  employeesLoadedOnceForOverlay = true;
+  maybeHideLoadingOverlay();
+  // Re-attempt PSS-to-employee name matching whenever the employee list
+  // changes (e.g. a newly added employee now matches names already in the
+  // uploaded sheet), and persist any newly-resolved matches.
+  // Re-run on every snapshot (including the very first one on page load) so
+  // any assignment that couldn't be matched earlier -- e.g. the sheet was
+  // uploaded before the secondary/POC2 person existed as an employee -- gets
+  // picked up and saved as soon as that employee exists, without needing
+  // another manual edit to trigger it.
+  if(SITES.length){
+    const before = JSON.stringify(SITES.map(s=>[s.assignedToId||null, s.secondaryToId||null]));
+    matchAssignments(SITES, employees);
+    const after = JSON.stringify(SITES.map(s=>[s.assignedToId||null, s.secondaryToId||null]));
+    if(before !== after) saveSheetDoc();
+  }
+  employeesLoadedOnce = true;
+}, err=>{
+  console.error('employees listener failed', err);
+  employeesLoadedOnceForOverlay = true;
+  maybeHideLoadingOverlay();
+});
+
+// ---- Attendance summary (monthly) ----
+const attendanceMonthInput = document.getElementById('attendanceMonthInput');
+const today = new Date();
+attendanceMonthInput.value = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
+attendanceMonthInput.addEventListener('change', renderAttendanceSummary);
+
+function renderAttendanceSummary(){
+  const body = document.getElementById('attendanceTableBody');
+  const empty = document.getElementById('attendanceEmptyState');
+  body.innerHTML = '';
+  if(!employees.length){
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const [yStr, mStr] = (attendanceMonthInput.value || '').split('-');
+  const year = Number(yStr) || today.getFullYear();
+  const month = (Number(mStr) || (today.getMonth()+1)) - 1; // 0-indexed
+
+  const isCurrentMonth = (year === today.getFullYear() && month === today.getMonth());
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const lastDayToCount = isCurrentMonth ? today.getDate() : (year > today.getFullYear() || (year === today.getFullYear() && month > today.getMonth()) ? 0 : daysInMonth);
+
+  employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
+    let absentCount = 0;
+    let halfCount = 0;
+    const absences = emp.absences || {};
+    for(let day=1; day<=lastDayToCount; day++){
+      const k = year + '-' + String(month+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+      const v = absences[k];
+      if(v === true || v === 'absent') absentCount++;
+      else if(v === 'half') halfCount++;
+    }
+    const totalDays = lastDayToCount;
+    const presentCount = totalDays - absentCount - halfCount;
+    // A half day counts as half a present day toward the attendance %.
+    const pct = totalDays ? Math.round((presentCount + halfCount*0.5)/totalDays*100) : 0;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><div class="emp-name">'+escapeHtml(emp.name||emp.id)+'</div><div class="emp-id">'+escapeHtml(emp.id)+'</div></td>' +
+      '<td>'+presentCount+' / '+totalDays+'</td>' +
+      '<td>'+(halfCount ? '<span class="pending-lbl" style="color:var(--amber);">'+halfCount+'</span>' : '<span class="no-data-lbl">0</span>')+'</td>' +
+      '<td>'+(absentCount ? '<span class="pending-lbl" style="color:var(--red);">'+absentCount+'</span>' : '<span class="no-data-lbl">0</span>')+'</td>' +
+      '<td>'+pct+'%</td>';
+    body.appendChild(tr);
+  });
+}
+
+function attendanceStatus(emp, dKey){
+  const v = emp.absences && emp.absences[dKey];
+  if(v === true || v === 'absent') return 'absent';
+  if(v === 'half') return 'half';
+  return 'present';
+}
+
+function renderEmployees(){
+  const body = document.getElementById('empTableBody');
+  const empty = document.getElementById('empEmptyState');
+  body.innerHTML = '';
+  if(!employees.length){
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  const dKey = dateKey(currentProgressDate);
+  employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
+    const prog = emp.progress && emp.progress[dKey];
+    const status = attendanceStatus(emp, dKey);
+    const isAbsent = status === 'absent';
+    const tr = document.createElement('tr');
+
+    let progressHtml;
+    if(isAbsent){
+      progressHtml = '<span class="no-data-lbl">Marked absent</span>';
+    } else if(prog){
+      const pct = prog.total ? Math.round(prog.done/prog.total*100) : 0;
+      progressHtml =
+        '<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%"></div></div>' +
+        '<div class="progress-lbl">'+prog.done+' / '+prog.total+' &middot; '+pct+'%</div>';
+    } else {
+      progressHtml = '<span class="no-data-lbl">No activity yet</span>';
+    }
+    const pendingHtml = (!isAbsent && prog && prog.pendingCount)
+      ? '<span class="pending-lbl">'+prog.pendingCount+' pending</span>'
+      : '<span class="no-data-lbl">&mdash;</span>';
+
+    tr.innerHTML =
+      '<td><div class="emp-name">'+escapeHtml(emp.name||emp.id)+'</div><div class="emp-id">'+escapeHtml(emp.id)+'</div></td>' +
+      '<td class="progress-cell">'+progressHtml+'</td>' +
+      '<td>'+pendingHtml+'</td>' +
+      '<td></td>' +
+      '<td></td>' +
+      '<td></td>';
+
+    const attTd = tr.children[3];
+    const attSel = document.createElement('select');
+    attSel.className = 'attendance-select st-' + status;
+    [['present','Present'],['half','Half Day'],['absent','Absent']].forEach(([val,label])=>{
+      const opt = document.createElement('option');
+      opt.value = val; opt.textContent = label;
+      if(status === val) opt.selected = true;
+      attSel.appendChild(opt);
+    });
+    attSel.onchange = ()=> setAttendanceStatus(emp.id, dKey, attSel.value);
+    attTd.appendChild(attSel);
+
+    const satTd = tr.children[4];
+    const satSel = document.createElement('select');
+    satSel.className = 'attendance-select';
+    [['firstThird','1st & 3rd Off'],['secondFourth','2nd & 4th Off'],['none','No Sat Off']].forEach(([val,label])=>{
+      const opt = document.createElement('option');
+      opt.value = val; opt.textContent = label;
+      satSel.appendChild(opt);
+    });
+    satSel.value = 'firstThird'; // default shown while the real value loads below
+    satSel.onchange = ()=> setSaturdayOffMode(emp.id, satSel.value);
+    satTd.appendChild(satSel);
+    // saturdayOffMode lives on the employee's own state/main doc (same place
+    // Checklist_V4.html reads/writes it), not the root employee doc, so it
+    // isn't included in the live employees listener above -- fetch it once.
+    db.collection('employees').doc(emp.id).collection('state').doc('main').get()
+      .then(stateDoc=>{
+        if(stateDoc.exists && stateDoc.data().saturdayOffMode){
+          satSel.value = stateDoc.data().saturdayOffMode;
+        }
+      })
+      .catch(e=>console.error('fetch saturdayOffMode failed', e));
+
+    const delTd = tr.children[5];
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'del-emp-btn';
+    editBtn.textContent = 'Edit';
+    editBtn.style.marginRight = '6px';
+    editBtn.onclick = ()=> startEditEmployee(emp);
+    delTd.appendChild(editBtn);
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'del-emp-btn';
+    delBtn.textContent = 'Delete';
+    delBtn.onclick = ()=> deleteEmployee(emp.id, emp.name);
+    delTd.appendChild(delBtn);
+
+    body.appendChild(tr);
+  });
+}
+
+async function setSaturdayOffMode(empId, mode){
+  try{
+    await db.collection('employees').doc(empId).collection('state').doc('main').set({ saturdayOffMode: mode }, { merge: true });
+    showToast('Saturday-off updated.');
+  }catch(e){
+    console.error('setSaturdayOffMode failed', e);
+    showToast('Could not update Saturday-off setting.');
+  }
+}
+
+async function setAttendanceStatus(empId, dKey, status){
+  try{
+    await db.collection('employees').doc(empId).set({
+      absences: { [dKey]: status }
+    }, { merge: true });
+    showToast(status === 'present' ? 'Marked present' : status === 'half' ? 'Marked half day' : 'Marked absent');
+  }catch(e){
+    console.error('setAttendanceStatus failed', e);
+    showToast('Could not update attendance.');
+  }
+}
+
+function downloadFile(filename, content, mime){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ---- Local linked-files shortcuts ----
+// Lets the admin save shortcuts to Excel workbooks on this computer, each
+// shown as a clickable name that opens that file directly. Saved in
+// localStorage (per browser/device only -- there is no way to share local
+// file paths across machines). Only works when this dashboard itself is
+// opened as a local file:// page; browsers block file:// links from a page
+// served over http(s). No file contents are read, stored, or processed --
+// this is purely a shortcut, same as a desktop icon.
+const LINKED_FILES_KEY = 'intimation-linked-files';
+const DEFAULT_LINKED_FILES = [
+  { name: 'RAAA Sheet Index', path: 'D:\\Users\\indranil.s\\Desktop\\Personal\\MAL_RAAA_012_RAAA Sheet Index.xlsx' }
+];
+
+function pathToFileUrl(path){
+  let p = path.trim().replace(/\\/g, '/');
+  let drivePrefix = '';
+  const driveMatch = p.match(/^([a-zA-Z]:)\/(.*)$/);
+  if(driveMatch){
+    drivePrefix = '/' + driveMatch[1]; // keep "C:" literal, browsers expect file:///C:/...
+    p = driveMatch[2];
+  }
+  return 'file://' + drivePrefix + '/' + p.split('/').map(encodeURIComponent).join('/');
+}
+
+function loadLinkedFiles(){
+  try{
+    const raw = localStorage.getItem(LINKED_FILES_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){ console.error('loadLinkedFiles failed', e); }
+  return DEFAULT_LINKED_FILES.slice();
+}
+
+function saveLinkedFiles(list){
+  localStorage.setItem(LINKED_FILES_KEY, JSON.stringify(list));
+}
+
+function renderLinkedFiles(){
+  const wrap = document.getElementById('linkedFilesList');
+  const list = loadLinkedFiles();
+  wrap.innerHTML = '';
+  if(!list.length){
+    const empty = document.createElement('div');
+    empty.className = 'section-sub';
+    empty.style.margin = '0';
+    empty.textContent = 'No files linked yet.';
+    wrap.appendChild(empty);
+    return;
+  }
+  list.forEach((file, idx)=>{
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
+    row.style.gap = '10px';
+    row.style.padding = '6px 0';
+    row.style.borderBottom = idx < list.length - 1 ? '1px solid var(--line)' : 'none';
+
+    const link = document.createElement('a');
+    link.href = pathToFileUrl(file.path);
+    link.textContent = file.name + ' \u2197';
+    link.style.color = 'var(--teal)';
+    link.style.textDecoration = 'underline';
+    link.style.fontSize = '12px';
+    link.style.flex = '1';
+    link.title = file.path;
+    row.appendChild(link);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'del-emp-btn';
+    removeBtn.textContent = 'Remove';
+    removeBtn.onclick = ()=>{
+      const current = loadLinkedFiles();
+      current.splice(idx, 1);
+      saveLinkedFiles(current);
+      renderLinkedFiles();
+    };
+    row.appendChild(removeBtn);
+
+    wrap.appendChild(row);
+  });
+}
+renderLinkedFiles();
+
+document.getElementById('addLinkedFileBtn').addEventListener('click', ()=>{
+  const nameInput = document.getElementById('linkedFileNameInput');
+  const pathInput = document.getElementById('linkedFilePathInput');
+  const name = nameInput.value.trim();
+  const path = pathInput.value.trim();
+  if(!name || !path){
+    showToast('Please enter both a display name and a file path.');
+    return;
+  }
+  const current = loadLinkedFiles();
+  current.push({ name, path });
+  saveLinkedFiles(current);
+  nameInput.value = '';
+  pathInput.value = '';
+  renderLinkedFiles();
+  showToast('File link added.');
+});
+
+// ---- All-employee multi-day summary (one .txt per employee, zipped) ----
+const summaryFromDate = document.getElementById('summaryFromDate');
+const summaryToDate = document.getElementById('summaryToDate');
+summaryFromDate.value = dateKey(new Date());
+summaryToDate.value = dateKey(new Date());
+
+function dateRangeKeys(fromStr, toStr){
+  const keys = [];
+  if(!fromStr || !toStr) return keys;
+  const [fy,fm,fd] = fromStr.split('-').map(Number);
+  const [ty,tm,td] = toStr.split('-').map(Number);
+  let cur = new Date(fy, fm-1, fd);
+  const end = new Date(ty, tm-1, td);
+  if(cur > end) return keys;
+  // Cap at 62 days so a mis-set range can't generate an enormous zip.
+  let guard = 0;
+  while(cur <= end && guard < 62){
+    keys.push(dateKey(cur));
+    cur.setDate(cur.getDate()+1);
+    guard++;
+  }
+  return keys;
+}
+
+const ROMAN = ['i','ii','iii','iv','v','vi','vii','viii','ix','x','xi','xii','xiii','xiv','xv','xvi','xvii','xviii','xix','xx'];
+function romanAt(idx){ return ROMAN[idx] || (idx+1)+'.'; }
+
+// Groups a day's workItems into the lettered categories from the paper
+// format (Loss Correction / Real Time Correction / Aeromal Correction /
+// MAPE / Day Skip / EN Combination Change / Preference Change / Remarks),
+// each numbered i), ii), iii)... Only categories with at least one entry
+// that day are shown, in this fixed relative order.
+function buildDayWorkSection(workItems){
+  const lc = [], rt = [], am = [], mape = [], daySkip = [], enc = [], pref = [], remarks = [];
+  workItems.forEach(item=>{
+    const w = item.work;
+    if(!w){ return; } // no structured data (legacy remark only) -- skip categorization for it
+    if(w.LC){
+      const types = Array.isArray(w.LC) ? w.LC : [w.LC];
+      if(types.length) lc.push(item.name + ' (' + types.join(', ') + ')');
+    }
+    if(w.RT) rt.push(item.name);
+    if(w.AM){
+      const parts = [];
+      if(w.AM.ProfileCorrection) parts.push('Profile correction');
+      if(w.AM.T21Correction) parts.push('T21 correction');
+      if(w.AM.STBCorrection) parts.push('STB correction');
+      if(w.AM.ETBCorrection) parts.push('ETB correction');
+      if(parts.length) am.push(parts.join('/') + '   ' + item.name);
+    }
+    if(w.MAPE) mape.push(item.name);
+    if(w.DaySkip){
+      const parts = [];
+      if(w.DaySkip.T1) parts.push('T1');
+      if(w.DaySkip.T21) parts.push('T21');
+      if(parts.length) daySkip.push(parts.join('/') + '   ' + item.name);
+    }
+    if(w.ENC) enc.push(item.name);
+    if(w.Pref) pref.push(item.name);
+    if(w.Others && w.Others.length){
+      w.Others.forEach(remark=>{ remarks.push(remark + ' (' + item.name + ')'); });
+    }
+  });
+
+  const cats = [];
+  if(lc.length) cats.push(['Loss Correction', lc]);
+  if(rt.length) cats.push(['Real Time Correction', rt]);
+  if(am.length) cats.push(['Aeromal Correction', am]);
+  if(mape.length) cats.push(['MAPE', mape]);
+  if(daySkip.length) cats.push(['Day Skip', daySkip]);
+  if(enc.length) cats.push(['EN Combination Change', enc]);
+  if(pref.length) cats.push(['Preference Change', pref]);
+  if(remarks.length) cats.push(['Remarks (PSS Name)', remarks]);
+
+  // Anything with a remark but no structured "work" data at all (older
+  // entries logged before this categorized format existed) still needs to
+  // show up somewhere, so it isn't silently dropped from the report.
+  const uncategorized = workItems.filter(item=>!item.work).map(item=>item.name + ': ' + item.remark);
+
+  if(!cats.length && !uncategorized.length) return [];
+
+  const lines = [];
+  const letters = 'ABCDEFGHIJ';
+  cats.forEach(([label, entries], catIdx)=>{
+    lines.push(letters[catIdx] + ') ' + label);
+    entries.forEach((entry, i)=>{
+      lines.push('   ' + romanAt(i) + ') ' + entry);
+    });
+    lines.push('');
+  });
+  if(uncategorized.length){
+    lines.push(letters[cats.length] + ') Other logged work');
+    uncategorized.forEach((entry, i)=>{
+      lines.push('   ' + romanAt(i) + ') ' + entry);
+    });
+    lines.push('');
+  }
+  return lines;
+}
+
+function buildEmployeeSummaryBlock(emp, dKeys){
+  const lines = [(emp.name || emp.id) + " (" + emp.id + ")", ""];
+  let anyContent = false;
+  dKeys.forEach(dKey=>{
+    const status = attendanceStatus(emp, dKey);
+    const prog = emp.progress && emp.progress[dKey];
+    const extraWorkText = (prog && prog.extraWork) ? String(prog.extraWork).trim() : '';
+    const extraWorkLines = extraWorkText ? extraWorkText.split('\n').map(s=>s.trim()).filter(Boolean) : [];
+
+    if(status === 'absent' && !prog){
+      lines.push("Date - " + dKey);
+      lines.push("Absent");
+      if(extraWorkLines.length){
+        lines.push("");
+        lines.push("Extra Work");
+        extraWorkLines.forEach(t=>lines.push('   - ' + t));
+      }
+      lines.push("");
+      anyContent = true;
+      return;
+    }
+    if(!prog) return; // no activity, no extra work, and not marked absent -- skip the date entirely
+    const hasWorkItems = !!(prog.workItems && prog.workItems.length);
+    const daySection = hasWorkItems ? buildDayWorkSection(prog.workItems) : [];
+    if(!daySection.length && !extraWorkLines.length) return; // nothing to report this day
+    anyContent = true;
+    lines.push("Date - " + dKey);
+    lines.push(...daySection);
+    if(extraWorkLines.length){
+      lines.push("Extra Work");
+      extraWorkLines.forEach(t=>lines.push('   - ' + t));
+      lines.push("");
+    }
+  });
+  if(!anyContent){
+    lines.push("No activity or attendance record in this range.");
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+
+function downloadAllSummaries(){
+  const dKeys = dateRangeKeys(summaryFromDate.value, summaryToDate.value);
+  if(!dKeys.length){
+    showToast('Pick a valid From/To date range first.');
+    return;
+  }
+  if(!employees.length){
+    showToast('No employees yet.');
+    return;
+  }
+  const header = "Employee Work Summaries: " + dKeys[0] + (dKeys.length>1 ? " to " + dKeys[dKeys.length-1] : "") + "\n" + "=".repeat(40) + "\n\n";
+  const body = employees.slice()
+    .sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id))
+    .map(emp => buildEmployeeSummaryBlock(emp, dKeys))
+    .join("-".repeat(40) + "\n\n");
+  downloadFile("Employee_Work_Summaries_" + dKeys[0] + "_to_" + dKeys[dKeys.length-1] + ".txt", header + body, "text/plain");
+}
+
+document.getElementById('downloadAllBtn').addEventListener('click', downloadAllSummaries);
+
+
+async function deleteEmployee(empId, empName){
+  const proceed = await showConfirm(
+    'Delete ' + (empName || empId) + '?',
+    'This removes their login immediately — they will no longer be able to sign in. Their past check-in history is kept in the database but no longer shown here.'
+  );
+  if(!proceed) return;
+  try{
+    await db.collection('employees').doc(empId).delete();
+    showToast('Employee removed.');
+  }catch(e){
+    console.error('deleteEmployee failed', e);
+    showToast('Could not remove employee.');
+  }
+}
+
+let editingEmpId = null;
+
+function startEditEmployee(emp){
+  editingEmpId = emp.id;
+  document.getElementById('newEmpName').value = emp.name || '';
+  document.getElementById('newEmpId').value = emp.id;
+  document.getElementById('newEmpPin').value = emp.pin || '';
+  document.getElementById('addEmpBtn').textContent = 'Save Changes';
+  document.getElementById('cancelEmpEditBtn').style.display = 'inline-block';
+  document.getElementById('newEmpName').scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+function cancelEditEmployee(){
+  editingEmpId = null;
+  document.getElementById('newEmpName').value = '';
+  document.getElementById('newEmpId').value = '';
+  document.getElementById('newEmpPin').value = '';
+  document.getElementById('addEmpBtn').textContent = 'Add Employee';
+  document.getElementById('cancelEmpEditBtn').style.display = 'none';
+}
+document.getElementById('cancelEmpEditBtn').addEventListener('click', cancelEditEmployee);
+
+document.getElementById('addEmpBtn').addEventListener('click', async ()=>{
+  const nameInput = document.getElementById('newEmpName');
+  const idInput = document.getElementById('newEmpId');
+  const pinInput = document.getElementById('newEmpPin');
+  const name = nameInput.value.trim();
+  const id = idInput.value.trim().toLowerCase();
+  const pin = pinInput.value.trim();
+
+  if(!name || !id || !pin){
+    showToast('Name, ID, and PIN are all required.');
+    return;
+  }
+  if(id === 'admin'){
+    showToast('"admin" is reserved — choose a different ID.');
+    return;
+  }
+
+  if(editingEmpId){
+    try{
+      if(id === editingEmpId){
+        // Same login ID: just update the fields in place.
+        await db.collection('employees').doc(id).set({ name, pin }, { merge: true });
+      } else {
+        // ID changed: Firestore doc IDs can't be renamed, so copy the existing
+        // record (including progress/absences/etc.) to the new ID, update the
+        // editable fields, then remove the old doc. State/main subcollection
+        // (ticks, saturdayOffMode) moves over too so nothing is lost.
+        const existingNewId = await db.collection('employees').doc(id).get();
+        if(existingNewId.exists){
+          showToast('That ID is already in use.');
+          return;
+        }
+        const oldDoc = await db.collection('employees').doc(editingEmpId).get();
+        const oldData = oldDoc.exists ? oldDoc.data() : {};
+        await db.collection('employees').doc(id).set({ ...oldData, name, pin });
+        const oldStateDoc = await db.collection('employees').doc(editingEmpId).collection('state').doc('main').get();
+        if(oldStateDoc.exists){
+          await db.collection('employees').doc(id).collection('state').doc('main').set(oldStateDoc.data());
+        }
+        await db.collection('employees').doc(editingEmpId).delete();
+      }
+      showToast('Employee updated.');
+      cancelEditEmployee();
+    }catch(e){
+      console.error('updateEmployee failed', e);
+      showToast('Could not update employee.');
+    }
+    return;
+  }
+
+  try{
+    const existing = await db.collection('employees').doc(id).get();
+    if(existing.exists){
+      showToast('That ID is already in use.');
+      return;
+    }
+    await db.collection('employees').doc(id).set({ name, pin, active: true });
+    nameInput.value = ''; idInput.value = ''; pinInput.value = '';
+    showToast('Employee added.');
+  }catch(e){
+    console.error('addEmployee failed', e);
+    showToast('Could not add employee.');
+  }
+});
+
+// ================= Shared PSS sheet + Manage PSS =================
+const ALT_GROUPS = [["Mon","Wed","Fri"], ["Tue","Thu","Sat"]];
+const TWICE_PAIRS = [["Mon","Thu"], ["Tue","Fri"], ["Wed","Sat"]];
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat"];
+
+function buildScheduleFromSites(sites){
+  const sched = {}; DAYS.forEach(d=>{ sched[d] = []; });
+  const everyday = sites.filter(s=>s.freq === 'E');
+  const alt = sites.filter(s=>s.freq === 'Alt');
+  const twice = sites.filter(s=>s.freq !== 'E' && s.freq !== 'Alt');
+  everyday.forEach(s=>{ DAYS.forEach(d=>sched[d].push(s.id)); });
+  alt.forEach((s,i)=>{ ALT_GROUPS[i % 2].forEach(d=>sched[d].push(s.id)); });
+  twice.forEach((s,i)=>{ TWICE_PAIRS[i % 3].forEach(d=>sched[d].push(s.id)); });
+  return sched;
+}
+
+let SITES = [];
+let sheetInfo = { sourceName: null, uploadedAt: null };
+let blockedNames = new Set();
+let manageSearchTerm = "";
+let editingSiteId = null;
+
+const SHEET_DOC = db.collection('sheet').doc('current');
+
+SHEET_DOC.onSnapshot(doc=>{
+  if(doc.exists){
+    const d = doc.data();
+    SITES = Array.isArray(d.sites) ? d.sites : [];
+    sheetInfo = { sourceName: d.sourceName || null, uploadedAt: d.uploadedAt || null };
+    blockedNames = new Set(Array.isArray(d.blocked) ? d.blocked : []);
+  } else {
+    SITES = [];
+    sheetInfo = { sourceName: null, uploadedAt: null };
+    blockedNames = new Set();
+  }
+  updateSheetInfoLbl();
+  renderManageList();
+  populateManageAssignFilter();
+  sheetLoadedOnceForOverlay = true;
+  maybeHideLoadingOverlay();
+  if(SITES.length && employees.length){
+    const before = JSON.stringify(SITES.map(s=>[s.assignedToId||null, s.secondaryToId||null]));
+    matchAssignments(SITES, employees);
+    const after = JSON.stringify(SITES.map(s=>[s.assignedToId||null, s.secondaryToId||null]));
+    if(before !== after) saveSheetDoc();
+  }
+}, err=>{
+  console.error('sheet listener failed', err);
+  sheetLoadedOnceForOverlay = true;
+  maybeHideLoadingOverlay();
+});
+
+async function saveSheetDoc(extra){
+  await SHEET_DOC.set(Object.assign({
+    sites: SITES,
+    sourceName: sheetInfo.sourceName,
+    uploadedAt: sheetInfo.uploadedAt,
+    blocked: [...blockedNames]
+  }, extra || {}), { merge: false });
+}
+
+function updateSheetInfoLbl(){
+  const lbl = document.getElementById('sheetInfoLbl');
+  if(sheetInfo.sourceName){
+    const when = sheetInfo.uploadedAt ? new Date(sheetInfo.uploadedAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '';
+    lbl.textContent = SITES.length + ' PSS \u2014 from ' + sheetInfo.sourceName + (when ? ' (uploaded ' + when + ')' : '');
+  } else if(SITES.length){
+    lbl.textContent = SITES.length + ' PSS (added manually).';
+  } else {
+    lbl.textContent = 'No sheet loaded.';
+  }
+}
+
+function priorityRank(p){ return ['Highest','Higher','High','Normal'].indexOf(p); }
+
+function normalizeFreq(raw){
+  const v = String(raw || '').trim().toLowerCase();
+  if(v.startsWith('every') || v === 'e' || v === 'daily') return 'E';
+  if(v.startsWith('alt')) return 'Alt';
+  return 'Twice in week';
+}
+
+function parseSheetRows(rows){
+  let headerRowIdx = -1;
+  for(let i=0; i<Math.min(rows.length, 15); i++){
+    const r = rows[i] || [];
+    if(r.some(c=>{
+      const v = String(c).trim().toLowerCase();
+      return v.includes('pss name') || v === 'pss';
+    })){
+      headerRowIdx = i;
+      break;
+    }
+  }
+  if(headerRowIdx === -1) return null;
+
+  const header = rows[headerRowIdx].map(c=>String(c).trim().toLowerCase());
+  const nameCol = header.findIndex(h=>h.includes('pss name') || h === 'name' || h === 'pss');
+  const freqCol = header.findIndex(h=>h.includes('frequency') || h.includes('check status'));
+  const stateCol = header.findIndex(h=>h.includes('state'));
+  const prioCol = header.findIndex(h=>h.includes('priority'));
+  const empCol = header.findIndex(h=>h.includes('employee') || h.includes('assigned') || h.includes('engineer') || h.includes('assignee') || h.includes('poc 1') || h.includes('poc1') || h === 'poc');
+  const secCol = header.findIndex(h=>h.includes('secondary') || h.includes('backup') || h.includes('poc 2') || h.includes('poc2'));
+  if(nameCol === -1) return null;
+
+  const usedIds = new Set();
+  const sites = [];
+  for(let i=headerRowIdx+1; i<rows.length; i++){
+    const r = rows[i] || [];
+    const name = String(r[nameCol] || '').trim();
+    if(!name) continue;
+    const freq = normalizeFreq(freqCol !== -1 ? r[freqCol] : '');
+    const stateVal = stateCol !== -1 ? String(r[stateCol] || '').trim() : '';
+    const priority = prioCol !== -1 ? (String(r[prioCol] || '').trim() || 'Normal') : 'Normal';
+    const assignedTo = empCol !== -1 ? String(r[empCol] || '').trim() : '';
+    const secondaryTo = secCol !== -1 ? String(r[secCol] || '').trim() : '';
+
+    let id = name, n = 2;
+    while(usedIds.has(id)){ id = name + ' (' + n + ')'; n++; }
+    usedIds.add(id);
+
+    sites.push({ id, name, freq, state: stateVal, priority, assignedTo, secondaryTo });
+  }
+  return sites.length ? sites : null;
+}
+
+// Matches each PSS's "assigned to" (POC 1) and "secondary" (POC 2) text
+// against known employees by name (case-insensitive, trimmed).
+// Returns { matchedCount, unmatchedNames }.
+function matchAssignments(sites, employeeList){
+  const byNameLower = new Map();
+  employeeList.forEach(emp=>{
+    byNameLower.set((emp.name || emp.id).trim().toLowerCase(), emp.id);
+  });
+  let matchedCount = 0;
+  const unmatchedNames = new Set();
+  sites.forEach(site=>{
+    if(site.assignedTo){
+      const key = site.assignedTo.trim().toLowerCase();
+      const empId = byNameLower.get(key);
+      if(empId){
+        site.assignedToId = empId;
+        matchedCount++;
+      } else {
+        unmatchedNames.add(site.assignedTo.trim());
+      }
+    }
+    if(site.secondaryTo){
+      const key2 = site.secondaryTo.trim().toLowerCase();
+      const empId2 = byNameLower.get(key2);
+      if(empId2){
+        site.secondaryToId = empId2;
+      } else {
+        unmatchedNames.add(site.secondaryTo.trim());
+      }
+    }
+  });
+  return { matchedCount, unmatchedNames: [...unmatchedNames] };
+}
+
+async function handleSheetFile(file){
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    let parsed = null;
+    for(const sn of wb.SheetNames){
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: false, defval: '' });
+      parsed = parseSheetRows(rows);
+      if(parsed) break;
+    }
+    if(!parsed){
+      showToast('Could not find a "PSS Name" column in that file.');
+      return;
+    }
+    const { matchedCount, unmatchedNames } = matchAssignments(parsed, employees);
+    SITES = parsed;
+    sheetInfo = { sourceName: file.name, uploadedAt: new Date().toISOString() };
+    blockedNames = new Set();
+    await saveSheetDoc();
+    const hasAssignCol = parsed.some(s=>s.assignedTo || s.secondaryTo);
+    if(hasAssignCol){
+      let msg = 'Sheet uploaded \u2014 ' + matchedCount + ' PSS matched to employees.';
+      if(unmatchedNames.length){
+        msg += ' Not matched: ' + unmatchedNames.join(', ') + '.';
+      }
+      showToast(msg, unmatchedNames.length ? 7000 : 2200);
+    } else {
+      showToast('Sheet uploaded \u2014 live for every employee.');
+    }
+  }catch(e){
+    console.error('sheet parse failed', e);
+    showToast('Could not read that file. Please upload a valid .xlsx, .xls, or .csv sheet.');
+  }
+}
+
+document.getElementById('uploadSheetBtn').addEventListener('click', ()=>{
+  document.getElementById('sheetFileInput').click();
+});
+document.getElementById('sheetFileInput').addEventListener('change', (e)=>{
+  const file = e.target.files && e.target.files[0];
+  if(file) handleSheetFile(file);
+  e.target.value = '';
+});
+document.getElementById('clearSheetBtn').addEventListener('click', async ()=>{
+  const proceed = await showConfirm('Remove all PSS?', 'This clears the shared checklist for every employee. Their check-off history stays saved by date.');
+  if(!proceed) return;
+  SITES = [];
+  sheetInfo = { sourceName: null, uploadedAt: null };
+  blockedNames = new Set();
+  await saveSheetDoc();
+  showToast('All PSS cleared.');
+});
+
+function nextCustomId(existingSites){
+  return 'c' + Date.now() + '-' + Math.floor(Math.random()*1000);
+}
+
+function populateNewPssAssignSelect(){
+  const sel = document.getElementById('newPssAssign');
+  const secSel = document.getElementById('newPssSecondary');
+  if(!sel || !secSel) return;
+  const prevValue = sel.value;
+  const prevSecValue = secSel.value;
+  sel.innerHTML = '<option value="">Primary (optional)</option>';
+  secSel.innerHTML = '<option value="">Secondary (optional)</option>';
+  employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
+    const opt = document.createElement('option');
+    opt.value = emp.id;
+    opt.textContent = emp.name || emp.id;
+    sel.appendChild(opt);
+    const opt2 = opt.cloneNode(true);
+    secSel.appendChild(opt2);
+  });
+  if([...sel.options].some(o=>o.value === prevValue)) sel.value = prevValue;
+  if([...secSel.options].some(o=>o.value === prevSecValue)) secSel.value = prevSecValue;
+}
+
+document.getElementById('addPssBtn').addEventListener('click', async ()=>{
+  const nameInput = document.getElementById('newPssName');
+  const stateInput = document.getElementById('newPssState');
+  const freqSel = document.getElementById('newPssFreq');
+  const prioSel = document.getElementById('newPssPriority');
+  const assignSel = document.getElementById('newPssAssign');
+  const secSel = document.getElementById('newPssSecondary');
+  const name = nameInput.value.trim();
+  if(!name){ nameInput.focus(); return; }
+
+  const assignedToId = assignSel.value;
+  const assignedEmp = employees.find(e=>e.id === assignedToId);
+  const secondaryToId = secSel.value;
+  const secondaryEmp = employees.find(e=>e.id === secondaryToId);
+
+  SITES = [...SITES, {
+    id: nextCustomId(),
+    name,
+    state: stateInput.value.trim() || '\u2014',
+    freq: freqSel.value,
+    priority: prioSel.value,
+    assignedToId: assignedToId || '',
+    assignedTo: assignedEmp ? (assignedEmp.name || assignedEmp.id) : '',
+    secondaryToId: secondaryToId || '',
+    secondaryTo: secondaryEmp ? (secondaryEmp.name || secondaryEmp.id) : ''
+  }];
+  await saveSheetDoc();
+  nameInput.value = ''; stateInput.value = ''; assignSel.value = ''; secSel.value = '';
+  showToast('PSS added.');
+});
+
+async function toggleBlock(name){
+  if(blockedNames.has(name)) blockedNames.delete(name);
+  else blockedNames.add(name);
+  await saveSheetDoc();
+}
+
+async function deletePss(id){
+  SITES = SITES.filter(s=>s.id !== id);
+  await saveSheetDoc();
+  showToast('PSS deleted.');
+}
+
+function editPssSite(id){ editingSiteId = id; renderManageList(); }
+function cancelPssEdit(){ editingSiteId = null; renderManageList(); }
+
+async function savePssEdit(id, newFreq, newPriority, newState, newAssignedToId, newSecondaryToId){
+  const empMatch = employees.find(e=>e.id === newAssignedToId);
+  const secMatch = employees.find(e=>e.id === newSecondaryToId);
+  SITES = SITES.map(s => s.id === id ? {
+    ...s, freq: newFreq, priority: newPriority, state: newState,
+    assignedToId: newAssignedToId || '',
+    assignedTo: empMatch ? (empMatch.name || empMatch.id) : '',
+    secondaryToId: newSecondaryToId || '',
+    secondaryTo: secMatch ? (secMatch.name || secMatch.id) : ''
+  } : s);
+  editingSiteId = null;
+  await saveSheetDoc();
+  showToast('PSS updated.');
+}
+
+function priorityClass(p){
+  if(!p) return '';
+  const low = p.toLowerCase();
+  if(low.startsWith('highest') || low.startsWith('higher')) return 'prio-highest';
+  if(low.startsWith('high')) return 'prio-high';
+  return '';
+}
+
+let manageAssignFilterVal = "";
+
+function populateManageAssignFilter(){
+  const sel = document.getElementById('manageAssignFilter');
+  if(!sel) return;
+  const prevValue = sel.value;
+  const unassignedCount = SITES.filter(s=>!s.assignedTo).length;
+  const unmatchedCount = SITES.filter(s=>s.assignedTo && !employees.some(e=>e.id === s.assignedToId)).length;
+  sel.innerHTML =
+    '<option value="">All employees (' + SITES.length + ')</option>' +
+    '<option value="__unassigned__">Unassigned (' + unassignedCount + ')</option>' +
+    '<option value="__unmatched__">Unmatched names (' + unmatchedCount + ')</option>';
+  employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
+    const count = SITES.filter(s=>s.assignedToId === emp.id).length;
+    const opt = document.createElement('option');
+    opt.value = emp.id;
+    opt.textContent = (emp.name || emp.id) + ' (' + count + ')';
+    sel.appendChild(opt);
+  });
+  if([...sel.options].some(o=>o.value === prevValue)) sel.value = prevValue;
+}
+
+function renderManageList(){
+  const list = document.getElementById('manageList');
+  const term = manageSearchTerm.trim().toLowerCase();
+  const sites = SITES.filter(s=>{
+    if(term && !s.name.toLowerCase().includes(term)) return false;
+    if(manageAssignFilterVal === '__unassigned__') return !s.assignedTo;
+    if(manageAssignFilterVal === '__unmatched__') return !!s.assignedTo && !employees.some(e=>e.id === s.assignedToId);
+    if(manageAssignFilterVal) return s.assignedToId === manageAssignFilterVal;
+    return true;
+  });
+  list.innerHTML = '';
+  if(!sites.length){
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = SITES.length ? 'No PSS matches that search/filter.' : 'No PSS yet — upload a sheet or add one above.';
+    list.appendChild(empty);
+    return;
+  }
+  sites.forEach(site=>{
+    const isBlocked = blockedNames.has(site.name);
+    const row = document.createElement('div');
+
+    if(editingSiteId === site.id){
+      row.className = 'manage-row';
+      row.innerHTML = '<div class="m-name">'+escapeHtml(site.name)+'</div>';
+      const stateInput = document.createElement('input');
+      stateInput.type = 'text'; stateInput.value = site.state || ''; stateInput.style.width = '70px';
+      stateInput.className = 'manage-edit-select';
+      const freqSel = document.createElement('select');
+      freqSel.className = 'manage-edit-select';
+      ['E','Alt','Twice in week'].forEach(f=>{
+        const opt = document.createElement('option');
+        opt.value = f; opt.textContent = f === 'E' ? 'Everyday' : f;
+        if(site.freq === f) opt.selected = true;
+        freqSel.appendChild(opt);
+      });
+      const prioSel = document.createElement('select');
+      prioSel.className = 'manage-edit-select';
+      ['Normal','High','Higher','Highest'].forEach(p=>{
+        const opt = document.createElement('option');
+        opt.value = p; opt.textContent = p;
+        if(site.priority === p) opt.selected = true;
+        prioSel.appendChild(opt);
+      });
+      const assignSel = document.createElement('select');
+      assignSel.className = 'manage-edit-select';
+      const noneOpt = document.createElement('option');
+      noneOpt.value = ''; noneOpt.textContent = 'Unassigned';
+      if(!site.assignedToId) noneOpt.selected = true;
+      assignSel.appendChild(noneOpt);
+      employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
+        const opt = document.createElement('option');
+        opt.value = emp.id; opt.textContent = emp.name || emp.id;
+        if(site.assignedToId === emp.id) opt.selected = true;
+        assignSel.appendChild(opt);
+      });
+      const secSel = document.createElement('select');
+      secSel.className = 'manage-edit-select';
+      const noneSecOpt = document.createElement('option');
+      noneSecOpt.value = ''; noneSecOpt.textContent = 'No secondary';
+      if(!site.secondaryToId) noneSecOpt.selected = true;
+      secSel.appendChild(noneSecOpt);
+      employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
+        const opt = document.createElement('option');
+        opt.value = emp.id; opt.textContent = emp.name || emp.id;
+        if(site.secondaryToId === emp.id) opt.selected = true;
+        secSel.appendChild(opt);
+      });
+      row.appendChild(stateInput);
+      row.appendChild(freqSel);
+      row.appendChild(prioSel);
+      row.appendChild(assignSel);
+      row.appendChild(secSel);
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'm-btn'; saveBtn.textContent = 'Save';
+      saveBtn.onclick = ()=> savePssEdit(site.id, freqSel.value, prioSel.value, stateInput.value.trim(), assignSel.value, secSel.value);
+      row.appendChild(saveBtn);
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'm-btn'; cancelBtn.textContent = 'Cancel';
+      cancelBtn.onclick = cancelPssEdit;
+      row.appendChild(cancelBtn);
+      list.appendChild(row);
+      return;
+    }
+
+    const assignedEmp = employees.find(e=>e.id === site.assignedToId);
+    const isUnmatched = !assignedEmp && !!site.assignedTo;
+    const assignLabel = assignedEmp ? (assignedEmp.name || assignedEmp.id) : (site.assignedTo ? site.assignedTo + ' (unmatched)' : 'Unassigned');
+    const assignLabelHtml = isUnmatched
+      ? '<span class="assign-unmatched">'+escapeHtml(assignLabel)+'</span>'
+      : escapeHtml(assignLabel);
+    const secondaryEmp = employees.find(e=>e.id === site.secondaryToId);
+    const isSecUnmatched = !secondaryEmp && !!site.secondaryTo;
+    const secLabel = secondaryEmp ? (secondaryEmp.name || secondaryEmp.id) : (site.secondaryTo ? site.secondaryTo + ' (unmatched)' : '');
+    const secLabelHtml = secLabel
+      ? ' &middot; Sec: ' + (isSecUnmatched ? '<span class="assign-unmatched">'+escapeHtml(secLabel)+'</span>' : escapeHtml(secLabel))
+      : '';
+    row.className = 'manage-row' + (isBlocked ? ' blocked' : '');
+    row.innerHTML =
+      '<div class="m-name">'+escapeHtml(site.name)+'</div>' +
+      '<div class="m-meta">'+escapeHtml(site.state||'')+' &middot; '+escapeHtml(site.freq)+' &middot; '+escapeHtml(site.priority)+' &middot; '+assignLabelHtml+secLabelHtml+'</div>';
+    const editBtn = document.createElement('button');
+    editBtn.className = 'm-btn'; editBtn.textContent = 'Edit';
+    editBtn.onclick = ()=> editPssSite(site.id);
+    row.appendChild(editBtn);
+    const blockBtn = document.createElement('button');
+    blockBtn.className = 'm-btn' + (isBlocked ? ' is-blocked' : '');
+    blockBtn.textContent = isBlocked ? 'Unblock' : 'Block';
+    blockBtn.onclick = ()=> toggleBlock(site.name);
+    row.appendChild(blockBtn);
+    const delBtn = document.createElement('button');
+    delBtn.className = 'm-btn danger'; delBtn.textContent = 'Delete';
+    delBtn.onclick = ()=> deletePss(site.id);
+    row.appendChild(delBtn);
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('manageSearchBox').addEventListener('input', (e)=>{
+  manageSearchTerm = e.target.value;
+  renderManageList();
+});
+document.getElementById('manageAssignFilter').addEventListener('change', (e)=>{
+  manageAssignFilterVal = e.target.value;
+  renderManageList();
+});
+</script>
+</body>
+</html>
