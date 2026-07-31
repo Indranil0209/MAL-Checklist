@@ -1,251 +1,945 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Checklist || Auth</title>
-<style>
-  :root{
-    --bg: #12181f;
-    --panel: #1a222b;
-    --card: #202b36;
-    --line: #2c3a47;
-    --amber: #f5a623;
-    --amber-dim: #8a651f;
-    --teal: #3fb8a8;
-    --red: #e5566d;
-    --red-dim: #7a3140;
-    --text: #e8ecef;
-    --text-dim: #93a1ac;
-    --text-faint: #5c6b78;
-    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    --mono: 'Consolas', 'SF Mono', monospace;
-  }
-  *{ box-sizing:border-box; }
-  body{
-    margin:0; min-height:100vh; background:var(--bg); color:var(--text); font-family:var(--font);
-    display:flex; align-items:center; justify-content:center; padding:20px;
-  }
-  .card{
-    width:100%; max-width:360px; background:var(--panel); border:1px solid var(--line);
-    border-radius:14px; padding:28px 26px; box-shadow:0 16px 48px rgba(0,0,0,.35);
-  }
-  .card h1{ margin:0 0 4px; font-size:17px; font-weight:600; }
-  .card p.sub{ margin:0 0 22px; font-size:11.5px; color:var(--text-dim); line-height:1.5; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checklist // Secure Access</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-  label{ display:block; font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px; }
-  input[type=text], input[type=password]{
-    width:100%; background:var(--card); border:1px solid var(--line); color:var(--text);
-    font-size:13px; padding:10px 11px; border-radius:7px; font-family:var(--font); margin-bottom:14px;
-    color-scheme: dark;
-  }
-  input[type=text]:focus, input[type=password]:focus{ outline:none; border-color:var(--teal); }
+  <style>
+    :root {
+      --bg: #05040a;
+      --bg-elevated: #0a0914;
+      --panel: rgba(14, 12, 30, .92);
+      --panel-hover: rgba(18, 16, 38, .95);
+      --pink: #ff6b9d;
+      --pink-glow: rgba(255, 107, 157, .4);
+      --yellow: #ffd166;
+      --yellow-glow: rgba(255, 209, 102, .3);
+      --green: #6ee7b7;
+      --green-glow: rgba(110, 231, 183, .35);
+      --cyan: #67e8f9;
+      --cyan-glow: rgba(103, 232, 249, .3);
+      --red: #f87171;
+      --red-glow: rgba(248, 113, 113, .3);
+      --text: #f0eefc;
+      --muted: #9ca3af;
+      --line: rgba(190, 164, 255, .18);
+      --line-strong: rgba(190, 164, 255, .35);
+      --glass: rgba(255, 255, 255, .03);
+      --glass-border: rgba(255, 255, 255, .08);
+      --font: 'Inter', system-ui, -apple-system, sans-serif;
+      --mono: 'JetBrains Mono', 'Consolas', monospace;
+    }
 
-  #loginBtn{
-    width:100%; background:var(--teal); border:none; color:#0c1116; padding:11px 0;
-    border-radius:7px; font-weight:600; font-size:13px; cursor:pointer; font-family:var(--font);
-    display:flex; align-items:center; justify-content:center; gap:8px;
-  }
-  #loginBtn:hover{ opacity:.9; }
-  #loginBtn:disabled{ opacity:.6; cursor:default; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html{ scroll-behavior:smooth; }
+    button, select, input, a{ transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, opacity .18s ease, transform .15s cubic-bezier(.34,1.4,.64,1); }
+    button:active{ transform:scale(.97); }
 
-  .spinner{
-    width:14px; height:14px; border-radius:50%; border:2px solid rgba(12,17,22,.35);
-    border-top-color:#0c1116; animation:spin .7s linear infinite; display:none;
-  }
-  #loginBtn.loading .spinner{ display:inline-block; }
-  @keyframes spin{ to{ transform:rotate(360deg); } }
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: var(--text);
+      font-family: var(--font);
+      background: var(--bg);
+      position: relative;
+    }
 
-  .error-msg{
-    display:none; font-size:11.5px; color:var(--red); background:rgba(229,86,109,.1);
-    border:1px solid var(--red-dim); border-radius:7px; padding:8px 10px; margin-bottom:14px;
-  }
-  .error-msg.show{ display:block; }
+    /* Animated background mesh */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 40%, rgba(255, 107, 157, .15), transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 60%, rgba(103, 232, 249, .12), transparent 55%),
+        radial-gradient(ellipse 50% 50% at 50% 100%, rgba(110, 231, 183, .08), transparent 50%);
+      animation: bgShift 20s ease-in-out infinite;
+    }
 
-  .foot{ margin-top:16px; font-size:10px; color:var(--text-faint); text-align:center; line-height:1.5; }
-</style>
+    /* Grid overlay */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      opacity: .04;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 0%, transparent 70%);
+    }
+
+    /* Floating particles */
+    .particles {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--pink);
+      box-shadow: 0 0 12px 2px var(--pink-glow);
+      opacity: 0;
+      animation: particleFloat 12s ease-in-out infinite;
+    }
+    .particle:nth-child(1) { left: 10%; top: 20%; animation-delay: 0s; background: var(--pink); }
+    .particle:nth-child(2) { left: 80%; top: 15%; animation-delay: 2s; background: var(--cyan); box-shadow: 0 0 12px 2px var(--cyan-glow); }
+    .particle:nth-child(3) { left: 30%; top: 70%; animation-delay: 4s; background: var(--green); box-shadow: 0 0 12px 2px var(--green-glow); }
+    .particle:nth-child(4) { left: 70%; top: 60%; animation-delay: 1s; background: var(--yellow); box-shadow: 0 0 12px 2px var(--yellow-glow); }
+    .particle:nth-child(5) { left: 50%; top: 30%; animation-delay: 3s; background: var(--cyan); }
+    .particle:nth-child(6) { left: 15%; top: 80%; animation-delay: 5s; background: var(--pink); }
+
+    button, input, a { cursor: pointer; font-family: var(--font); }
+
+    .page {
+      position: relative;
+      z-index: 10;
+      width: min(92%, 920px);
+      min-height: 520px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+      background: var(--panel);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      box-shadow:
+        0 0 60px rgba(255, 107, 157, .1),
+        0 30px 80px rgba(0, 0, 0, .5),
+        inset 0 1px 0 rgba(255, 255, 255, .06);
+      backdrop-filter: blur(24px) saturate(1.2);
+      -webkit-backdrop-filter: blur(24px) saturate(1.2);
+      animation: enter .9s cubic-bezier(.16, 1, .3, 1) both;
+    }
+
+    /* Corner accents */
+    .page::before, .page::after {
+      content: "";
+      position: absolute;
+      z-index: 20;
+      width: 80px;
+      height: 14px;
+      pointer-events: none;
+    }
+    .page::before {
+      top: 16px; left: 16px;
+      border-top: 2px solid var(--pink);
+      border-left: 2px solid var(--pink);
+      border-radius: 4px 0 0 0;
+      opacity: .7;
+    }
+    .page::after {
+      right: 16px; bottom: 16px;
+      border-right: 2px solid var(--cyan);
+      border-bottom: 2px solid var(--cyan);
+      border-radius: 0 0 4px 0;
+      opacity: .7;
+    }
+
+    /* Top gradient line */
+    .top-line {
+      position: absolute;
+      top: 0; left: 10%; right: 10%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--pink), var(--cyan), var(--green), transparent);
+      opacity: .6;
+      z-index: 20;
+    }
+
+    .visual {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-right: 1px solid var(--glass-border);
+      background:
+        radial-gradient(circle at 50% 45%, rgba(255, 107, 157, .12), transparent 18rem),
+        radial-gradient(circle at 30% 70%, rgba(103, 232, 249, .08), transparent 15rem),
+        linear-gradient(160deg, rgba(14, 12, 30, .98), rgba(8, 7, 20, .98));
+    }
+
+    /* Orbital rings */
+    .orbit-ring {
+      position: absolute;
+      border: 1px solid rgba(255, 107, 157, .12);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .orbit-ring-1 { width: 320px; height: 320px; animation: orbitSpin 20s linear infinite; }
+    .orbit-ring-2 { width: 240px; height: 240px; animation: orbitSpin 15s linear infinite reverse; border-color: rgba(103, 232, 249, .1); }
+    .orbit-ring-3 { width: 180px; height: 180px; animation: orbitSpin 10s linear infinite; border-color: rgba(110, 231, 183, .08); }
+
+    /* Orbiting dots on rings */
+    .orbit-dot {
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--pink);
+      box-shadow: 0 0 14px 3px var(--pink-glow);
+    }
+    .orbit-ring-1 .orbit-dot { top: -4px; left: 50%; transform: translateX(-50%); }
+    .orbit-ring-2 .orbit-dot { bottom: -4px; left: 50%; transform: translateX(-50%); background: var(--cyan); box-shadow: 0 0 14px 3px var(--cyan-glow); }
+    .orbit-ring-3 .orbit-dot { right: -4px; top: 50%; transform: translateY(-50%); background: var(--green); box-shadow: 0 0 14px 3px var(--green-glow); }
+
+    .mascot {
+      position: relative;
+      z-index: 5;
+      width: 190px;
+      height: 240px;
+      animation: float 5s ease-in-out infinite;
+    }
+
+    .mascot-glow {
+      position: absolute;
+      top: 46%; left: 50%;
+      width: 220px; height: 220px;
+      background: radial-gradient(circle, rgba(255, 107, 157, .25), transparent 65%);
+      transform: translate(-50%, -50%);
+      filter: blur(8px);
+      pointer-events: none;
+      animation: glowPulse 4s ease-in-out infinite;
+    }
+
+    .antenna {
+      position: absolute;
+      top: -28px; left: 50%;
+      width: 3px; height: 28px;
+      background: linear-gradient(180deg, var(--green), transparent);
+      transform: translateX(-50%);
+    }
+    .antenna-bulb {
+      position: absolute;
+      top: -7px; left: 50%;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 16px 5px var(--green-glow), 0 0 30px 8px rgba(110,231,183,.15);
+      transform: translateX(-50%);
+      animation: blinkCentered 2.4s ease-in-out infinite;
+    }
+
+    .mascot-head {
+      position: relative;
+      z-index: 2;
+      width: 132px; height: 100px;
+      margin: 0 auto;
+      background: linear-gradient(165deg, #2d2658, #1a1538);
+      border: 2.5px solid rgba(255, 255, 255, .75);
+      border-radius: 28px;
+      box-shadow:
+        0 12px 30px rgba(0, 0, 0, .5),
+        0 0 28px rgba(255, 107, 157, .2),
+        inset 0 1px 0 rgba(255,255,255,.1);
+    }
+
+    .mascot-visor {
+      position: absolute;
+      top: 32px; left: 50%;
+      display: flex;
+      gap: 18px;
+      width: 92px; height: 32px;
+      padding: 0 12px;
+      background: #070514;
+      border-radius: 16px;
+      transform: translateX(-50%);
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,.6);
+    }
+
+    .eye {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--pink);
+      box-shadow: 0 0 12px 4px var(--pink-glow);
+      animation: blink 3s ease-in-out infinite;
+    }
+    .eye-r { animation-delay: .15s; background: var(--cyan); box-shadow: 0 0 12px 4px var(--cyan-glow); }
+
+    .mascot-body {
+      position: relative;
+      z-index: 1;
+      width: 112px; height: 96px;
+      margin: -16px auto 0;
+      background: linear-gradient(165deg, #252050, #141030);
+      border: 2.5px solid rgba(255, 255, 255, .6);
+      border-radius: 24px;
+      box-shadow: 0 16px 32px rgba(0, 0, 0, .45);
+    }
+
+    .chest-dot {
+      position: absolute;
+      top: 18px; left: 50%;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--yellow);
+      box-shadow: 0 0 18px 5px var(--yellow-glow), 0 0 40px 10px rgba(255,209,102,.1);
+      transform: translateX(-50%);
+      animation: cardPulse 2.4s ease-in-out infinite;
+    }
+
+    .panel-line {
+      position: absolute;
+      left: 50%;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, .15);
+      transform: translateX(-50%);
+    }
+    .panel-line { top: 48px; width: 64px; }
+    .panel-line.short { top: 62px; width: 42px; }
+
+    .mascot-arm {
+      position: absolute;
+      top: 132px;
+      width: 16px; height: 50px;
+      background: linear-gradient(180deg, #2d2658, #1a1538);
+      border: 2.5px solid rgba(255, 255, 255, .6);
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,.3);
+    }
+    .arm-l { left: 22px; transform-origin: top center; animation: idleRock 3s ease-in-out infinite; }
+    .arm-r { right: 22px; transform-origin: top center; animation: wave 2s ease-in-out infinite; }
+
+    .hi-bubble {
+      position: absolute;
+      top: 88px; right: -10px;
+      padding: 6px 14px;
+      background: linear-gradient(135deg, #fdfaf1, #fff8e7);
+      color: #1a1538;
+      font-family: var(--font);
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: .02em;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.3), 0 0 20px rgba(255,209,102,.3);
+      animation: bubbleBob 2s ease-in-out infinite;
+      transform-origin: bottom left;
+    }
+    .hi-bubble::after {
+      content: "";
+      position: absolute;
+      bottom: -7px; left: 16px;
+      width: 12px; height: 12px;
+      background: #fdfaf1;
+      clip-path: polygon(0 0, 100% 0, 0 100%);
+    }
+
+    .spark {
+      position: absolute;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .spark.one { top: 16px; left: 170px; background: var(--yellow); box-shadow: 0 0 16px 4px var(--yellow-glow); animation: sparkle 2.2s ease-in-out infinite; }
+    .spark.two { top: 160px; right: 22px; background: var(--cyan); box-shadow: 0 0 16px 4px var(--cyan-glow); animation: sparkle 2.8s ease-in-out infinite .6s; }
+    .spark.three { bottom: 44px; left: 48px; background: var(--pink); box-shadow: 0 0 16px 4px var(--pink-glow); animation: sparkle 2.5s ease-in-out infinite 1.2s; }
+
+    .visual-label {
+      position: absolute;
+      bottom: 28px; left: 32px;
+      z-index: 10;
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      font-family: var(--mono);
+    }
+    .visual-label span { color: var(--green); text-shadow: 0 0 10px var(--green-glow); animation: pulseDot 2s ease-in-out infinite; }
+
+    .login {
+      display: flex;
+      align-items: center;
+      padding: 52px clamp(30px, 5vw, 58px);
+      position: relative;
+    }
+
+    .login-content {
+      width: 100%;
+      max-width: 340px;
+      margin: auto;
+      animation: slideUp .8s cubic-bezier(.16, 1, .3, 1) .3s both;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+    .brand-mark {
+      width: 36px; height: 36px;
+      display: grid;
+      place-items: center;
+      color: #1a0a1c;
+      background: linear-gradient(135deg, var(--pink), var(--yellow));
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(255, 107, 157, .4), 0 4px 12px rgba(0,0,0,.3);
+      font-size: 18px;
+      font-weight: 800;
+      animation: markGlow 3s ease-in-out infinite;
+    }
+    .brand-text {
+      color: var(--pink);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -.04em;
+      background: linear-gradient(135deg, var(--text), var(--muted));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      margin: 0 0 32px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+      font-weight: 400;
+    }
+
+    .field {
+      margin-bottom: 18px;
+      position: relative;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      font-family: var(--font);
+    }
+
+    input {
+      width: 100%;
+      height: 50px;
+      padding: 0 16px;
+      color: var(--text);
+      background: rgba(3, 9, 20, .7);
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      outline: none;
+      color-scheme: dark;
+      font-size: 14px;
+      font-family: var(--font);
+      transition: all .3s cubic-bezier(.4, 0, .2, 1);
+    }
+    input::placeholder { color: #5a5570; }
+    input:hover { border-color: var(--line-strong); background: rgba(3, 9, 20, .85); }
+    input:focus {
+      border-color: var(--pink);
+      box-shadow: 0 0 0 4px rgba(255, 107, 157, .1), 0 0 20px rgba(255, 107, 157, .08);
+      background: rgba(3, 9, 20, .9);
+    }
+
+    /* Input icon */
+    .field-icon {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      opacity: .5;
+      font-size: 14px;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+    input:focus ~ .field-icon { opacity: .8; color: var(--pink); }
+
+    button {
+      width: 100%;
+      min-height: 50px;
+      border: 0;
+      border-radius: 12px;
+      color: #1a0a1c;
+      background: linear-gradient(135deg, var(--pink), var(--yellow));
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-family: var(--font);
+      position: relative;
+      overflow: hidden;
+      transition: all .3s cubic-bezier(.4, 0, .2, 1);
+      box-shadow: 0 4px 20px rgba(255, 107, 157, .25);
+    }
+    button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+      transform: translateX(-100%);
+      transition: transform .6s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255, 107, 157, .4), 0 0 40px rgba(255, 107, 157, .1);
+    }
+    button:hover::before { transform: translateX(100%); }
+    button:active { transform: translateY(0) scale(.98); }
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .error-msg {
+      display: none;
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      color: var(--red);
+      background: rgba(248, 113, 113, .08);
+      border: 1px solid rgba(248, 113, 113, .2);
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+      animation: shake .4s ease;
+    }
+    .error-msg.show { display: block; }
+
+    .forgot {
+      margin-top: 18px;
+      text-align: center;
+    }
+    .forgot a {
+      color: var(--muted);
+      font-size: 12px;
+      text-decoration: none;
+      position: relative;
+      transition: color .2s;
+      font-weight: 500;
+    }
+    .forgot a::after {
+      content: "";
+      position: absolute;
+      bottom: -2px; left: 0;
+      width: 0; height: 1.5px;
+      background: linear-gradient(90deg, var(--pink), var(--cyan));
+      transition: width .3s ease;
+    }
+    .forgot a:hover { color: var(--pink); }
+    .forgot a:hover::after { width: 100%; }
+
+    #forgotPinPanel {
+      display: none;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--glass-border);
+      animation: slideDown .3s ease;
+    }
+    #forgotPinPanel p {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    #forgotStatusMsg {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+      text-align: center;
+      animation: fadeIn .3s ease;
+    }
+    #forgotStatusMsg.success {
+      display: block;
+      color: var(--green);
+      background: rgba(110, 231, 183, .08);
+      border: 1px solid rgba(110, 231, 183, .2);
+    }
+    #forgotStatusMsg.error {
+      display: block;
+      color: var(--red);
+      background: rgba(248, 113, 113, .08);
+      border: 1px solid rgba(248, 113, 113, .2);
+    }
+
+    .secure {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 28px;
+      color: #5a5570;
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-family: var(--mono);
+    }
+    .secure span {
+      color: var(--green);
+      font-size: 10px;
+      animation: pulseDot 2s ease-in-out infinite;
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      color: var(--muted);
+      font-size: 11px;
+      opacity: .6;
+    }
+    .divider::before, .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--line), transparent);
+    }
+
+    @keyframes enter {
+      from { opacity: 0; transform: translateY(20px) scale(.97); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0); }
+      50% { transform: translateY(-10px) rotate(1deg); }
+    }
+    @keyframes glowPulse {
+      0%, 100% { opacity: .7; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+    }
+    @keyframes cardPulse {
+      0%, 100% { filter: brightness(1); box-shadow: 0 0 18px 5px var(--yellow-glow); }
+      50% { filter: brightness(1.2); box-shadow: 0 0 24px 8px var(--yellow-glow), 0 0 50px 15px rgba(255,209,102,.1); }
+    }
+    @keyframes sparkle {
+      0%, 100% { opacity: .15; transform: scale(.5); }
+      50% { opacity: 1; transform: scale(1.3); }
+    }
+    @keyframes blink {
+      0%, 88%, 100% { transform: scaleY(1); opacity: 1; }
+      92% { transform: scaleY(.1); opacity: .5; }
+    }
+    @keyframes blinkCentered {
+      0%, 88%, 100% { transform: translateX(-50%) scaleY(1); opacity: 1; }
+      92% { transform: translateX(-50%) scaleY(.1); opacity: .5; }
+    }
+    @keyframes wave {
+      0%, 100% { transform: rotate(-35deg); }
+      50% { transform: rotate(8deg); }
+    }
+    @keyframes idleRock {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(8deg); }
+    }
+    @keyframes bubbleBob {
+      0%, 100% { transform: scale(1) translateY(0); }
+      50% { transform: scale(1.05) translateY(-4px); }
+    }
+    @keyframes orbitSpin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes bgShift {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .8; }
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .4; }
+    }
+    @keyframes markGlow {
+      0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 157, .4), 0 4px 12px rgba(0,0,0,.3); }
+      50% { box-shadow: 0 0 30px rgba(255, 107, 157, .6), 0 4px 12px rgba(0,0,0,.3); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+    @keyframes particleFloat {
+      0% { opacity: 0; transform: translateY(100vh) scale(0); }
+      10% { opacity: 1; transform: translateY(90vh) scale(1); }
+      90% { opacity: 1; transform: translateY(-10vh) scale(1); }
+      100% { opacity: 0; transform: translateY(-20vh) scale(0); }
+    }
+
+    @media (max-width: 700px) {
+      body { overflow: auto; padding: 20px 0; }
+      .page { width: min(94%, 420px); display: block; min-height: 0; }
+      .visual { min-height: 280px; border-right: 0; border-bottom: 1px solid var(--glass-border); }
+      .mascot { transform: scale(.78); }
+      .login { padding: 32px 24px 28px; }
+      .brand { margin-bottom: 28px; }
+      h1 { font-size: 26px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
 </head>
+
 <body>
-  <div class="card">
-    <h1>LOGIN</h1>
-    <p class="sub"></p>
+  <div class="particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
 
-    <div class="error-msg" id="errorMsg">Incorrect ID or PIN.</div>
+  <main class="page">
+    <div class="top-line"></div>
 
-    <label for="idInput">User ID</label>
-    <input type="text" id="idInput" placeholder="Enter EMP ID" autocomplete="off">
+    <section class="visual" aria-label="Checklist mascot">
+      <div class="orbit-ring orbit-ring-1"><div class="orbit-dot"></div></div>
+      <div class="orbit-ring orbit-ring-2"><div class="orbit-dot"></div></div>
+      <div class="orbit-ring orbit-ring-3"><div class="orbit-dot"></div></div>
 
-    <label for="pinInput">PIN</label>
-    <input type="password" id="pinInput" placeholder="Enter PIN" autocomplete="off">
+      <div class="mascot" id="mascot">
+        <span class="mascot-glow"></span>
+        <span class="antenna"><span class="antenna-bulb"></span></span>
+        <div class="mascot-head">
+          <div class="mascot-visor">
+            <span class="eye eye-l"></span>
+            <span class="eye eye-r"></span>
+          </div>
+        </div>
+        <div class="mascot-body">
+          <span class="chest-dot"></span>
+          <span class="panel-line"></span>
+          <span class="panel-line short"></span>
+        </div>
+        <span class="mascot-arm arm-l"></span>
+        <span class="mascot-arm arm-r"></span>
+        <span class="hi-bubble">Hi!</span>
+      </div>
 
-    <button id="loginBtn" type="button"><span class="spinner"></span><span id="loginBtnLabel">Login</span></button>
+      <span class="spark one"></span>
+      <span class="spark two"></span>
+      <span class="spark three"></span>
 
-    <div style="text-align:center; margin-top:12px;">
-      <a href="#" id="forgotPinLink" style="font-size:11px; color:var(--text-dim); text-decoration:underline;">Forgot PIN?</a>
-    </div>
+      <div class="visual-label">
+        <span>●</span> System Online
+      </div>
+    </section>
 
-    <div id="forgotPinPanel" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid var(--line);">
-      <p style="margin:0 0 10px; font-size:11px; color:var(--text-dim); line-height:1.5;">Enter your User ID and we'll send a reset request to your admin. They'll set a new PIN for you.</p>
-      <label for="forgotIdInput">User ID</label>
-      <input type="text" id="forgotIdInput" placeholder="e.g. emp1" autocomplete="off">
-      <button id="forgotSubmitBtn" type="button" style="width:100%; background:var(--card); border:1px solid var(--line); color:var(--text); padding:10px 0; border-radius:7px; font-weight:600; font-size:12.5px; cursor:pointer; font-family:var(--font);">Send Reset Request</button>
-      <div id="forgotStatusMsg" style="display:none; font-size:11px; margin-top:10px; text-align:center;"></div>
-    </div>
+    <section class="login">
+      <div class="login-content">
+        <div class="brand">
+          <span class="brand-mark">✓</span>
+          <span class="brand-text">Checklist</span>
+        </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script>
-  // ---- Firebase ----
-  const firebaseConfig = {
-    apiKey: "AIzaSyAHzVTjMA0ErfhEhP7a1kQJBCNEV9yMxRo",
-    authDomain: "pss-checklist.firebaseapp.com",
-    projectId: "pss-checklist",
-    storageBucket: "pss-checklist.firebasestorage.app",
-    messagingSenderId: "66873555979",
-    appId: "1:66873555979:web:ddd15dacbb8f003e529b0e",
-    measurementId: "G-HFZK8BXFMC"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+        <h1>Welcome back</h1>
+        <p class="subtitle">Sign in with your employee ID to access your secure workspace.</p>
 
-  // ---- Fixed admin credential ----
-  // Kept out of Firestore on purpose so admin access can never be locked out
-  // or accidentally deleted through the employee-management UI. Change this
-  // PIN here if needed — it only lives in this file.
-  const ADMIN_ID = "admin";
-  const ADMIN_PIN = "1111";
+        <div class="error-msg" id="errorMsg" role="alert"></div>
 
-  const ROLE_SESSION_KEY = "intimation-tracker-role";
-  const ID_SESSION_KEY = "intimation-tracker-userid";
-  const NAME_SESSION_KEY = "intimation-tracker-loginname";
-  const CHECKLIST_PAGE = "employee_dashboard.html";
-  const ADMIN_DASHBOARD_PAGE = "admin_dashboard.html";
+        <div class="field">
+          <label for="idInput">Employee ID</label>
+          <input id="idInput" type="text" placeholder="Enter employee ID" autocomplete="username">
+        </div>
 
-  const idInput = document.getElementById('idInput');
-  const pinInput = document.getElementById('pinInput');
-  const loginBtn = document.getElementById('loginBtn');
-  const loginBtnLabel = document.getElementById('loginBtnLabel');
-  const errorMsg = document.getElementById('errorMsg');
+        <div class="field">
+          <label for="pinInput">PIN</label>
+          <input id="pinInput" type="password" placeholder="Enter your PIN" autocomplete="current-password">
+        </div>
 
-  function setLoading(loading){
-    loginBtn.disabled = loading;
-    loginBtn.classList.toggle('loading', loading);
-    loginBtnLabel.textContent = loading ? 'Checking\u2026' : 'Login';
-  }
+        <button id="loginBtn" type="button">Initialize workspace</button>
 
-  function showError(msg){
-    errorMsg.textContent = msg;
-    errorMsg.classList.add('show');
-  }
+        <div class="forgot">
+          <a href="#" id="forgotPinLink">Forgot your PIN?</a>
+        </div>
 
-  async function doLogin(){
-    errorMsg.classList.remove('show');
-    const enteredId = idInput.value.trim().toLowerCase();
-    const enteredPin = pinInput.value;
+        <div id="forgotPinPanel">
+          <p>Enter your employee ID to send a reset request to your admin.</p>
+          <div class="field">
+            <label for="forgotIdInput">Employee ID</label>
+            <input id="forgotIdInput" type="text" placeholder="Enter employee ID">
+          </div>
+          <button id="forgotSubmitBtn" type="button">Send reset request</button>
+          <div id="forgotStatusMsg" role="status"></div>
+        </div>
 
-    if(!enteredId || !enteredPin){
-      showError('Please enter both an ID and a PIN.');
-      return;
+        <div class="secure">
+          <span>◆</span>
+          Secure workspace connection
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHzVTjMA0ErfhEhP7a1kQJBCNEV9yMxRo",
+      authDomain: "pss-checklist.firebaseapp.com",
+      projectId: "pss-checklist",
+      storageBucket: "pss-checklist.firebasestorage.app",
+      messagingSenderId: "66873555979",
+      appId: "1:66873555979:web:ddd15dacbb8f003e529b0e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const ADMIN_ID = "admin";
+    const ADMIN_PIN = "1111";
+    const ROLE_KEY = "intimation-tracker-role";
+    const ID_KEY = "intimation-tracker-userid";
+    const NAME_KEY = "intimation-tracker-loginname";
+
+    const idInput = document.getElementById("idInput");
+    const pinInput = document.getElementById("pinInput");
+    const loginBtn = document.getElementById("loginBtn");
+    const errorMsg = document.getElementById("errorMsg");
+
+    function showError(message) {
+      errorMsg.textContent = message;
+      errorMsg.classList.add("show");
+      setTimeout(() => errorMsg.classList.remove("show"), 5000);
     }
 
-    // Fixed admin account — checked locally, no Firestore round trip needed.
-    if(enteredId === ADMIN_ID){
-      if(enteredPin === ADMIN_PIN){
-        sessionStorage.setItem(ROLE_SESSION_KEY, 'admin');
-        sessionStorage.setItem(ID_SESSION_KEY, ADMIN_ID);
-        sessionStorage.setItem(NAME_SESSION_KEY, 'Admin');
-        window.location.href = ADMIN_DASHBOARD_PAGE;
+    async function login() {
+      errorMsg.classList.remove("show");
+      const id = idInput.value.trim().toLowerCase();
+      const pin = pinInput.value;
+
+      if (!id || !pin) {
+        showError("Please enter both your employee ID and PIN.");
         return;
       }
-      showError('Incorrect ID or PIN.');
-      pinInput.value = '';
-      pinInput.focus();
-      return;
-    }
 
-    // Employee accounts live in Firestore so admin can add/remove them from
-    // the Admin Dashboard and it takes effect on every device immediately.
-    setLoading(true);
-    try{
-      const doc = await db.collection('employees').doc(enteredId).get();
-      if(!doc.exists || doc.data().pin !== enteredPin || doc.data().active === false){
-        showError('Incorrect ID or PIN.');
-        pinInput.value = '';
-        pinInput.focus();
+      if (id === ADMIN_ID) {
+        if (pin === ADMIN_PIN) {
+          sessionStorage.setItem(ROLE_KEY, "admin");
+          sessionStorage.setItem(ID_KEY, ADMIN_ID);
+          sessionStorage.setItem(NAME_KEY, "Admin");
+          window.location.href = "admin_dashboard.html";
+        } else {
+          showError("Incorrect ID or PIN.");
+          pinInput.value = "";
+        }
         return;
       }
-      const data = doc.data();
-      sessionStorage.setItem(ROLE_SESSION_KEY, 'employee');
-      sessionStorage.setItem(ID_SESSION_KEY, enteredId);
-      sessionStorage.setItem(NAME_SESSION_KEY, data.name || enteredId);
-      window.location.href = CHECKLIST_PAGE;
-    }catch(e){
-      console.error('login failed', e);
-      showError('Could not reach the server. Check your connection and try again.');
-    }finally{
-      setLoading(false);
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Authenticating…";
+
+      try {
+        const employeeDoc = await db.collection("employees").doc(id).get();
+        const employee = employeeDoc.data();
+
+        if (!employeeDoc.exists || employee.pin !== pin || employee.active === false) {
+          showError("Incorrect ID or PIN.");
+          pinInput.value = "";
+          return;
+        }
+
+        sessionStorage.setItem(ROLE_KEY, "employee");
+        sessionStorage.setItem(ID_KEY, id);
+        sessionStorage.setItem(NAME_KEY, employee.name || id);
+        window.location.href = "employee_dashboard.html";
+      } catch (error) {
+        console.error(error);
+        showError("Unable to connect. Please try again.");
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Initialize workspace";
+      }
     }
-  }
 
-  loginBtn.addEventListener('click', doLogin);
-  idInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') pinInput.focus(); });
-  pinInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') doLogin(); });
+    loginBtn.addEventListener("click", login);
+    idInput.addEventListener("keydown", e => { if (e.key === "Enter") pinInput.focus(); });
+    pinInput.addEventListener("keydown", e => { if (e.key === "Enter") login(); });
 
-  // ---- Forgot PIN ----
-  // Since this app has no email/SMS backend, "forgot PIN" is request-based:
-  // the employee submits their ID, it's logged in Firestore, and the admin
-  // sees it in the Admin Dashboard to reset the PIN from there.
-  const forgotPinLink = document.getElementById('forgotPinLink');
-  const forgotPinPanel = document.getElementById('forgotPinPanel');
-  const forgotIdInput = document.getElementById('forgotIdInput');
-  const forgotSubmitBtn = document.getElementById('forgotSubmitBtn');
-  const forgotStatusMsg = document.getElementById('forgotStatusMsg');
+    const forgotLink = document.getElementById("forgotPinLink");
+    const forgotPanel = document.getElementById("forgotPinPanel");
+    const forgotIdInput = document.getElementById("forgotIdInput");
+    const forgotButton = document.getElementById("forgotSubmitBtn");
+    const forgotStatus = document.getElementById("forgotStatusMsg");
 
-  forgotPinLink.addEventListener('click', (e)=>{
-    e.preventDefault();
-    const opening = forgotPinPanel.style.display === 'none';
-    forgotPinPanel.style.display = opening ? 'block' : 'none';
-    forgotStatusMsg.style.display = 'none';
-    if(opening) forgotIdInput.focus();
-  });
+    forgotLink.addEventListener("click", event => {
+      event.preventDefault();
+      const open = forgotPanel.style.display !== "block";
+      forgotPanel.style.display = open ? "block" : "none";
+      if (open) forgotIdInput.focus();
+    });
 
-  function setForgotStatus(msg, isError){
-    forgotStatusMsg.textContent = msg;
-    forgotStatusMsg.style.color = isError ? 'var(--red)' : 'var(--teal)';
-    forgotStatusMsg.style.display = 'block';
-  }
-
-  async function submitForgotPin(){
-    const id = forgotIdInput.value.trim().toLowerCase();
-    if(!id){
-      setForgotStatus('Please enter your User ID.', true);
-      return;
-    }
-    forgotSubmitBtn.disabled = true;
-    forgotSubmitBtn.textContent = 'Sending\u2026';
-    try{
-      const empDoc = await db.collection('employees').doc(id).get();
-      if(!empDoc.exists){
-        setForgotStatus('No account found with that ID. Check with your admin.', true);
+    forgotButton.addEventListener("click", async () => {
+      const id = forgotIdInput.value.trim().toLowerCase();
+      if (!id) {
+        forgotStatus.className = "error";
+        forgotStatus.textContent = "Please enter your employee ID.";
         return;
       }
-      await db.collection('pinResetRequests').doc(id).set({
-        employeeId: id,
-        employeeName: empDoc.data().name || id,
-        requestedAt: new Date().toISOString(),
-        resolved: false
-      });
-      setForgotStatus('Request sent your admin will reset your PIN shortly.', false);
-      forgotIdInput.value = '';
-    }catch(e){
-      console.error('forgot pin request failed', e);
-      setForgotStatus('Could not send the request. Check your connection and try again.', true);
-    }finally{
-      forgotSubmitBtn.disabled = false;
-      forgotSubmitBtn.textContent = 'Send Reset Request';
-    }
-  }
-  forgotSubmitBtn.addEventListener('click', submitForgotPin);
-  forgotIdInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') submitForgotPin(); });
-</script>
+      forgotButton.disabled = true;
+      forgotButton.textContent = "Sending…";
+      try {
+        const employeeDoc = await db.collection("employees").doc(id).get();
+        if (!employeeDoc.exists) throw new Error("Employee not found");
+        const employee = employeeDoc.data();
+        await db.collection("pinResetRequests").doc(id).set({
+          employeeId: id,
+          employeeName: employee.name || id,
+          requestedAt: new Date().toISOString(),
+          resolved: false
+        });
+        forgotStatus.className = "success";
+        forgotStatus.textContent = "Reset request sent successfully.";
+        forgotIdInput.value = "";
+      } catch (error) {
+        forgotStatus.className = "error";
+        forgotStatus.textContent = "Unable to send request. Please try again.";
+      } finally {
+        forgotButton.disabled = false;
+        forgotButton.textContent = "Send reset request";
+      }
+    });
+  </script>
 </body>
 </html>
