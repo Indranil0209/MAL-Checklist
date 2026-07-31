@@ -4,29 +4,63 @@
 <meta charset="UTF-8">
 <title>No name</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
   :root{
-    --bg: #12181f;
-    --panel: #1a222b;
-    --card: #202b36;
-    --line: #2c3a47;
-    --amber: #f5a623;
-    --amber-dim: #8a651f;
-    --teal: #3fb8a8;
-    --red: #e5566d;
-    --red-dim: #7a3140;
-    --text: #e8ecef;
-    --text-dim: #93a1ac;
-    --text-faint: #5c6b78;
-    --done: #3fb8a8;
-    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --bg: #070611;
+    --panel: #120f26;
+    --card: #1a1533;
+    --line: rgba(190,164,255,.25);
+    --amber: #ffd85c;
+    --amber-dim: #4a3d16;
+    --teal: #65ffc7;
+    --teal-glow: #65ffc7;
+    --red: #ff67bd;
+    --red-dim: #7a2f5c;
+    --text: #f7f5ff;
+    --text-dim: #a19bbd;
+    --text-faint: #6e6790;
+    --done: #65ffc7;
+    --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
     --mono: 'Consolas', 'SF Mono', monospace;
+    --mascot-a: #ff67bd;
+    --mascot-b: #65ffc7;
+    --mascot-c: #ffd85c;
+    --radius-card: 16px;
+    --radius-btn: 10px;
+    --radius-chip: 20px;
+    --border-w: 1px;
+    --shadow-card: 0 10px 30px -16px rgba(0,0,0,.55);
+    --shadow-btn: 0 8px 20px -8px rgba(255,103,189,.5);
+    --card-top-accent: linear-gradient(90deg, var(--red), var(--teal) 70%);
   }
+
   *{ box-sizing:border-box; }
+  html{ transition: background-color .35s ease; scroll-behavior:smooth; }
+  button, select, input, a{ transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, opacity .18s ease, transform .15s cubic-bezier(.34,1.4,.64,1); }
+  button:active{ transform:scale(.97); }
   body{
-    margin:0; background:var(--bg); color:var(--text); font-family:var(--font);
-    padding: 16px 16px 24px;
+    margin:0; color:var(--text); font-family:var(--font);
+    padding: 16px 16px 24px; position:relative;
+    transition: background-color .35s ease, color .35s ease;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,103,189,.14), transparent 22rem),
+      radial-gradient(circle at 80% 80%, rgba(69,236,255,.12), transparent 25rem),
+      var(--bg);
   }
-  .wrap{ max-width:960px; margin:0 auto; }
+  body::before{
+    content:''; position:fixed; inset:0; z-index:-2; pointer-events:none; opacity:.24;
+    background-image:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size:42px 42px;
+    mask-image: linear-gradient(to bottom, #000, transparent);
+  }
+  body::after{
+    content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.035;
+    background: repeating-linear-gradient(to bottom, transparent 0 3px, #fff 4px);
+  }
+  .wrap{ position:relative; z-index:1; max-width:960px; margin:0 auto; }
 
   .masthead{
     display:flex; justify-content:space-between; align-items:center;
@@ -46,6 +80,65 @@
     cursor:pointer; color-scheme: dark;
   }
   .grid-mark-select:hover{ color:var(--amber); border-color:var(--amber); }
+
+  .masthead-left{ display:flex; align-items:center; gap:10px; }
+
+  .mini-mascot{
+    position:relative;
+    width:32px; height:36px;
+    flex-shrink:0;
+  }
+  .mm-antenna{
+    position:absolute; top:-6px; left:50%;
+    width:2px; height:7px;
+    background:var(--mascot-b);
+    transform:translateX(-50%);
+    transition: background-color .35s ease;
+  }
+  .mm-antenna::after{
+    content:''; position:absolute; top:-4px; left:50%;
+    width:5px; height:5px; border-radius:50%;
+    background:var(--mascot-b);
+    box-shadow:0 0 6px 2px var(--mascot-b);
+    transform:translateX(-50%);
+    animation: mmBlink 2.6s ease-in-out infinite;
+    transition: background-color .35s ease, box-shadow .35s ease;
+  }
+  .mm-head{
+    position:absolute; top:2px; left:1px;
+    width:28px; height:22px;
+    background:var(--card);
+    border:2px solid var(--line);
+    border-radius:8px;
+    display:flex; align-items:center; justify-content:center; gap:4px;
+    transition: background-color .35s ease, border-color .35s ease;
+  }
+  .mm-eye{
+    width:5px; height:5px; border-radius:50%;
+    background:var(--mascot-a);
+    box-shadow:0 0 5px 1px var(--mascot-a);
+    animation: mmBlink 3.4s ease-in-out infinite;
+    transition: background-color .35s ease, box-shadow .35s ease;
+  }
+  .mm-eye-r{ background:var(--mascot-b); box-shadow:0 0 5px 1px var(--mascot-b); animation-delay:.15s; }
+  .mm-arm{
+    position:absolute; top:18px; right:-2px;
+    width:5px; height:13px;
+    background:var(--card);
+    border:2px solid var(--line);
+    border-radius:4px;
+    transform-origin: top center;
+    animation: mmWave 2.4s ease-in-out infinite;
+    transition: background-color .35s ease, border-color .35s ease;
+  }
+  @keyframes mmBlink{
+    0%, 88%, 100%{ opacity:1; transform:scaleY(1); }
+    92%{ opacity:.5; transform:scaleY(.2); }
+  }
+  @keyframes mmWave{
+    0%, 100%{ transform:rotate(-30deg); }
+    50%{ transform:rotate(6deg); }
+  }
 
   .top-row{ display:flex; gap:10px; margin-bottom:10px; align-items:stretch; flex-wrap:wrap; }
 
@@ -91,11 +184,11 @@
     background:var(--card); border:1px solid var(--line); color:var(--text);
     font-size:11px; padding:6px 8px; border-radius:6px; font-family:var(--font); color-scheme:dark;
   }
-  #doExportReportBtn{
+  #doExportReportDocBtn{
     background:var(--teal); border:none; color:#0c1116; padding:7px 14px; border-radius:6px;
     font-weight:600; font-size:11px; cursor:pointer; font-family:var(--font);
   }
-  #doExportReportBtn:hover{ opacity:.88; }
+  #doExportReportDocBtn:hover{ opacity:.88; }
   .report-hint{ font-size:10px; color:var(--text-faint); margin:-4px 0 10px; }
 
   .chart-card{
@@ -116,7 +209,7 @@
   .toolbar{ display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
   .active-filter-row{ display:flex; gap:6px; flex-wrap:wrap; margin:-4px 0 10px; }
   .filter-chip{
-    display:inline-flex; align-items:center; gap:5px; background:rgba(63,184,168,.1);
+    display:inline-flex; align-items:center; gap:5px; background:rgba(101,255,199,.12);
     border:1px solid #1f5f56; color:var(--teal); font-size:10.5px; padding:3px 5px 3px 9px;
     border-radius:20px; font-family:var(--font);
   }
@@ -124,7 +217,7 @@
     background:none; border:none; color:var(--teal); cursor:pointer; font-size:12px; line-height:1;
     padding:2px 4px; border-radius:50%; font-family:var(--font);
   }
-  .filter-chip button:hover{ background:rgba(63,184,168,.2); }
+  .filter-chip button:hover{ background:rgba(101,255,199,.22); }
   .toolbar input[type=text]{
     background:var(--panel); border:1px solid var(--line); color:var(--text);
     font-size:11px; padding:6px 9px; border-radius:6px; font-family:var(--font);
@@ -165,13 +258,19 @@
   .site-meta{ font-size:9px; color:var(--text-faint); display:flex; gap:6px; }
   .site-time{ font-size:9px; color:var(--text-faint); }
   .badge-row{ display:flex; flex-direction:column; gap:2px; align-items:flex-end; flex-shrink:0; }
-  .copy-btn{
+  .copy-btn, .info-btn{
     flex-shrink:0; width:22px; height:22px; padding:0; display:flex; align-items:center; justify-content:center;
     background:none; border:1px solid var(--line); border-radius:5px; color:var(--text-faint); cursor:pointer;
   }
-  .copy-btn svg{ width:12px; height:12px; }
-  .copy-btn:hover{ color:var(--text-dim); border-color:var(--text-dim); }
+  .copy-btn svg, .info-btn svg{ width:12px; height:12px; }
+  .copy-btn:hover, .info-btn:hover{ color:var(--text-dim); border-color:var(--text-dim); }
   .copy-btn.copied{ color:var(--done); border-color:var(--done); }
+  .pss-info-row{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--line); font-size:12.5px; }
+  .pss-info-row:last-child{ border-bottom:none; }
+  .pss-info-label{ color:var(--text-faint); }
+  .pss-info-val{ color:var(--text); font-family:var(--mono); }
+  .confirm-ok{ background:linear-gradient(135deg, var(--teal), var(--teal-glow)); color:#06110f; border-color:transparent; font-weight:600; }
+  .confirm-ok:hover{ filter:brightness(1.1); transform:translateY(-1px); }
   .badge{
     font-family:var(--mono); font-size:9px; padding:1px 6px; border-radius:20px;
     border:1px solid var(--line); color:var(--text-dim); white-space:nowrap;
@@ -203,7 +302,7 @@
   .remark-input::placeholder{ color:var(--text-faint); font-style:italic; }
   .remark-input:hover{ border-color:var(--text-faint); }
   .remark-input:focus{ border-color:var(--teal); color:var(--text); background:var(--card); }
-  .remark-input:not(:placeholder-shown){ color:var(--amber); border-color:var(--amber-dim); background:rgba(245,166,35,.05); }
+  .remark-input:not(:placeholder-shown){ color:var(--amber); border-color:var(--amber-dim); background:rgba(255,216,92,.06); }
 
   .site-row.is-pending{ border-color:var(--red-dim); background:linear-gradient(0deg, rgba(229,86,109,.07), rgba(229,86,109,.07)) var(--card); }
 
@@ -223,6 +322,11 @@
     background:var(--red-dim); color:var(--text); border-radius:20px; font-family:var(--mono);
     font-size:10px; padding:1px 7px;
   }
+  .clear-all-btn{
+    margin-left:auto; font-size:9.5px; padding:3px 8px; border-radius:6px; cursor:pointer; font-family:var(--font);
+    background:none; border:1px solid var(--line); color:var(--text-faint); text-transform:none; letter-spacing:normal;
+  }
+  .clear-all-btn:hover{ border-color:var(--red); color:var(--red); }
   .pending-list{ display:flex; flex-direction:column; gap:5px; }
   .pending-item{
     display:flex; align-items:center; gap:8px; padding:6px 9px; background:var(--card);
@@ -238,6 +342,11 @@
     background:none; border:1px solid var(--line); color:var(--text-dim);
   }
   .resolve-btn:hover{ border-color:var(--done); color:var(--done); }
+  .clear-btn{
+    flex-shrink:0; font-size:10px; padding:4px 9px; border-radius:6px; cursor:pointer; font-family:var(--font);
+    background:none; border:1px solid var(--line); color:var(--text-faint);
+  }
+  .clear-btn:hover{ border-color:var(--red); color:var(--red); }
   .pending-empty{ font-size:11px; color:var(--text-faint); }
 
   .empty-day{
@@ -343,7 +452,7 @@
     border:1px solid var(--amber-dim); border-radius:20px; padding:1px 6px; white-space:nowrap;
   }
   .dupe-banner{
-    font-size:10.5px; color:var(--amber); background:rgba(245,166,35,.08); border:1px solid var(--amber-dim);
+    font-size:10.5px; color:var(--amber); background:rgba(255,216,92,.1); border:1px solid var(--amber-dim);
     border-radius:7px; padding:6px 9px; margin-bottom:8px;
   }
 
@@ -443,22 +552,418 @@
     font-size:12.5px; color:var(--text-dim); letter-spacing:.02em;
   }
   @keyframes app-spin{ to{ transform:rotate(360deg); } }
+
+  html{ scrollbar-color: #35424f var(--bg); }
+  ::-webkit-scrollbar{ width:10px; height:10px; }
+  ::-webkit-scrollbar-track{ background:var(--bg); }
+  ::-webkit-scrollbar-thumb{ background:var(--card); border-radius:8px; }
+  ::-webkit-scrollbar-thumb:hover{ background:var(--line); }
+
+  body{
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,103,189,.14), transparent 22rem),
+      radial-gradient(circle at 80% 80%, rgba(69,236,255,.12), transparent 25rem),
+      var(--bg);
+    background-attachment: fixed;
+  }
+
+  .masthead h1{
+    background:linear-gradient(90deg, var(--text), var(--teal-glow));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    letter-spacing:.01em;
+  }
+
+  .overall, .chart-card, .pending-panel, #extraWorkPanel, #teamPanel, .manage-panel{
+    box-shadow: 0 10px 30px -14px rgba(0,0,0,.5);
+    transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
+    background: rgba(18,15,38,.62) !important;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+  }
+  .overall:hover, .chart-card:hover{ box-shadow: 0 14px 36px -14px rgba(0,0,0,.6); border-color: rgba(190,164,255,.4); }
+
+  .overall .bar-fill{
+    background: linear-gradient(90deg, var(--teal), var(--teal-glow));
+    box-shadow: 0 0 10px rgba(79,216,196,.5);
+  }
+
+  #exportWorkReportBtn, #doExportReportDocBtn{
+    background: linear-gradient(135deg, var(--red), var(--amber) 70%);
+    color:#2a0a1e;
+    box-shadow: 0 8px 20px -8px rgba(255,103,189,.5);
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  }
+  #exportWorkReportBtn:hover, #doExportReportDocBtn:hover{
+    opacity:1; transform:translateY(-1px); filter:brightness(1.06);
+    box-shadow: 0 12px 26px -8px rgba(255,103,189,.6);
+  }
+  #exportWorkReportBtn:active, #doExportReportDocBtn:active{ transform:translateY(0); }
+
+  .reset-btn{ transition: border-color .15s ease, color .15s ease, background .15s ease; }
+  .reset-btn:hover{ background:rgba(255,255,255,.03); }
+
+  .site-row{
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .site-row:hover:not(.checked){
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px -8px rgba(0,0,0,.5);
+    border-color: rgba(190,164,255,.4);
+  }
+  .chk{ transition: background .15s ease, border-color .15s ease, transform .15s ease; }
+  .site-row.checked .chk{ animation: chkPop .28s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes chkPop{
+    0%{ transform:scale(.7); }
+    60%{ transform:scale(1.15); }
+    100%{ transform:scale(1); }
+  }
+
+  .copy-btn{ transition: color .15s ease, border-color .15s ease, transform .15s ease; }
+  .copy-btn:hover{ transform:translateY(-1px); }
+
+  #extraWorkPanel{
+    background: linear-gradient(135deg, rgba(255,216,92,.06), var(--panel) 60%);
+  }
+  #extraWorkText{ transition: border-color .15s ease, box-shadow .15s ease; }
+  #extraWorkText:focus{ box-shadow: 0 0 0 3px rgba(255,216,92,.12); }
+
+  .rte-toolbar{
+    display:flex; align-items:center; gap:2px; margin-bottom:6px;
+    background: var(--card); border:1px solid var(--line); border-radius:7px;
+    padding:3px; width:max-content;
+  }
+  .rte-btn{
+    display:flex; align-items:center; justify-content:center;
+    width:24px; height:24px; padding:0; border:none; border-radius:5px;
+    background:transparent; color:var(--text-dim); cursor:pointer;
+    transition: background .12s ease, color .12s ease;
+  }
+  .rte-btn svg{ width:13px; height:13px; pointer-events:none; }
+  .rte-btn:hover{ background: var(--panel); color:var(--text); }
+  .rte-btn.active{ background: var(--amber-dim); color: var(--amber); }
+  .rte-sep{ width:1px; height:16px; background:var(--line); margin:0 3px; flex-shrink:0; }
+
+  .rte-editor{
+    width:100%; min-height:80px; max-height:260px; overflow-y:auto; overflow-x:auto;
+    background:var(--card); border:1px solid var(--line); color:var(--text);
+    border-radius:7px; padding:10px; font-family:var(--font); font-size:12.5px;
+    line-height:1.5; box-sizing:border-box; transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .rte-editor:focus{ outline:none; box-shadow: 0 0 0 3px rgba(255,216,92,.12); }
+  .rte-editor[data-placeholder]:empty::before{
+    content: attr(data-placeholder); color: var(--text-faint); pointer-events:none;
+  }
+  .rte-editor ul, .rte-editor ol{ margin:4px 0; padding-left:20px; }
+  .rte-editor p{ margin:0 0 4px; }
+  .rte-editor p, .rte-editor li{ white-space:pre-wrap; }
+
+  input[type=text]:focus, input[type=password]:focus, .remark-input:focus{
+    box-shadow: 0 0 0 3px rgba(101,255,199,.14);
+  }
+
+  #roleToggleBtn, .btn-outline{ transition: border-color .15s ease, color .15s ease, background .15s ease; }
+
+  .site-grid{ animation: gridIn .35s cubic-bezier(.16,1,.3,1); }
+  @keyframes gridIn{
+    from{ opacity:0; transform:translateY(6px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .overall, .chart-card, #extraWorkPanel, .confirm-box, .work-popup, .pending-panel, .manage-panel{
+    border-radius: var(--radius-card) !important;
+    border-width: var(--border-w) !important;
+    box-shadow: var(--shadow-card) !important;
+    position: relative;
+  }
+  .overall::before, .chart-card::before{
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+    background: var(--card-top-accent); opacity:.7; pointer-events:none;
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+  }
+
+  #exportWorkReportBtn, #doExportReportDocBtn, .reset-btn, .copy-btn, #roleToggleBtn,
+  .grid-mark-select, .week-select, .filter-select{
+    border-radius: var(--radius-btn) !important;
+    border-width: var(--border-w) !important;
+  }
+  #exportWorkReportBtn, #doExportReportDocBtn{
+    box-shadow: var(--shadow-btn) !important;
+  }
+
+  input[type=text], input[type=date], .remark-input, #extraWorkText{
+    border-radius: calc(var(--radius-btn) * .7) !important;
+    border-width: var(--border-w) !important;
+  }
+
+  .badge, .role-badge, .filter-chip, .pending-toggle .toggle-track{
+    border-radius: var(--radius-chip) !important;
+    border-width: var(--border-w) !important;
+  }
+
+  .site-row{
+    border-radius: calc(var(--radius-card) * .5) !important;
+    border-width: var(--border-w) !important;
+  }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(8px);
+    background:var(--panel); border:1px solid var(--line); color:var(--text);
+    font-size:12px; padding:11px 20px; border-radius:12px; box-shadow:0 16px 40px rgba(0,0,0,.5);
+    opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease; z-index:200;
+    max-width:min(90vw, 360px); text-align:center;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.error{ border-color:var(--red); color:var(--red); }
+
+  /* ---- Team chat ---- */
+  #chatLauncherBtn{
+    position:relative; display:flex; align-items:center; justify-content:center;
+    width:28px; height:28px; border-radius:8px; border:1px solid var(--line);
+    background:rgba(255,255,255,.04); color:var(--text-dim); cursor:pointer;
+    transition:border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  #chatLauncherBtn:hover{ border-color:var(--teal); color:var(--teal); background:rgba(101,255,199,.08); }
+  .chat-unread-dot{
+    position:absolute; top:-2px; right:-2px; width:9px; height:9px; border-radius:50%;
+    background:var(--red); border:2px solid var(--bg);
+  }
+
+  .chat-overlay{
+    position:fixed; inset:0; z-index:150; background:rgba(0,0,0,.4);
+    backdrop-filter:blur(2px); animation:riseIn .15s ease;
+  }
+  .chat-panel{
+    position:fixed; top:0; right:0; bottom:0; z-index:151; width:min(360px, 92vw);
+    background:rgba(18,15,38,.92); backdrop-filter:blur(20px) saturate(150%); -webkit-backdrop-filter:blur(20px) saturate(150%);
+    border-left:1px solid var(--line-strong, var(--line)); box-shadow:-16px 0 50px rgba(0,0,0,.5);
+    display:flex; flex-direction:column; animation:chatSlideIn .22s cubic-bezier(.16,1,.3,1);
+  }
+  .chat-panel.closing{ animation:chatSlideOut .18s cubic-bezier(.4,0,1,1) forwards; }
+  .chat-overlay.closing{ animation:fadeOut .18s ease forwards; }
+  @keyframes chatSlideIn{ from{ transform:translateX(100%); } to{ transform:translateX(0); } }
+  @keyframes chatSlideOut{ from{ transform:translateX(0); opacity:1; } to{ transform:translateX(100%); opacity:.6; } }
+  @keyframes fadeOut{ from{ opacity:1; } to{ opacity:0; } }
+
+  .chat-panel-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid var(--line); }
+  .chat-tabs{ display:flex; gap:6px; }
+  .chat-tab{
+    padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:transparent;
+    color:var(--text-dim); font-size:11.5px; font-family:var(--font); cursor:pointer;
+    transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .chat-tab.active{ background:rgba(101,255,199,.12); border-color:var(--teal); color:var(--teal); }
+  #chatCloseBtn{
+    width:26px; height:26px; border-radius:7px; border:1px solid var(--line); background:transparent;
+    color:var(--text-dim); font-size:16px; line-height:1; cursor:pointer;
+  }
+  #chatCloseBtn:hover{ border-color:var(--red); color:var(--red); }
+
+  .chat-view{ flex:1; display:flex; flex-direction:column; min-height:0; }
+  .chat-messages{
+    flex:1; overflow-y:auto; padding:12px 14px; display:flex; flex-direction:column; gap:8px;
+  }
+  .chat-msg{ max-width:82%; padding:7px 10px; border-radius:12px; font-size:12px; line-height:1.4; word-wrap:break-word; }
+  .chat-msg.mine{ align-self:flex-end; background:linear-gradient(135deg, var(--teal), var(--teal-glow)); color:#06110f; border-bottom-right-radius:3px; }
+  .chat-msg.theirs{ align-self:flex-start; background:rgba(255,255,255,.06); border:1px solid var(--line); border-bottom-left-radius:3px; }
+  .chat-msg .chat-msg-meta{ display:block; font-size:9px; opacity:.7; margin-bottom:2px; }
+  .chat-msg-empty{ margin:auto; text-align:center; font-size:11.5px; color:var(--text-faint); padding:20px; }
+  .chat-msg-receipt{
+    display:flex; align-items:center; gap:3px; justify-content:flex-end;
+    align-self:flex-end; font-size:9.5px; color:var(--text-faint); margin-top:-3px; padding-right:2px;
+    transition:color .2s ease;
+  }
+  .chat-msg-receipt.seen{ color:var(--teal); }
+  .chat-msg-receipt svg{ display:block; }
+  .chat-msg-receipt .tick2{ margin-left:-8px; }
+
+  .chat-input-row{ display:flex; align-items:center; gap:8px; padding:10px 12px; border-top:1px solid var(--line); }
+  .chat-input-row input{
+    flex:1; background:rgba(255,255,255,.05); border:1px solid var(--line); color:var(--text);
+    font-size:12px; padding:9px 11px; border-radius:999px; font-family:var(--font);
+  }
+  .chat-input-row input:focus{ outline:none; border-color:var(--teal); box-shadow:0 0 0 2px rgba(101,255,199,.15); }
+  .chat-input-row button{
+    width:34px; height:34px; flex-shrink:0; border-radius:50%; border:none; cursor:pointer;
+    background:linear-gradient(135deg, var(--teal), var(--teal-glow)); color:#06110f;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .12s ease, filter .12s ease;
+  }
+  .chat-input-row button:hover{ transform:scale(1.06); filter:brightness(1.06); }
+  .chat-input-row button:disabled{ opacity:.5; cursor:default; transform:none; }
+
+  .chat-contact-list{ flex:1; overflow-y:auto; padding:8px; }
+  .chat-contact{
+    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px; cursor:pointer;
+    transition:background .12s ease;
+  }
+  .chat-contact:hover{ background:rgba(255,255,255,.05); }
+  .chat-contact-avatar{
+    width:30px; height:30px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg, var(--pink, #ff67bd), var(--amber)); color:#2a0a1e; font-size:12px; font-weight:700;
+  }
+  .chat-contact-name{ font-size:12.5px; color:var(--text); }
+  .chat-contact-sub{ font-size:10px; color:var(--text-faint); }
+  .chat-dm-thread{ flex:1; display:flex; flex-direction:column; min-height:0; }
+  .chat-dm-back{
+    display:flex; align-items:center; gap:6px; padding:9px 12px; background:transparent; border:none;
+    border-bottom:1px solid var(--line); color:var(--text-dim); font-size:11.5px; font-family:var(--font); cursor:pointer; text-align:left;
+  }
+  .chat-dm-back:hover{ color:var(--teal); }
+
+  .chat-toast-stack{
+    position:fixed; top:16px; right:16px; z-index:200;
+    display:flex; flex-direction:column; gap:8px; pointer-events:none;
+  }
+  .chat-toast{
+    pointer-events:auto; cursor:pointer; display:flex; align-items:center; gap:10px;
+    max-width:300px; padding:11px 14px; border-radius:12px;
+    background:rgba(18,15,38,.92); backdrop-filter:blur(18px) saturate(150%); -webkit-backdrop-filter:blur(18px) saturate(150%);
+    border:1px solid var(--line-strong, var(--line)); box-shadow:0 14px 34px rgba(0,0,0,.5);
+    animation: chatToastIn .25s ease;
+  }
+  .chat-toast.leaving{ animation: chatToastOut .2s ease forwards; }
+  @keyframes chatToastIn{ from{ opacity:0; transform:translateX(24px); } to{ opacity:1; transform:translateX(0); } }
+  @keyframes chatToastOut{ from{ opacity:1; transform:translateX(0); } to{ opacity:0; transform:translateX(24px); } }
+  .chat-toast-avatar{
+    width:30px; height:30px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg, var(--teal), var(--teal-glow)); color:#06110f; font-size:12px; font-weight:700;
+  }
+  .chat-toast-body{ min-width:0; }
+  .chat-toast-title{ font-size:12px; font-weight:600; color:var(--text); }
+  .chat-toast-sub{ font-size:11px; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .chat-attach-progress{
+    height:4px; border-radius:2px; background:rgba(255,255,255,.1); margin-top:4px; overflow:hidden;
+  }
+  .chat-attach-progress-bar{
+    height:100%; background:linear-gradient(90deg, var(--teal), var(--teal-glow)); width:0%;
+    transition:width .15s ease;
+  }
+
+  .chat-search-row{
+    display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--line);
+    color:var(--text-faint);
+  }
+  .chat-search-row input{
+    flex:1; background:rgba(255,255,255,.05); border:1px solid var(--line); color:var(--text);
+    font-size:12px; padding:7px 10px; border-radius:999px; font-family:var(--font);
+  }
+  .chat-search-row input:focus{ outline:none; border-color:var(--teal); box-shadow:0 0 0 2px rgba(101,255,199,.15); }
+
+  .chat-contact{ position:relative; }
+  .chat-contact-info{ flex:1; min-width:0; }
+  .chat-contact-unread{
+    width:8px; height:8px; border-radius:50%; background:var(--red); flex-shrink:0; margin-left:auto;
+  }
+
+  .chat-attach-btn{
+    width:34px; height:34px; flex-shrink:0; border-radius:50%; border:1px solid var(--line); cursor:pointer;
+    background:transparent; color:var(--text-dim);
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .chat-attach-btn:hover{ border-color:var(--teal); color:var(--teal); background:rgba(101,255,199,.08); }
+  .chat-attach-btn:disabled{ opacity:.5; cursor:default; }
+  .chat-attach-status{ padding:0 14px 6px; font-size:10.5px; color:var(--text-faint); }
+
+  .chat-attach-img-wrap{ display:block; margin-top:4px; }
+  .chat-attach-img{ max-width:180px; max-height:180px; border-radius:8px; display:block; }
+  .chat-attach-file{
+    display:flex; align-items:center; gap:6px; margin-top:4px; padding:6px 9px; border-radius:8px;
+    background:rgba(255,255,255,.08); color:inherit; text-decoration:none; font-size:11px;
+  }
+  .chat-attach-file-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px; }
+  .chat-attach-file-size{ color:var(--text-faint); flex-shrink:0; }
+
+  @media (max-width:520px){
+    .chat-panel{ width:100vw; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
+  }
 </style>
 </head>
 <body>
+  <div class="toast" id="toast"></div>
   <div id="appLoadingOverlay">
     <div class="loading-spinner"></div>
     <div class="loading-text">Loading your checklist&hellip;</div>
   </div>
 <div class="wrap">
 
+  <div id="chatToastStack" class="chat-toast-stack" aria-live="polite"></div>
+
+  <div id="chatOverlay" class="chat-overlay" style="display:none;"></div>
+  <div id="chatPanel" class="chat-panel" style="display:none;" role="dialog" aria-label="Team chat">
+    <div class="chat-panel-head">
+      <div class="chat-tabs">
+        <button type="button" class="chat-tab active" id="chatTabTeam">Team</button>
+        <button type="button" class="chat-tab" id="chatTabDirect">Direct</button>
+      </div>
+      <button type="button" id="chatCloseBtn" aria-label="Close chat">&times;</button>
+    </div>
+
+    <div id="chatTeamView" class="chat-view">
+      <div id="chatTeamMessages" class="chat-messages"></div>
+      <div class="chat-attach-status" id="chatTeamAttachStatus" style="display:none;"></div>
+      <div class="chat-input-row">
+        <button type="button" id="chatTeamAttachBtn" class="chat-attach-btn" aria-label="Attach file" title="Attach file (max 650KB)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <input type="file" id="chatTeamAttachInput" style="display:none;">
+        <input type="text" id="chatTeamInput" placeholder="Message the team&hellip;" autocomplete="off">
+        <button type="button" id="chatTeamSendBtn" aria-label="Send">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="chatDirectView" class="chat-view" style="display:none;">
+      <div class="chat-search-row" id="chatSearchRow">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="chatContactSearch" placeholder="Search people&hellip;" autocomplete="off">
+      </div>
+      <div id="chatContactList" class="chat-contact-list"></div>
+      <div id="chatDmThread" class="chat-dm-thread" style="display:none;">
+        <button type="button" id="chatDmBackBtn" class="chat-dm-back">&larr; <span id="chatDmContactName"></span></button>
+        <div id="chatDmMessages" class="chat-messages"></div>
+        <div class="chat-attach-status" id="chatDmAttachStatus" style="display:none;"></div>
+        <div class="chat-input-row">
+          <button type="button" id="chatDmAttachBtn" class="chat-attach-btn" aria-label="Attach file" title="Attach file (max 650KB)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <input type="file" id="chatDmAttachInput" style="display:none;">
+          <input type="text" id="chatDmInput" placeholder="Message&hellip;" autocomplete="off">
+          <button type="button" id="chatDmSendBtn" aria-label="Send">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="masthead">
-    <div>
-      <h1 id="checklistName">PSS Checklist</h1>
-      <p id="masthead-sub"></p>
+    <div class="masthead-left">
+      <div class="mini-mascot" aria-hidden="true">
+        <span class="mm-antenna"></span>
+        <span class="mm-head">
+          <span class="mm-eye mm-eye-l"></span>
+          <span class="mm-eye mm-eye-r"></span>
+        </span>
+        <span class="mm-arm"></span>
+      </div>
+      <div>
+        <h1 id="checklistName">PSS Checklist</h1>
+        <p id="masthead-sub"></p>
+      </div>
     </div>
     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
       <div class="role-badge-wrap">
+        <button id="chatLauncherBtn" type="button" aria-label="Open team chat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          <span id="chatUnreadDot" class="chat-unread-dot" style="display:none;"></span>
+        </button>
         <span class="role-badge" id="roleBadge">Employee</span>
         <button id="roleToggleBtn" type="button">Logout</button>
       </div>
@@ -502,17 +1007,45 @@
 
   <div id="extraWorkPanel" style="background:var(--panel); border:1px solid var(--amber-dim); border-left:4px solid var(--amber); border-radius:10px; padding:14px 16px; margin-bottom:16px;">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-      <h3 style="margin:0; font-size:13px; color:var(--amber);">&#128221; Extra Work &mdash; <span id="extraWorkDateLbl"></span></h3>
+      <h3 style="margin:0; font-size:13px; color:var(--amber);">&#128221; Other Works &mdash; <span id="extraWorkDateLbl"></span></h3>
       <span id="extraWorkSavedLbl" style="font-size:10px; color:var(--text-faint);"></span>
     </div>
-    <p style="margin:6px 0 10px; font-size:11px; color:var(--text-dim);">Log any work you did today that isn't covered by a PSS in the checklist above. This resets automatically each day \u2014 today's notes stay under today's date in the report.</p>
-    <textarea id="extraWorkText" placeholder="e.g. Helped troubleshoot SCADA connectivity at site X&#10;Attended vendor call re: meter replacement" style="width:100%; min-height:80px; background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:7px; padding:10px; font-family:var(--font); font-size:12.5px; resize:vertical; box-sizing:border-box;"></textarea>
+    <p style="margin:6px 0 10px; font-size:11px; color:var(--text-dim);">Log any work you did today that isn't covered by a PSS in the checklist above. This resets automatically each day &mdash; today's notes stay under today's date in the report.</p>
+    <div class="rte-toolbar" id="extraWorkToolbar" role="toolbar" aria-label="Text formatting">
+      <button type="button" class="rte-btn" data-cmd="bold" title="Bold (Ctrl+B)" aria-label="Bold">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h7a3.5 3.5 0 0 1 0 7H6z"/><path d="M6 11h8a3.5 3.5 0 0 1 0 7H6z"/></svg>
+      </button>
+      <button type="button" class="rte-btn" data-cmd="italic" title="Italic (Ctrl+I)" aria-label="Italic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="4" x2="18" y2="4"/><line x1="6" y1="20" x2="14" y2="20"/><line x1="14" y1="4" x2="10" y2="20"/></svg>
+      </button>
+      <button type="button" class="rte-btn" data-cmd="underline" title="Underline (Ctrl+U)" aria-label="Underline">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v7a6 6 0 0 0 12 0V4"/><line x1="5" y1="20" x2="19" y2="20"/></svg>
+      </button>
+      <span class="rte-sep"></span>
+      <button type="button" class="rte-btn" data-cmd="insertUnorderedList" title="Bulleted list" aria-label="Bulleted list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="4.5" cy="6" r="1.1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1.1" fill="currentColor" stroke="none"/><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/></svg>
+      </button>
+      <button type="button" class="rte-btn" data-cmd="insertOrderedList" title="Numbered list" aria-label="Numbered list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><text x="1" y="8" font-size="7" fill="currentColor" stroke="none" font-family="sans-serif">1</text><text x="1" y="14" font-size="7" fill="currentColor" stroke="none" font-family="sans-serif">2</text><text x="1" y="20" font-size="7" fill="currentColor" stroke="none" font-family="sans-serif">3</text></svg>
+      </button>
+    </div>
+    <div id="extraWorkText" class="rte-editor" contenteditable="true" spellcheck="false" data-placeholder="e.g. Helped troubleshoot SCADA connectivity at site X. Attended vendor call re: meter replacement" role="textbox" aria-multiline="true" aria-label="Other Works notes"></div>
+  </div>
+
+  <div id="personalNotePanel" style="background:var(--panel); border:1px solid var(--teal); border-left:4px solid var(--teal); border-radius:10px; padding:14px 16px; margin-bottom:16px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <h3 style="margin:0; font-size:13px; color:var(--teal);">&#128204; Sticky Note</h3>
+      <span id="personalNoteSavedLbl" style="font-size:10px; color:var(--text-faint);"></span>
+    </div>
+    <p style="margin:6px 0 10px; font-size:11px; color:var(--text-dim);">Your own personal notes &mdash; anything you want to jot down and keep. Unlike Other Works, this never resets; it stays exactly as you left it every day.</p>
+    <textarea id="personalNoteText" placeholder="e.g. Ideas, reminders, things to follow up on&hellip;" style="width:100%; min-height:70px; background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:7px; padding:10px; font-family:var(--font); font-size:12.5px; resize:vertical; box-sizing:border-box;"></textarea>
   </div>
 
   <div id="pendingPanel" class="pending-panel collapsed" style="display:none;">
     <h3 id="pendingPanelHead" style="cursor:pointer; user-select:none;">
       <span class="pending-caret" id="pendingCaret">&#9660;</span>
       Pending Tasks <span class="count-pill" id="pendingCount">0</span>
+      <button type="button" id="pendingClearAllBtn" class="clear-all-btn">Clear All</button>
     </h3>
     <div class="pending-list" id="pendingList"></div>
   </div>
@@ -531,7 +1064,7 @@
       <input type="date" id="reportAddDate">
       <button id="reportAddDateBtn" class="reset-btn" type="button">Add date</button>
     </div>
-    <button id="doExportReportBtn" type="button">Export .txt</button>
+    <button id="doExportReportDocBtn" type="button">Export .doc</button>
   </div>
 
   <div class="toolbar">
@@ -553,6 +1086,16 @@
     <div class="confirm-actions">
       <button type="button" class="confirm-no" id="confirmNoBtn">No</button>
       <button type="button" class="confirm-yes" id="confirmYesBtn">Yes</button>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="pssInfoOverlay">
+  <div class="confirm-box" style="max-width:340px;">
+    <h4 id="pssInfoTitle">PSS Info</h4>
+    <div id="pssInfoBody"></div>
+    <div class="confirm-actions" style="margin-top:16px;">
+      <button type="button" class="confirm-yes confirm-ok" id="pssInfoCloseBtn">Close</button>
     </div>
   </div>
 </div>
@@ -615,6 +1158,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script>
 // ---- Firebase ----
 const firebaseConfig = {
@@ -626,21 +1170,24 @@ const firebaseConfig = {
   appId: "1:66873555979:web:ddd15dacbb8f003e529b0e",
   measurementId: "G-HFZK8BXFMC"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// ---- default source data (from Intimation_Sheet.xlsx, POC 1) ----
-// This template starts blank. Upload a monthly intimation sheet via the
-// "Upload Intimation Sheet" button, or add PSS entries manually via
-// "Manage PSS", to populate the checklist.
+let db = null;
+let storage = null;
+try{
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+}catch(e){
+  console.error('Firebase failed to initialize \u2014 data features will be unavailable', e);
+}
+try{
+  storage = firebase.storage();
+}catch(e){
+  console.error('Firebase Storage failed to initialize \u2014 attachments will be unavailable', e);
+}
 
 const ALT_GROUPS = [["Mon","Wed","Fri"], ["Tue","Thu","Sat"]];
 const TWICE_PAIRS = [["Mon","Thu"], ["Tue","Fri"], ["Wed","Sat"]];
 const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat"];
 
-// Auto-generated day assignment: Everyday -> all 6 days;
-// Alt -> alternating Mon/Wed/Fri or Tue/Thu/Sat by list order;
-// Twice in week -> round-robin across Mon+Thu / Tue+Fri / Wed+Sat.
 function buildScheduleFromSites(sites){
   const sched = {}; DAYS.forEach(d=>{ sched[d] = []; });
   const everyday = sites.filter(s=>s.freq === 'E');
@@ -667,13 +1214,60 @@ function rebuildSiteIndex(){
 }
 rebuildSiteIndex();
 
-let customSites = [];   // [{ id, name, state, freq, priority, days:[...], custom:true }, ...]
-let blockedNames = new Set();   // blocking is by NAME so it survives re-uploading a new sheet
-let dayOverrides = {};  // { siteId: ['Mon','Wed',...] } — manual drag-and-drop day changes, take precedence over the auto-generated schedule
-let pendingMap = {};            // { siteId: { remark, since: 'YYYY-MM-DD', auto: bool } } — persists across dates until marked done
-let autoResolvedUntil = {};     // { siteId: 'YYYY-MM-DD' } — suppresses auto-pending re-detection for dates on/before this once resolved
-let extraItemsByDate = {};      // { 'YYYY-MM-DD': [siteId, ...] } — tasks completed via "Mark Done" on a day they weren't normally scheduled, so they still show in that day's list
-let extraWorkByDate = {};       // { 'YYYY-MM-DD': 'free text' } — the "Extra Work" sticky note, one entry per calendar day
+let customSites = [];
+let blockedNames = new Set();
+let dayOverrides = {};
+let pendingMap = {};
+let autoResolvedUntil = {};
+let extraItemsByDate = {};
+let extraWorkByDate = {};
+
+// ---- Other Works rich-text helpers: convert saved HTML into plain text ----
+function stripHtmlToText(html){
+  const div = document.createElement('div');
+  div.innerHTML = html || '';
+  return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
+}
+
+// Splits rich-text HTML into an array of plain-text lines: one line per
+// list item, or per block-level element, with formatting tags stripped.
+function htmlNotesToLines(html){
+  const container = document.createElement('div');
+  container.innerHTML = html || '';
+  const lines = [];
+
+  function blockText(el){
+    return (el.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  const listItems = container.querySelectorAll('li');
+  if(listItems.length){
+    listItems.forEach(li=>{
+      const t = blockText(li);
+      if(t) lines.push(t);
+    });
+    // also pick up any top-level text outside of lists
+    container.querySelectorAll('li').forEach(li=>li.remove());
+  }
+
+  const blocks = container.querySelectorAll('div, p');
+  if(blocks.length){
+    blocks.forEach(b=>{
+      const t = blockText(b);
+      if(t) lines.push(t);
+    });
+  } else {
+    // Fallback for browsers (e.g. Firefox) that use <br> instead of block
+    // elements to separate lines within contenteditable.
+    container.querySelectorAll('br').forEach(br=>br.replaceWith('\n'));
+    const raw = (container.textContent || '').split('\n').map(s=>s.trim()).filter(Boolean);
+    lines.push(...raw);
+  }
+
+  return lines.filter(Boolean);
+}
+
+let personalNote = ''; // permanent sticky note, not tied to any date -- never resets
 
 function escapeHtml(str){
   return String(str == null ? '' : str).replace(/[&<>"']/g, c=>({
@@ -681,20 +1275,17 @@ function escapeHtml(str){
   }[c]));
 }
 
-let allDatesState = {};   // { "2026-07-13": { "s001": true, "s001_time": "..." }, ... }
+let allDatesState = {};
 let currentDate = new Date();
 let searchTerm = "";
 let stateFilterVal = "";
 let pieChart, monthChart;
 
-// ---- Session gate ----
-// Login.html sets these on successful login. Admins are sent to the Admin
-// Dashboard instead — this file is employee-only from here on.
 const ROLE_SESSION_KEY = "intimation-tracker-role";
 const ID_SESSION_KEY = "intimation-tracker-userid";
 const NAME_SESSION_KEY = "intimation-tracker-loginname";
 const LOGIN_PAGE = "index.html";
-const ADMIN_DASHBOARD_PAGE = "Admin_Dashboard.html";
+const ADMIN_DASHBOARD_PAGE = "admin_dashboard.html";
 
 const employeeId = sessionStorage.getItem(ID_SESSION_KEY);
 const employeeName = sessionStorage.getItem(NAME_SESSION_KEY) || employeeId;
@@ -704,6 +1295,580 @@ if(!sessionStorage.getItem(ROLE_SESSION_KEY) || !employeeId){
 } else if(sessionStorage.getItem(ROLE_SESSION_KEY) === 'admin'){
   window.location.replace(ADMIN_DASHBOARD_PAGE);
 }
+
+// ---- Team chat: group room + 1:1 direct messages. Wrapped in its own IIFE
+// and every Firestore call is individually guarded so a database hiccup
+// here can never break the rest of the app (or vice versa). ----
+// ---- Team chat: group room + 1:1 direct messages, with search and file
+// attachments. Wrapped in its own IIFE and every Firestore/Storage call is
+// individually guarded so a database hiccup here can never break the rest
+// of the app (or vice versa). ----
+(function initTeamChat(){
+  const launcherBtn = document.getElementById('chatLauncherBtn');
+  const overlay = document.getElementById('chatOverlay');
+  const panel = document.getElementById('chatPanel');
+  const closeBtn = document.getElementById('chatCloseBtn');
+  const tabTeam = document.getElementById('chatTabTeam');
+  const tabDirect = document.getElementById('chatTabDirect');
+  const teamView = document.getElementById('chatTeamView');
+  const directView = document.getElementById('chatDirectView');
+  const teamMessages = document.getElementById('chatTeamMessages');
+  const teamInput = document.getElementById('chatTeamInput');
+  const teamSendBtn = document.getElementById('chatTeamSendBtn');
+  const teamAttachBtn = document.getElementById('chatTeamAttachBtn');
+  const teamAttachInput = document.getElementById('chatTeamAttachInput');
+  const teamAttachStatus = document.getElementById('chatTeamAttachStatus');
+  const contactSearch = document.getElementById('chatContactSearch');
+  const searchRow = document.getElementById('chatSearchRow');
+  const contactList = document.getElementById('chatContactList');
+  const dmThread = document.getElementById('chatDmThread');
+  const dmBackBtn = document.getElementById('chatDmBackBtn');
+  const dmContactName = document.getElementById('chatDmContactName');
+  const dmMessages = document.getElementById('chatDmMessages');
+  const dmInput = document.getElementById('chatDmInput');
+  const dmSendBtn = document.getElementById('chatDmSendBtn');
+  const dmAttachBtn = document.getElementById('chatDmAttachBtn');
+  const dmAttachInput = document.getElementById('chatDmAttachInput');
+  const dmAttachStatus = document.getElementById('chatDmAttachStatus');
+  const unreadDot = document.getElementById('chatUnreadDot');
+  if(!launcherBtn || !panel) return;
+
+  let teamUnsub = null;
+  let dmUnsub = null;
+  let contactsUnsub = null;
+  let teamSummaryUnsub = null;
+  let dmSummariesUnsub = null;
+  let dmChatDocUnsub = null;
+  let activeDmId = null;
+  let activeDmOtherId = null;
+  let panelOpen = false;
+  let activeTab = 'team';
+  let allContacts = [];
+  let dmUnreadIds = new Set(); // otherId -> has unread
+  let dmLatestDocs = [];       // last rendered message docs for the open DM thread
+  let dmOtherReadTs = null;    // millis: how far the other participant has read
+
+  // Marks the DM thread as read by me, both locally (for the unread dot) and in
+  // Firestore (so the other participant's client can show a "Seen" receipt).
+  function markDmRead(chatId){
+    if(!chatId) return;
+    setLastSeen(chatId, Date.now());
+    if(!db) return;
+    db.collection('chats').doc(chatId).set({
+      lastRead: { [employeeId]: firebase.firestore.FieldValue.serverTimestamp() }
+    }, { merge:true }).catch(e=>console.error('mark dm read failed', e));
+  }
+
+  function lastSeenKey(chatId){ return 'chat:lastSeen:' + employeeId + ':' + chatId; }
+  function getLastSeen(chatId){
+    try{ return Number(localStorage.getItem(lastSeenKey(chatId))) || 0; }catch(e){ return 0; }
+  }
+  function setLastSeen(chatId, ts){
+    try{ localStorage.setItem(lastSeenKey(chatId), String(ts || Date.now())); }catch(e){}
+  }
+
+  function escapeHtml(s){
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function fmtBytes(n){
+    if(!n && n !== 0) return '';
+    if(n < 1024) return n + ' B';
+    if(n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+    return (n/(1024*1024)).toFixed(1) + ' MB';
+  }
+
+  function attachmentHtml(att){
+    if(!att || !att.url) return '';
+    const isImage = (att.type || '').indexOf('image/') === 0;
+    if(isImage){
+      return '<a href="' + escapeHtml(att.url) + '" target="_blank" rel="noopener" class="chat-attach-img-wrap">' +
+        '<img src="' + escapeHtml(att.url) + '" alt="' + escapeHtml(att.name || 'attachment') + '" class="chat-attach-img"></a>';
+    }
+    return '<a href="' + escapeHtml(att.url) + '" target="_blank" rel="noopener" download="' + escapeHtml(att.name || 'file') + '" class="chat-attach-file">' +
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+      '<span class="chat-attach-file-name">' + escapeHtml(att.name || 'file') + '</span>' +
+      (att.size ? '<span class="chat-attach-file-size">' + escapeHtml(fmtBytes(att.size)) + '</span>' : '') +
+      '</a>';
+  }
+
+  // Tick icon markup for read receipts (single check = sent, double = seen).
+  function receiptTicksHtml(seen){
+    return '<span class="chat-msg-receipt' + (seen ? ' seen' : '') + '">' +
+      '<svg width="12" height="9" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 6 5 10 11 2"/></svg>' +
+      (seen ? '<svg class="tick2" width="12" height="9" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 6 5 10 11 2"/></svg>' : '') +
+      '</span>';
+  }
+
+  function msgBubbleHtml(m, mine){
+    return '<div class="chat-msg ' + (mine ? 'mine' : 'theirs') + '">' +
+      (!mine ? '<span class="chat-msg-meta">' + escapeHtml(m.senderName || m.senderId) + '</span>' : '') +
+      (m.text ? '<div>' + escapeHtml(m.text) + '</div>' : '') +
+      attachmentHtml(m.attachment) +
+      '</div>';
+  }
+
+  // Keeps track of which doc IDs are currently rendered in each container, so
+  // a snapshot that's just "the same messages plus one new one" can append
+  // instead of rebuilding the whole list -- this is what caused the visible
+  // jump/flicker on every update (including receipt-only changes).
+  const renderedIds = new WeakMap(); // container -> array of doc ids in order
+
+  // readTs (millis, optional): when provided, the LAST message sent by me gets a
+  // "Sent"/"Seen" receipt based on whether the other participant has read past its
+  // timestamp. Team chat doesn't pass this (group read receipts aren't shown).
+  function renderMessages(container, docs, readTs){
+    if(!docs.length){
+      container.innerHTML = '<div class="chat-msg-empty">No messages yet \u2014 say hello!</div>';
+      renderedIds.set(container, []);
+      return;
+    }
+    const nearBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 60;
+    const ids = docs.map(d=>d.id);
+    const prevIds = renderedIds.get(container) || [];
+    const sameOrder = prevIds.length && ids.length >= prevIds.length &&
+      prevIds.every((id, i)=> ids[i] === id);
+
+    let lastMineIdx = -1;
+    docs.forEach((d, i)=>{ if(d.data().senderId === employeeId) lastMineIdx = i; });
+
+    if(sameOrder){
+      // Fast path: only new messages were added at the end -- append just those,
+      // and refresh the receipt on the (previous) last-mine message in place.
+      if(ids.length > prevIds.length){
+        const frag = document.createDocumentFragment();
+        for(let i = prevIds.length; i < docs.length; i++){
+          const m = docs[i].data();
+          const mine = m.senderId === employeeId;
+          const wrap = document.createElement('div');
+          wrap.innerHTML = msgBubbleHtml(m, mine) +
+            (mine && typeof readTs === 'number' && i === lastMineIdx ? receiptTicksHtml(readTs >= (m.clientTs || 0)) : '');
+          while(wrap.firstChild) frag.appendChild(wrap.firstChild);
+        }
+        container.appendChild(frag);
+      }
+      // Refresh the receipt on the last-mine bubble without touching anything else.
+      const oldReceipt = container.querySelector('.chat-msg-receipt');
+      if(oldReceipt) oldReceipt.remove();
+      if(lastMineIdx !== -1 && typeof readTs === 'number'){
+        const m = docs[lastMineIdx].data();
+        const bubbles = container.querySelectorAll('.chat-msg.mine');
+        const lastBubble = bubbles[bubbles.length - 1];
+        if(lastBubble) lastBubble.insertAdjacentHTML('afterend', receiptTicksHtml(readTs >= (m.clientTs || 0)));
+      }
+      renderedIds.set(container, ids);
+      if(nearBottom) container.scrollTop = container.scrollHeight;
+      return;
+    }
+
+    // Fallback: full rebuild (message removed, reordered, or container was empty).
+    container.innerHTML = docs.map((d, i)=>{
+      const m = d.data();
+      const mine = m.senderId === employeeId;
+      let receipt = '';
+      if(mine && typeof readTs === 'number' && i === lastMineIdx){
+        receipt = receiptTicksHtml(readTs >= (m.clientTs || 0));
+      }
+      return msgBubbleHtml(m, mine) + receipt;
+    }).join('');
+    renderedIds.set(container, ids);
+    if(nearBottom) container.scrollTop = container.scrollHeight;
+  }
+
+  function dmIdFor(otherId){
+    return 'dm_' + [employeeId, otherId].sort().join('_');
+  }
+
+  function updateLauncherDot(){
+    const teamUnread = getLastSeen('team') < (window.__chatTeamLastMsgTs || 0);
+    const anyDmUnread = dmUnreadIds.size > 0;
+    if(unreadDot) unreadDot.style.display = (teamUnread || anyDmUnread) ? 'block' : 'none';
+  }
+
+  function openPanel(){
+    panelOpen = true;
+    overlay.style.display = 'block';
+    panel.style.display = 'flex';
+    if(activeTab === 'team'){
+      subscribeTeam();
+      setLastSeen('team', Date.now());
+    } else {
+      subscribeContacts();
+    }
+    updateLauncherDot();
+  }
+  function closePanel(){
+    panelOpen = false;
+    panel.classList.add('closing');
+    overlay.classList.add('closing');
+    setTimeout(()=>{
+      overlay.style.display = 'none';
+      panel.style.display = 'none';
+      panel.classList.remove('closing');
+      overlay.classList.remove('closing');
+    }, 180);
+    if(teamUnsub){ teamUnsub(); teamUnsub = null; }
+    if(dmUnsub){ dmUnsub(); dmUnsub = null; }
+    if(dmChatDocUnsub){ dmChatDocUnsub(); dmChatDocUnsub = null; }
+  }
+
+  launcherBtn.addEventListener('click', openPanel);
+  closeBtn.addEventListener('click', closePanel);
+  overlay.addEventListener('click', closePanel);
+
+  tabTeam.addEventListener('click', ()=>{
+    activeTab = 'team';
+    tabTeam.classList.add('active'); tabDirect.classList.remove('active');
+    teamView.style.display = 'flex'; directView.style.display = 'none';
+    subscribeTeam();
+    setLastSeen('team', Date.now());
+    updateLauncherDot();
+  });
+  tabDirect.addEventListener('click', ()=>{
+    activeTab = 'direct';
+    tabDirect.classList.add('active'); tabTeam.classList.remove('active');
+    directView.style.display = 'flex'; teamView.style.display = 'none';
+    if(teamUnsub){ teamUnsub(); teamUnsub = null; }
+    subscribeContacts();
+  });
+
+  // ---- Team room ----
+  function subscribeTeam(){
+    if(!db){ teamMessages.innerHTML = '<div class="chat-msg-empty">Chat unavailable right now.</div>'; return; }
+    if(teamUnsub) return;
+    try{
+      teamUnsub = db.collection('chats').doc('team').collection('messages')
+        .orderBy('clientTs', 'asc').limitToLast(100)
+        .onSnapshot(snap=>{
+          renderMessages(teamMessages, snap.docs);
+        }, err=>{
+          console.error('team chat listener failed', err);
+          teamMessages.innerHTML = '<div class="chat-msg-empty">Chat unavailable right now.</div>';
+        });
+    }catch(e){ console.error('team chat subscribe failed', e); }
+  }
+
+  async function sendTeamMessage(attachment){
+    const text = teamInput.value.trim();
+    if(!text && !attachment) return;
+    if(!db) return;
+    teamInput.value = '';
+    const payload = {
+      senderId: employeeId, senderName: employeeName, text: text,
+      clientTs: Date.now(), ts: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if(attachment) payload.attachment = attachment;
+    try{
+      await db.collection('chats').doc('team').collection('messages').add(payload);
+      await db.collection('chats').doc('team').set({
+        lastMessage: text || (attachment ? ('\ud83d\udcce ' + attachment.name) : ''),
+        lastSenderId: employeeId, lastSenderName: employeeName,
+        lastTs: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+    }catch(e){ console.error('send team message failed', e); }
+  }
+  teamSendBtn.addEventListener('click', ()=>sendTeamMessage());
+  teamInput.addEventListener('keydown', e=>{ if(e.key === 'Enter') sendTeamMessage(); });
+
+  // ---- Toast notifications ----
+  const toastStack = document.getElementById('chatToastStack');
+  function showToast(name, subtitle, onClick){
+    if(!toastStack) return;
+    const el = document.createElement('div');
+    el.className = 'chat-toast';
+    const initial = (name || '?').trim().charAt(0).toUpperCase();
+    el.innerHTML =
+      '<span class="chat-toast-avatar">' + escapeHtml(initial) + '</span>' +
+      '<span class="chat-toast-body">' +
+      '<span class="chat-toast-title">' + escapeHtml(name) + ' sent you a message</span><br>' +
+      '<span class="chat-toast-sub">' + escapeHtml(subtitle || '') + '</span></span>';
+    el.addEventListener('click', ()=>{ if(onClick) onClick(); dismiss(); });
+    toastStack.appendChild(el);
+    const timer = setTimeout(dismiss, 5000);
+    function dismiss(){
+      clearTimeout(timer);
+      el.classList.add('leaving');
+      setTimeout(()=> el.remove(), 220);
+    }
+  }
+
+  let teamSummaryInitialized = false;
+  if(db){
+    try{
+      teamSummaryUnsub = db.collection('chats').doc('team').onSnapshot(doc=>{
+        if(!doc.exists) return;
+        const d = doc.data();
+        const ts = d.lastTs && typeof d.lastTs.toMillis === 'function' ? d.lastTs.toMillis() : 0;
+        const isNew = teamSummaryInitialized && d.lastSenderId !== employeeId && ts > window.__chatTeamLastMsgTs;
+        window.__chatTeamLastMsgTs = ts;
+        updateLauncherDot();
+        if(isNew && !(panelOpen && activeTab === 'team')){
+          showToast(d.lastSenderName || d.lastSenderId, d.lastMessage || 'New message in Team', ()=>{
+            openPanel();
+            tabTeam.click();
+          });
+        }
+        teamSummaryInitialized = true;
+      }, err=>console.error('team summary listener failed', err));
+    }catch(e){ console.error('team summary subscribe failed', e); }
+  }
+
+  // ---- Attachments: shared upload helper ----
+  // Downscales/re-encodes images client-side before upload. A typical phone
+  // photo is 3-8MB straight off the camera; this brings it down to a few
+  // hundred KB, which is almost always the real reason uploads feel slow.
+  function compressImageIfNeeded(file){
+    return new Promise((resolve)=>{
+      if(!file.type || file.type.indexOf('image/') !== 0 || file.type === 'image/gif'){
+        resolve(file); return;
+      }
+      const MAX_DIM = 1600;
+      const img = new Image();
+      const objUrl = URL.createObjectURL(file);
+      img.onload = ()=>{
+        URL.revokeObjectURL(objUrl);
+        let { width, height } = img;
+        if(width <= MAX_DIM && height <= MAX_DIM && file.size < 900*1024){
+          resolve(file); return; // already small enough, skip re-encoding
+        }
+        const scale = Math.min(1, MAX_DIM / Math.max(width, height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(width * scale);
+        canvas.height = Math.round(height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(blob=>{
+          if(!blob){ resolve(file); return; }
+          resolve(new File([blob], file.name, { type:'image/jpeg' }));
+        }, 'image/jpeg', 0.78);
+      };
+      img.onerror = ()=>{ URL.revokeObjectURL(objUrl); resolve(file); };
+      img.src = objUrl;
+    });
+  }
+
+  // Reads a file as a base64 data URL so it can be embedded directly inside
+  // the Firestore message document — no Storage bucket required.
+  function readFileAsDataUrl(file){
+    return new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onload = ()=> resolve(reader.result);
+      reader.onerror = ()=> reject(reader.error || new Error('read failed'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function uploadAttachment(file, chatId, statusEl, btnEl){
+    // Firestore caps a document at 1MB and base64 inflates size by ~33%,
+    // plus the rest of the message payload needs headroom. Cap the source
+    // file well under that so the encoded result always fits.
+    const MAX_KB = 650;
+    if(file.size > MAX_KB * 1024){
+      if(statusEl){ statusEl.textContent = 'File too large (max ' + MAX_KB + 'KB \u2014 attachments are stored inline).'; statusEl.style.display = 'inline'; }
+      return null;
+    }
+    if(btnEl) btnEl.disabled = true;
+    if(statusEl){
+      statusEl.innerHTML = 'Preparing\u2026';
+      statusEl.style.display = 'inline';
+    }
+    try{
+      const uploadFile = await compressImageIfNeeded(file);
+      // Re-check after image compression, since a large photo might still be
+      // over budget even after downscaling.
+      if(uploadFile.size > MAX_KB * 1024){
+        if(statusEl){ statusEl.textContent = 'File too large after compression (max ' + MAX_KB + 'KB).'; statusEl.style.display = 'inline'; }
+        return null;
+      }
+      const dataUrl = await readFileAsDataUrl(uploadFile);
+      if(statusEl) statusEl.style.display = 'none';
+      return { url: dataUrl, name: file.name, type: uploadFile.type || file.type || '', size: uploadFile.size, inline: true };
+    }catch(e){
+      console.error('attachment read failed', e);
+      if(statusEl){ statusEl.textContent = 'Attach failed.'; statusEl.style.display = 'inline'; }
+      return null;
+    }finally{
+      if(btnEl) btnEl.disabled = false;
+    }
+  }
+
+
+  if(teamAttachBtn && teamAttachInput){
+    teamAttachBtn.addEventListener('click', ()=> teamAttachInput.click());
+    teamAttachInput.addEventListener('change', async ()=>{
+      const file = teamAttachInput.files && teamAttachInput.files[0];
+      teamAttachInput.value = '';
+      if(!file) return;
+      const att = await uploadAttachment(file, 'team', teamAttachStatus, teamAttachBtn);
+      if(att) sendTeamMessage(att);
+    });
+  }
+
+  // ---- Direct messages ----
+  function subscribeContacts(){
+    if(!db){ contactList.innerHTML = '<div class="chat-msg-empty">Contacts unavailable right now.</div>'; return; }
+    if(contactsUnsub) return;
+    try{
+      contactsUnsub = db.collection('employees').onSnapshot(snap=>{
+        allContacts = snap.docs
+          .filter(d => d.id !== employeeId && d.data().active !== false)
+          .map(d => ({ id:d.id, name:d.data().name || d.id }))
+          .sort((a,b)=> a.name.localeCompare(b.name));
+        renderContactList(contactSearch ? contactSearch.value : '');
+        subscribeDmSummaries();
+      }, err=>{
+        console.error('contacts listener failed', err);
+        contactList.innerHTML = '<div class="chat-msg-empty">Contacts unavailable right now.</div>';
+      });
+    }catch(e){ console.error('contacts subscribe failed', e); }
+  }
+
+  function renderContactList(filterText){
+    const q = (filterText || '').trim().toLowerCase();
+    const rows = !q ? allContacts : allContacts.filter(r =>
+      r.name.toLowerCase().indexOf(q) !== -1 || r.id.toLowerCase().indexOf(q) !== -1
+    );
+    if(!rows.length){
+      contactList.innerHTML = '<div class="chat-msg-empty">' + (allContacts.length ? 'No matches.' : 'No other employees yet.') + '</div>';
+      return;
+    }
+    contactList.innerHTML = rows.map(r=>{
+      const initial = (r.name || '?').trim().charAt(0).toUpperCase();
+      const unread = dmUnreadIds.has(r.id);
+      return '<div class="chat-contact" data-id="' + escapeHtml(r.id) + '" data-name="' + escapeHtml(r.name) + '">' +
+        '<span class="chat-contact-avatar">' + escapeHtml(initial) + '</span>' +
+        '<span class="chat-contact-info"><span class="chat-contact-name">' + escapeHtml(r.name) + '</span><br>' +
+        '<span class="chat-contact-sub">' + escapeHtml(r.id) + '</span></span>' +
+        (unread ? '<span class="chat-contact-unread"></span>' : '') +
+        '</div>';
+    }).join('');
+    contactList.querySelectorAll('.chat-contact').forEach(el=>{
+      el.addEventListener('click', ()=> openDmThread(el.dataset.id, el.dataset.name));
+    });
+  }
+  if(contactSearch){
+    contactSearch.addEventListener('input', ()=> renderContactList(contactSearch.value));
+  }
+
+  let dmSummariesInitialized = false;
+  const dmKnownTs = {};
+  function subscribeDmSummaries(){
+    if(!db || dmSummariesUnsub) return;
+    try{
+      dmSummariesUnsub = db.collection('chats')
+        .where('participants', 'array-contains', employeeId)
+        .onSnapshot(snap=>{
+          dmUnreadIds = new Set();
+          snap.docs.forEach(doc=>{
+            const d = doc.data();
+            if(!d.participants || d.lastSenderId === employeeId) return;
+            const ts = d.lastTs && typeof d.lastTs.toMillis === 'function' ? d.lastTs.toMillis() : 0;
+            const otherId = d.participants.find(p => p !== employeeId);
+            if(ts > getLastSeen(doc.id)){
+              if(otherId) dmUnreadIds.add(otherId);
+            }
+            const isNew = dmSummariesInitialized && ts > (dmKnownTs[doc.id] || 0);
+            const threadOpen = panelOpen && activeTab === 'direct' && activeDmId === doc.id;
+            if(isNew && !threadOpen){
+              showToast(d.lastSenderName || otherId, d.lastMessage || 'New message', ()=>{
+                openPanel();
+                tabDirect.click();
+                openDmThread(otherId, d.lastSenderName || otherId);
+              });
+            }
+            dmKnownTs[doc.id] = ts;
+          });
+          renderContactList(contactSearch ? contactSearch.value : '');
+          updateLauncherDot();
+          dmSummariesInitialized = true;
+        }, err=>console.error('dm summaries listener failed', err));
+    }catch(e){ console.error('dm summaries subscribe failed', e); }
+  }
+  subscribeDmSummaries();
+
+  function openDmThread(otherId, otherName){
+    activeDmId = dmIdFor(otherId);
+    activeDmOtherId = otherId;
+    dmOtherReadTs = null;
+    dmContactName.textContent = otherName || otherId;
+    contactList.style.display = 'none';
+    if(searchRow) searchRow.style.display = 'none';
+    dmThread.style.display = 'flex';
+    markDmRead(activeDmId);
+    dmUnreadIds.delete(otherId);
+    updateLauncherDot();
+    if(dmUnsub){ dmUnsub(); dmUnsub = null; }
+    if(dmChatDocUnsub){ dmChatDocUnsub(); dmChatDocUnsub = null; }
+    if(!db) return;
+    try{
+      dmUnsub = db.collection('chats').doc(activeDmId).collection('messages')
+        .orderBy('clientTs', 'asc').limitToLast(100)
+        .onSnapshot(snap=>{
+          dmLatestDocs = snap.docs;
+          renderMessages(dmMessages, dmLatestDocs, dmOtherReadTs);
+          markDmRead(activeDmId);
+        }, err=>{
+          console.error('dm listener failed', err);
+          dmMessages.innerHTML = '<div class="chat-msg-empty">Chat unavailable right now.</div>';
+        });
+      // Watch the chat doc for the other participant's lastRead timestamp so we
+      // can flip "Sent" -> "Seen" on my last message in real time.
+      dmChatDocUnsub = db.collection('chats').doc(activeDmId)
+        .onSnapshot(doc=>{
+          const d = doc.data();
+          const otherTs = d && d.lastRead && d.lastRead[otherId];
+          dmOtherReadTs = otherTs && typeof otherTs.toMillis === 'function' ? otherTs.toMillis() : null;
+          if(dmLatestDocs.length) renderMessages(dmMessages, dmLatestDocs, dmOtherReadTs);
+        }, err=>console.error('dm chat doc listener failed', err));
+    }catch(e){ console.error('dm subscribe failed', e); }
+  }
+  dmBackBtn.addEventListener('click', ()=>{
+    if(dmUnsub){ dmUnsub(); dmUnsub = null; }
+    if(dmChatDocUnsub){ dmChatDocUnsub(); dmChatDocUnsub = null; }
+    dmThread.style.display = 'none';
+    contactList.style.display = 'block';
+    if(searchRow) searchRow.style.display = 'flex';
+    activeDmId = null;
+    activeDmOtherId = null;
+    dmLatestDocs = [];
+    dmOtherReadTs = null;
+  });
+
+  async function sendDmMessage(attachment){
+    const text = dmInput.value.trim();
+    if((!text && !attachment) || !db || !activeDmId) return;
+    dmInput.value = '';
+    const otherId = activeDmId.replace('dm_', '').split('_').find(id => id !== employeeId);
+    const payload = {
+      senderId: employeeId, senderName: employeeName, text: text,
+      clientTs: Date.now(), ts: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if(attachment) payload.attachment = attachment;
+    try{
+      await db.collection('chats').doc(activeDmId).collection('messages').add(payload);
+      await db.collection('chats').doc(activeDmId).set({
+        participants: [employeeId, otherId].sort(),
+        lastMessage: text || (attachment ? ('\ud83d\udcce ' + attachment.name) : ''),
+        lastSenderId: employeeId, lastSenderName: employeeName,
+        lastTs: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+      markDmRead(activeDmId);
+    }catch(e){ console.error('send dm message failed', e); }
+  }
+  dmSendBtn.addEventListener('click', ()=>sendDmMessage());
+  dmInput.addEventListener('keydown', e=>{ if(e.key === 'Enter') sendDmMessage(); });
+
+  if(dmAttachBtn && dmAttachInput){
+    dmAttachBtn.addEventListener('click', ()=> dmAttachInput.click());
+    dmAttachInput.addEventListener('change', async ()=>{
+      const file = dmAttachInput.files && dmAttachInput.files[0];
+      dmAttachInput.value = '';
+      if(!file || !activeDmId) return;
+      const att = await uploadAttachment(file, activeDmId, dmAttachStatus, dmAttachBtn);
+      if(att) sendDmMessage(att);
+    });
+  }
+})();
 
 function applyRoleUI(){
   const badge = document.getElementById('roleBadge');
@@ -715,9 +1880,6 @@ function applyRoleUI(){
   document.title = employeeName;
 }
 
-// Tracks whether a debounced save (e.g. the Extra Work note) is still
-// waiting to fire. Logout paths check this and force an immediate save
-// first, so navigating away doesn't race a save that hasn't happened yet.
 let pendingSaveFlush = null;
 
 async function flushPendingSaves(){
@@ -737,9 +1899,6 @@ async function handleLogoutClick(){
 }
 document.getElementById('roleToggleBtn').addEventListener('click', handleLogoutClick);
 
-// ---- Idle auto-logout ----
-// If nobody touches the page for 60 minutes, log out automatically so a
-// shared/unattended device doesn't stay signed in.
 const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
 let idleTimer = null;
 async function handleIdleLogout(){
@@ -758,9 +1917,6 @@ function resetIdleTimer(){
 });
 resetIdleTimer();
 
-// A tab/window close can't be awaited, but this is the best-effort safety
-// net: if a save is still pending when the page is about to unload, kick
-// off the write anyway. Not guaranteed to finish, but better than nothing.
 window.addEventListener('beforeunload', ()=>{
   if(pendingSaveFlush){
     clearTimeout(pendingSaveFlush.timer);
@@ -776,11 +1932,8 @@ function dateKey(d){
 }
 function weekdayName(d){ return JS_DAY_TO_NAME[d.getDay()]; }
 
-// Saturday-off mode is configurable per checklist (not everyone has the
-// same off Saturdays). One of: 'firstThird', 'secondFourth', 'none'.
 let saturdayOffMode = 'firstThird';
 
-// ---- Reusable styled Yes/No confirm modal (replaces native confirm() for anything destructive) ----
 function showConfirm(title, message){
   return new Promise(resolve=>{
     const overlay = document.getElementById('confirmOverlay');
@@ -814,12 +1967,7 @@ function showConfirm(title, message){
   });
 }
 
-// ---- Work-type popup: shown whenever a PSS is ticked, to record what work was done ----
 let workPopupKey = null;
-// When the popup was opened from the Pending Tasks "Done" button, this holds the
-// original pending id so confirmWorkPopup can do the pending-specific bookkeeping
-// (clearing it from pendingMap, marking it resolved, etc.) and so the popup always
-// reads/writes *today's* state regardless of which date is currently being viewed.
 let workPopupPendingId = null;
 
 function workPopupTargetState(){
@@ -874,9 +2022,6 @@ function updateWorkPopupSubVisibility(){
   document.getElementById('wpError').style.display = 'none';
 }
 
-// "None" means no correction was needed for this PSS -- it's mutually exclusive
-// with LC/RT/AM/MAPE. Picking None clears the others; picking any of the others
-// clears None.
 function onWorkCatChange(changedId){
   if(changedId === 'wpNone'){
     if(document.getElementById('wpNone').checked){
@@ -927,8 +2072,6 @@ function openWorkPopup(id, key, site, pendingId){
   clearOthersInputs();
   document.querySelectorAll('input[name="wpLCType"]').forEach(r=>{ r.checked = false; });
 
-  // Pre-fill from this PSS's last recorded work-type selection on this date, if any
-  // (e.g. re-opening after an uncheck/recheck).
   const existing = workPopupTargetState()[key+"_work"];
   if(existing){
     if(existing.RT) document.getElementById('wpRT').checked = true;
@@ -968,10 +2111,6 @@ function openWorkPopup(id, key, site, pendingId){
   document.getElementById('workPopupOverlay').classList.add('open');
 }
 
-// Opens the same work-type popup for a Pending Tasks "Done" click. Mirrors the
-// same-name merge logic that used to live in markPendingDone: if a PSS with the
-// same name already sits in today's list under a different id, the popup targets
-// that id instead of creating a duplicate entry by name.
 function openWorkPopupForPendingDone(pendingId){
   const site = getSite(pendingId);
   if(!site) return;
@@ -999,9 +2138,6 @@ async function confirmWorkPopup(){
   const pendingId = workPopupPendingId;
   const pendingRemark = pendingId ? pendingEntryRemark(pendingMap[pendingId]).trim() : '';
 
-  // After writing today's entry, clear the source item off the Pending Tasks list
-  // and stop it from re-appearing via auto-detection -- same bookkeeping
-  // markPendingDone used to do directly.
   const finalizePending = async ()=>{
     if(!pendingId) return;
     const todayKey = dateKey(new Date());
@@ -1016,7 +2152,6 @@ async function confirmWorkPopup(){
     await saveConfig();
   };
 
-  // "None" -- no correction needed. Just mark it done with a blank remark.
   if(document.getElementById('wpNone').checked){
     s[key] = true;
     s[key+"_time"] = new Date().toLocaleString();
@@ -1131,7 +2266,7 @@ function isOffSaturday(d){
   if(saturdayOffMode === 'none') return false;
   const weekOfMonth = Math.ceil(d.getDate() / 7);
   if(saturdayOffMode === 'secondFourth') return weekOfMonth === 2 || weekOfMonth === 4;
-  return weekOfMonth === 1 || weekOfMonth === 3; // 'firstThird' (default)
+  return weekOfMonth === 1 || weekOfMonth === 3;
 }
 
 function saturdayOffLabel(){
@@ -1162,13 +2297,28 @@ function siteKey(id){ return id; }
 function getSite(id){ return SITE_BY_ID[id] || customSites.find(c=>c.id===id); }
 function allSites(){ return [...SITES, ...customSites]; }
 
+// ---- PSS info popup: Lat / Long / Capacity (MW), read-only ----
+function showPssInfo(site){
+  document.getElementById('pssInfoTitle').textContent = site.name;
+  const fmt = v => (v !== undefined && v !== null && String(v).trim() !== '') ? String(v).trim() : '\u2014';
+  const capVal = fmt(site.capacityMw);
+  document.getElementById('pssInfoBody').innerHTML =
+    '<div class="pss-info-row"><span class="pss-info-label">Latitude</span><span class="pss-info-val">'+escapeHtml(fmt(site.lat))+'</span></div>' +
+    '<div class="pss-info-row"><span class="pss-info-label">Longitude</span><span class="pss-info-val">'+escapeHtml(fmt(site.lng))+'</span></div>' +
+    '<div class="pss-info-row"><span class="pss-info-label">Capacity</span><span class="pss-info-val">'+escapeHtml(capVal === '\u2014' ? '\u2014' : capVal + ' MW')+'</span></div>';
+  document.getElementById('pssInfoOverlay').classList.add('open');
+}
+document.getElementById('pssInfoCloseBtn').addEventListener('click', ()=> document.getElementById('pssInfoOverlay').classList.remove('open'));
+document.getElementById('pssInfoOverlay').addEventListener('click', (e)=>{ if(e.target.id === 'pssInfoOverlay') e.currentTarget.classList.remove('open'); });
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape') document.getElementById('pssInfoOverlay').classList.remove('open'); });
+
 async function copyToClipboard(text){
   try{
     if(navigator.clipboard && navigator.clipboard.writeText){
       await navigator.clipboard.writeText(text);
       return;
     }
-  }catch(e){ /* fall through to legacy method */ }
+  }catch(e){}
   try{
     const ta = document.createElement('textarea');
     ta.value = text;
@@ -1184,9 +2334,6 @@ async function copyToClipboard(text){
   }
 }
 
-// Which weekdays a given PSS runs on: a manual drag-and-drop override takes
-// precedence; otherwise custom PSS use their assigned .days, and uploaded-sheet
-// PSS fall back to whatever the auto-generated round-robin schedule gave them.
 function siteDaysFor(id){
   if(dayOverrides[id]) return dayOverrides[id];
   const site = getSite(id);
@@ -1194,25 +2341,23 @@ function siteDaysFor(id){
   return DAYS.filter(d => (SCHEDULE_IDS[d] || []).includes(id));
 }
 
-// If the uploaded sheet includes an "Employee" column, each employee only
-// sees PSS assigned to them by name. If the sheet has no such column at all
-// (nothing has assignedTo set), everyone sees the full shared list as before.
 function sheetHasAssignments(){
   return SITES.some(s => s.assignedTo);
 }
 
-// Live map of every employee's marked absence days: { employeeId: { dateKey: 'absent'|'half'|'present' } }.
-// Populated so a secondary (POC 2) can automatically pick up a PSS on any day
-// its primary (POC 1) is marked absent in the Admin Dashboard.
 let employeeAbsences = {};
-db.collection('employees').onSnapshot(snap=>{
-  employeeAbsences = {};
-  snap.docs.forEach(doc=>{
-    const d = doc.data();
-    if(d.absences) employeeAbsences[doc.id] = d.absences;
-  });
-  if(typeof renderAll === 'function') renderAll();
-});
+if(db){
+  try{
+    db.collection('employees').onSnapshot(snap=>{
+      employeeAbsences = {};
+      snap.docs.forEach(doc=>{
+        const d = doc.data();
+        if(d.absences) employeeAbsences[doc.id] = d.absences;
+      });
+      if(typeof renderAll === 'function') renderAll();
+    }, err => console.error('employee absences listener failed', err));
+  }catch(e){ console.error('employee absences subscribe failed', e); }
+}
 
 function isPrimaryAbsentOn(primaryEmpId, d){
   const abs = employeeAbsences[primaryEmpId];
@@ -1221,20 +2366,15 @@ function isPrimaryAbsentOn(primaryEmpId, d){
   return status === 'absent' || status === 'half';
 }
 
-// ---- Tracking which of a primary's PSS are already checked off ----
-// When I'm someone's secondary, I need to know which of *their* PSS are
-// already done that day, so only the ones they haven't gotten to yet move
-// to my checklist -- work they already finished before going on leave stays
-// credited to them, not duplicated onto mine.
-let primaryStateSubs = {};   // { primaryEmployeeId: unsubscribeFn }
-let primaryDoneMap = {};     // { primaryEmployeeId: { dateKey: { siteId: true } } }
+let primaryStateSubs = {};
+let primaryDoneMap = {};
 
 function ensurePrimarySubscriptions(){
   const needed = new Set(
     SITES.filter(s => s.secondaryToId === employeeId && s.assignedToId).map(s => s.assignedToId)
   );
   needed.forEach(pid=>{
-    if(primaryStateSubs[pid]) return; // already subscribed
+    if(primaryStateSubs[pid]) return;
     primaryStateSubs[pid] = db.collection('employees').doc(pid).collection('state').doc('main')
       .onSnapshot(doc=>{
         primaryDoneMap[pid] = (doc.exists && doc.data().allDatesState && typeof doc.data().allDatesState === 'object')
@@ -1244,7 +2384,7 @@ function ensurePrimarySubscriptions(){
   });
   Object.keys(primaryStateSubs).forEach(pid=>{
     if(!needed.has(pid)){
-      primaryStateSubs[pid](); // unsubscribe -- no longer their secondary for anything
+      primaryStateSubs[pid]();
       delete primaryStateSubs[pid];
       delete primaryDoneMap[pid];
     }
@@ -1260,9 +2400,6 @@ function isAssignedToMe(site, d){
   if(!sheetHasAssignments()) return true;
   const useDate = d || currentDate;
   if(site.assignedToId === employeeId){
-    // On a day I'm marked absent/half-day, my PSS moves to my secondary --
-    // except anything I'd already checked off myself before leaving, which
-    // stays visible (and credited) on my own checklist.
     if(isPrimaryAbsentOn(employeeId, useDate)){
       return !!(allDatesState[dateKey(useDate)] && allDatesState[dateKey(useDate)][site.id]);
     }
@@ -1270,15 +2407,12 @@ function isAssignedToMe(site, d){
   }
   if(site.secondaryToId === employeeId && site.assignedToId){
     if(isPrimaryAbsentOn(site.assignedToId, useDate)){
-      // Only pick up what the primary hasn't finished yet.
       return !isPrimaryDoneWithSite(site.assignedToId, useDate, site.id);
     }
   }
   return false;
 }
 
-// Raw schedule for a date, ignoring pending status (used for auto-pending detection and
-// anywhere we need to know what *would* be scheduled regardless of pending state).
 function scheduledIdsForDateRaw(d){
   if(isOffSaturday(d)) return [];
   const wd = weekdayName(d);
@@ -1293,8 +2427,6 @@ function scheduledIdsForDateRaw(d){
   return ids;
 }
 
-// Move a PSS from one scheduled day to another (drag-and-drop). Materializes an
-// explicit override on first use so it survives independent of the auto schedule.
 function moveSiteDay(id, fromDay, toDay){
   if(fromDay === toDay) return;
   let days = [...siteDaysFor(id)];
@@ -1307,7 +2439,6 @@ function moveSiteDay(id, fromDay, toDay){
   saveConfig();
 }
 
-// Names currently sitting in the Pending Tasks list (manually flagged or auto-detected).
 function pendingNameSet(){
   const names = new Set();
   Object.keys(pendingMap).forEach(id=>{
@@ -1317,13 +2448,6 @@ function pendingNameSet(){
   return names;
 }
 
-// Schedule for a date, with any PSS that's currently on the pending list removed —
-// a pending PSS is prioritised in the Pending Tasks panel instead of showing again
-// in the day-to-day list under the same name. (scheduledIdsForDateRaw already folds
-// in anything completed via "Mark Done" that wasn't natively scheduled that day.)
-// Also: once a missed task has been resolved via "Mark Done" on a later day, it's
-// hidden from the original day it was missed on too (rather than sitting there
-// forever as unchecked) — it now lives only on the day it was actually completed.
 function allItemsForDate(d){
   const raw = scheduledIdsForDateRaw(d);
   const pendingNames = pendingNameSet();
@@ -1434,6 +2558,9 @@ function renderPanel(){
       '<button type="button" class="copy-btn" title="Copy name" aria-label="Copy name">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5a1.5 1.5 0 0 1 1.5-1.5H15"/></svg>' +
       '</button>' +
+      '<button type="button" class="info-btn" title="Lat / Long / Capacity" aria-label="PSS info: lat, long, capacity">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>' +
+      '</button>' +
       '<div class="site-text"><div class="site-name">'+site.name+'</div>' +
         '<div class="site-meta"><span>'+site.state+'</span></div>' + timeStr +
         '<input type="text" class="remark-input" placeholder="Add remark&hellip;" value="'+escapeHtml(remarkVal)+'">' +
@@ -1454,10 +2581,12 @@ function renderPanel(){
       copyBtn.classList.add('copied');
       setTimeout(()=>copyBtn.classList.remove('copied'), 1000);
     };
+    const infoBtn = row.querySelector('.info-btn');
+    infoBtn.onclick = (e)=>{ e.stopPropagation(); showPssInfo(site); };
     const remarkInput = row.querySelector('.remark-input');
     remarkInput.addEventListener('click', e=> e.stopPropagation());
     remarkInput.addEventListener('keydown', e=>{
-      e.stopPropagation(); // typing (incl. spacebar) inside the remark box must never trigger row shortcuts
+      e.stopPropagation();
       if(e.key === 'Enter'){ e.preventDefault(); remarkInput.blur(); }
     });
     remarkInput.addEventListener('blur', async ()=>{
@@ -1475,8 +2604,6 @@ function renderPanel(){
       await saveConfig();
       renderAll();
     });
-    // Keyboard: Space/Enter toggles the focused row's check; Up/Down moves focus
-    // between rows so a whole day can be worked through without a mouse.
     row.addEventListener('keydown', (e)=>{
       if(e.key === ' ' || e.key === 'Enter'){
         e.preventDefault();
@@ -1538,9 +2665,6 @@ function renderOverall(){
   }
 }
 
-// Consecutive fully-completed past days (strictly before today), walking backward.
-// Days with nothing scheduled (offs, or before the sheet existed) are skipped
-// without breaking the streak; a day with items left undone stops it.
 function computeStreak(){
   let streak = 0;
   const d = new Date();
@@ -1595,7 +2719,7 @@ function renderCharts(){
       type: 'doughnut',
       data: {
         labels: ['Completed', 'Remaining'],
-        datasets: [{ data: [done, remaining], backgroundColor: ['#3fb8a8', '#2c3a47'], borderWidth: 0 }]
+        datasets: [{ data: [done, remaining], backgroundColor: ['#65ffc7', '#2a2350'], borderWidth: 0 }]
       },
       options: {
         responsive: true,
@@ -1617,7 +2741,7 @@ function renderCharts(){
       type: 'pie',
       data: {
         labels: ['Completed', 'Remaining'],
-        datasets: [{ data: [mDone, mRemaining], backgroundColor: ['#3fb8a8', '#2c3a47'], borderWidth: 0 }]
+        datasets: [{ data: [mDone, mRemaining], backgroundColor: ['#65ffc7', '#2a2350'], borderWidth: 0 }]
       },
       options: {
         responsive: true,
@@ -1674,12 +2798,35 @@ function renderPendingPanel(){
     doneBtn.textContent = 'Mark Done';
     doneBtn.onclick = ()=> openWorkPopupForPendingDone(id);
     item.appendChild(doneBtn);
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'clear-btn';
+    clearBtn.textContent = 'Clear';
+    clearBtn.title = 'Remove from pending without logging work';
+    clearBtn.onclick = async ()=>{
+      const ok = await showConfirm('Clear pending task?', 'This removes "' + site.name + '" from the pending list without logging any work. This can\'t be undone.');
+      if(!ok) return;
+      delete pendingMap[id];
+      renderPendingPanel();
+      await saveConfig();
+    };
+    item.appendChild(clearBtn);
     list.appendChild(item);
   });
 }
 
 document.getElementById('pendingPanelHead').addEventListener('click', ()=>{
   document.getElementById('pendingPanel').classList.toggle('collapsed');
+});
+
+document.getElementById('pendingClearAllBtn').addEventListener('click', async (e)=>{
+  e.stopPropagation(); // don't also trigger the header's collapse toggle
+  const count = Object.keys(pendingMap).length;
+  if(!count) return;
+  const ok = await showConfirm('Clear all pending tasks?', 'This removes all ' + count + ' pending task' + (count === 1 ? '' : 's') + ' without logging any work. This can\'t be undone.');
+  if(!ok) return;
+  pendingMap = {};
+  renderPendingPanel();
+  await saveConfig();
 });
 
 function renderAll(){
@@ -1694,28 +2841,22 @@ function renderAll(){
 let extraWorkLoaded = false;
 function renderExtraWorkPanel(){
   const dateLbl = document.getElementById('extraWorkDateLbl');
-  const textarea = document.getElementById('extraWorkText');
-  if(!dateLbl || !textarea) return;
+  const editor = document.getElementById('extraWorkText');
+  if(!dateLbl || !editor) return;
   const k = dateKey(currentDate);
   dateLbl.textContent = currentDate.toLocaleDateString(undefined, { weekday:'short', day:'numeric', month:'short', year:'numeric' });
-  // Don't touch the textarea until the real saved data has arrived from
-  // Firestore -- otherwise the very first render (which fires before that
-  // fetch completes) stamps today's date as "already shown" with blank
-  // text, and the real data gets silently skipped when it arrives.
   if(!extraWorkLoaded) return;
-  // Only overwrite the textarea if the date actually changed, so we don't
-  // stomp on what the person is mid-typing if renderAll fires from an
-  // unrelated update (e.g. a Firestore snapshot for something else).
-  if(textarea.dataset.boundDate !== k){
-    textarea.value = extraWorkByDate[k] || '';
-    textarea.dataset.boundDate = k;
+  if(editor.dataset.boundDate !== k){
+    editor.innerHTML = extraWorkByDate[k] || '';
+    editor.dataset.boundDate = k;
   }
 }
 
 let extraWorkSaveTimer = null;
-document.getElementById('extraWorkText').addEventListener('input', (e)=>{
+function scheduleExtraWorkSave(){
+  const editor = document.getElementById('extraWorkText');
   const k = dateKey(currentDate);
-  extraWorkByDate[k] = e.target.value;
+  extraWorkByDate[k] = editor.innerHTML;
   const savedLbl = document.getElementById('extraWorkSavedLbl');
   if(savedLbl) savedLbl.textContent = 'Saving\u2026';
   clearTimeout(extraWorkSaveTimer);
@@ -1725,36 +2866,97 @@ document.getElementById('extraWorkText').addEventListener('input', (e)=>{
     if(savedLbl) savedLbl.textContent = 'Saved';
   }, 600);
   pendingSaveFlush = { timer: extraWorkSaveTimer };
+}
+
+// ---- Other Works rich-text editor: minimal-icon toolbar + keyboard shortcuts ----
+(function initOtherWorksEditor(){
+  const editor = document.getElementById('extraWorkText');
+  const toolbar = document.getElementById('extraWorkToolbar');
+  if(!editor || !toolbar) return;
+
+  editor.addEventListener('input', scheduleExtraWorkSave);
+
+  function updateToolbarState(){
+    toolbar.querySelectorAll('.rte-btn[data-cmd]').forEach(btn=>{
+      const cmd = btn.dataset.cmd;
+      let isActive = false;
+      try { isActive = document.queryCommandState(cmd); } catch(e){}
+      btn.classList.toggle('active', !!isActive);
+    });
+  }
+
+  toolbar.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.rte-btn[data-cmd]');
+    if(!btn) return;
+    editor.focus();
+    document.execCommand(btn.dataset.cmd, false, null);
+    updateToolbarState();
+    scheduleExtraWorkSave();
+  });
+
+  editor.addEventListener('keyup', updateToolbarState);
+  editor.addEventListener('mouseup', updateToolbarState);
+
+  editor.addEventListener('keydown', (e)=>{
+    const ctrl = e.ctrlKey || e.metaKey;
+    if(!ctrl) return;
+    const key = e.key.toLowerCase();
+    // Bold / Italic / Underline
+    if(key === 'b'){ e.preventDefault(); document.execCommand('bold'); updateToolbarState(); scheduleExtraWorkSave(); return; }
+    if(key === 'i'){ e.preventDefault(); document.execCommand('italic'); updateToolbarState(); scheduleExtraWorkSave(); return; }
+    if(key === 'u'){ e.preventDefault(); document.execCommand('underline'); updateToolbarState(); scheduleExtraWorkSave(); return; }
+    // Undo / Redo
+    if(key === 'z'){ e.preventDefault(); document.execCommand('undo'); scheduleExtraWorkSave(); return; }
+    if(key === 'y'){ e.preventDefault(); document.execCommand('redo'); scheduleExtraWorkSave(); return; }
+    // Select All / Cut / Copy / Paste — let the browser handle these natively inside contenteditable
+  });
+})();
+
+let personalNoteSaveTimer = null;
+document.getElementById('personalNoteText').addEventListener('input', (e)=>{
+  personalNote = e.target.value;
+  const savedLbl = document.getElementById('personalNoteSavedLbl');
+  if(savedLbl) savedLbl.textContent = 'Saving\u2026';
+  clearTimeout(personalNoteSaveTimer);
+  personalNoteSaveTimer = setTimeout(async ()=>{
+    pendingSaveFlush = null;
+    await saveState();
+    if(savedLbl) savedLbl.textContent = 'Saved';
+  }, 600);
+  pendingSaveFlush = { timer: personalNoteSaveTimer };
 });
 
-// ---- persistence ----
-// ---- Firestore-backed storage ----
-// Each employee's checklist state (ticks, pending items, personal settings)
-// lives at employees/{employeeId}/state/main so it syncs across that
-// employee's own devices and is readable by the Admin Dashboard for progress
-// reporting. The PSS site list itself is shared and admin-managed, read live
-// from sheet/current below.
 const EMP_STATE_DOC = () => db.collection('employees').doc(employeeId).collection('state').doc('main');
 const EMP_DOC = () => db.collection('employees').doc(employeeId);
 const SHEET_DOC = db.collection('sheet').doc('current');
+
+
+let toastTimer = null;
+function showToast(msg, isError, durationMs){
+  const t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), durationMs || (isError ? 3200 : 2200));
+}
 
 let stateSaveTimer = null;
 async function saveState(){
   try{
     await EMP_STATE_DOC().set({
-      allDatesState, pendingMap, autoResolvedUntil, extraItemsByDate, extraWorkByDate, saturdayOffMode,
+      allDatesState, pendingMap, autoResolvedUntil, extraItemsByDate, extraWorkByDate, saturdayOffMode, personalNote,
       updatedAt: new Date().toISOString()
     }, { merge: true });
   }catch(e){
     console.error('saveState failed', e);
+    showToast('Couldn\u2019t save \u2014 check your connection', true);
   }
-  // Debounce the progress-summary write slightly so rapid ticks don't spam it.
   clearTimeout(stateSaveTimer);
   stateSaveTimer = setTimeout(updateProgressSummary, 400);
 }
 
-// saveConfig is kept as an alias so the rest of the app (pending/report logic
-// written before this Firestore migration) can call either name.
 async function saveConfig(){ await saveState(); }
 
 async function updateProgressSummary(){
@@ -1766,10 +2968,6 @@ async function updateProgressSummary(){
     const done = doneItems.length;
     const pendingCount = Object.keys(pendingMap).length;
     const k = dateKey(currentDate);
-    // Only include a PSS in the detailed work log if it actually has a
-    // remark logged (matches the same "worth reporting" rule the Work
-    // Report export already uses) — ticked-with-no-remark items are still
-    // counted in total/done above, just not itemised here.
     const workItems = doneItems
       .map(id=>{
         const site = getSite(id);
@@ -1778,13 +2976,14 @@ async function updateProgressSummary(){
         return (site && remark) ? { name: site.name, remark, work } : null;
       })
       .filter(Boolean);
-    const extraWorkText = (extraWorkByDate[k] || '').trim();
+    const extraWorkText = stripHtmlToText(extraWorkByDate[k] || '');
     await EMP_DOC().set({
       name: employeeName,
       progress: { [k]: { total, done, pendingCount, workItems, extraWork: extraWorkText, updatedAt: new Date().toISOString() } }
     }, { merge: true });
   }catch(e){
     console.error('updateProgressSummary failed', e);
+    showToast('Couldn\u2019t save \u2014 check your connection', true);
   }
 }
 
@@ -1811,20 +3010,21 @@ async function loadState(){
       extraItemsByDate = (d.extraItemsByDate && typeof d.extraItemsByDate === 'object') ? d.extraItemsByDate : {};
       extraWorkByDate = (d.extraWorkByDate && typeof d.extraWorkByDate === 'object') ? d.extraWorkByDate : {};
       saturdayOffMode = ['firstThird','secondFourth','none'].includes(d.saturdayOffMode) ? d.saturdayOffMode : 'firstThird';
+      personalNote = typeof d.personalNote === 'string' ? d.personalNote : '';
     }
     extraWorkLoaded = true;
   }catch(e){
     console.error('loadState failed', e);
-    extraWorkLoaded = true; // don't leave the note box permanently frozen if the fetch fails
+    extraWorkLoaded = true;
   }
+  const noteTextarea = document.getElementById('personalNoteText');
+  if(noteTextarea && noteTextarea.value !== personalNote) noteTextarea.value = personalNote;
   populateStateFilter();
   const satSel = document.getElementById('saturdayOffSelect');
   if(satSel) satSel.value = saturdayOffMode;
   updateGridMark();
   document.getElementById('foot-note').textContent =
     'Tap a site to mark it checked \u2014 you\'ll be asked what work was done. Progress is saved to your account and visible to your admin. Pick a different date above to jump to that day\'s PSS list.';
-  // One-time cleanup: drop any auto-detected pending entries saved under the old
-  // per-day key shape (from before pending was tracked separately).
   autoDetectOverduePending();
   await saveState();
   applyRoleUI();
@@ -1833,9 +3033,6 @@ async function loadState(){
   maybeHideLoadingOverlay();
 }
 
-// The shared PSS site list is admin-managed and read-only here. We listen
-// live so if admin uploads a new sheet or edits a site mid-day, it updates
-// without needing a refresh.
 function subscribeSheet(){
   SHEET_DOC.onSnapshot(doc=>{
     if(doc.exists){
@@ -1873,29 +3070,21 @@ function subscribeSheet(){
 }
 
 function updateMastheadSubtitle(){
-  const mySites = sheetHasAssignments() ? SITES.filter(isAssignedToMe) : SITES;
+  const mySites = sheetHasAssignments() ? SITES.filter(s => isAssignedToMe(s)) : SITES;
   const states = [...new Set(mySites.map(s=>s.state).filter(Boolean))].sort();
   document.getElementById('masthead-sub').textContent = mySites.length
     ? mySites.length + ' sites' + (states.length ? ' \u00b7 ' + states.join(' / ') : '') + ' \u00b7 check-in intimation schedule'
     : (SITES.length ? 'No PSS assigned to you yet \u2014 ask your admin' : 'No PSS yet \u2014 ask your admin to upload the intimation sheet');
 }
 
-// Any scheduled task from a past day that was never checked off is treated as
-// pending too, even if nobody flagged it by hand. Only considers days on/after the
-// current intimation sheet was uploaded — days before that never had these PSS
-// tracked, so they're never backdated into a false backlog. A task stays
-// suppressed once its pending entry has been marked done (see autoResolvedUntil).
 function autoDetectOverduePending(){
   let changed = false;
   const pendingNames = pendingNameSet();
   const todayKey = dateKey(new Date());
   const sheetStartKey = (sheetInfo && sheetInfo.uploadedAt) ? dateKey(new Date(sheetInfo.uploadedAt)) : null;
-  // Only look at dates that actually have saved state — i.e. days you had the
-  // checklist open on. Days before you started using this tool are never
-  // guessed at, so it won't invent a backlog out of history that doesn't exist.
   Object.keys(allDatesState).forEach(dKey=>{
-    if(dKey >= todayKey) return; // skip today/future — only past days count as overdue
-    if(sheetStartKey && dKey < sheetStartKey) return; // predates the current sheet — skip
+    if(dKey >= todayKey) return;
+    if(sheetStartKey && dKey < sheetStartKey) return;
     const [y,m,day] = dKey.split('-').map(Number);
     const d = new Date(y, m-1, day);
     if(isOffSaturday(d)) return;
@@ -1904,11 +3093,11 @@ function autoDetectOverduePending(){
     raw.forEach(id=>{
       const site = getSite(id);
       if(!site) return;
-      if(dayState[siteKey(id)]) return; // was checked done that day
-      if(Object.prototype.hasOwnProperty.call(pendingMap, id)) return; // already pending
-      if(pendingNames.has(site.name)) return; // another entry with same name already pending
+      if(dayState[siteKey(id)]) return;
+      if(Object.prototype.hasOwnProperty.call(pendingMap, id)) return;
+      if(pendingNames.has(site.name)) return;
       const resolvedUntil = autoResolvedUntil[id];
-      if(resolvedUntil && dKey <= resolvedUntil) return; // resolved through this date already
+      if(resolvedUntil && dKey <= resolvedUntil) return;
       pendingMap[id] = { remark: dayState[siteKey(id)+"_remark"] || '', since: dKey, auto: true };
       pendingNames.add(site.name);
       changed = true;
@@ -1918,7 +3107,6 @@ function autoDetectOverduePending(){
   return changed;
 }
 
-// ---- Work report export (Tue: Fri+Sat+Mon+Tue / Thu: Wed+Thu, or any custom day selection) ----
 function addDays(d, n){
   const nd = new Date(d);
   nd.setDate(nd.getDate() + n);
@@ -1926,15 +3114,13 @@ function addDays(d, n){
 }
 
 function reportDateLabel(d){
-  // Matches the template's "10 July" style: day number + full month name, no year.
   return d.getDate() + ' ' + MONTH_NAMES[d.getMonth()];
 }
 
 let reportPanelOpen = false;
-let reportSelectedDates = new Set(); // set of dateKey strings
+let reportSelectedDates = new Set();
 
 function mostRecentWeekday(baseDate, targetDow){
-  // targetDow: 0=Sun ... 6=Sat. Returns the most recent date on/before baseDate with that weekday.
   const d = new Date(baseDate);
   const diff = (d.getDay() - targetDow + 7) % 7;
   d.setDate(d.getDate() - diff);
@@ -1944,10 +3130,10 @@ function mostRecentWeekday(baseDate, targetDow){
 function applyPresetTue(){
   const tue = mostRecentWeekday(new Date(), 2);
   reportSelectedDates = new Set([
-    dateKey(addDays(tue, -4)), // Fri
-    dateKey(addDays(tue, -3)), // Sat
-    dateKey(addDays(tue, -1)), // Mon
-    dateKey(tue)               // Tue
+    dateKey(addDays(tue, -4)),
+    dateKey(addDays(tue, -3)),
+    dateKey(addDays(tue, -1)),
+    dateKey(tue)
   ]);
   renderReportDaysList();
 }
@@ -1955,8 +3141,8 @@ function applyPresetTue(){
 function applyPresetThu(){
   const thu = mostRecentWeekday(new Date(), 4);
   reportSelectedDates = new Set([
-    dateKey(addDays(thu, -1)), // Wed
-    dateKey(thu)               // Thu
+    dateKey(addDays(thu, -1)),
+    dateKey(thu)
   ]);
   renderReportDaysList();
 }
@@ -1976,7 +3162,6 @@ function renderReportDaysList(){
     d.setDate(d.getDate() - i);
     keys.push(dateKey(d));
   }
-  // keep any manually-added dates that fall outside the last-14-days window too
   [...reportSelectedDates].forEach(k=>{ if(!keys.includes(k)) keys.push(k); });
   keys.sort();
   keys.reverse();
@@ -2007,7 +3192,9 @@ function buildWorkReportText(dateKeys){
     const dayState = allDatesState[k] || {};
     const items = allItemsForDate(d);
 
-    const lc = [], rt = [], am = [], mape = [], daySkip = [], enc = [], pref = [], others = [];
+    const lc = [], rt = [], mape = [], enc = [], pref = [], others = [];
+    const aeroProfile = [], aeroT21 = [], aeroSTB = [], aeroETB = [];
+    const dsT1 = [], dsT21 = [];
     items.forEach(id=>{
       const site = getSite(id);
       if(!site) return;
@@ -2015,60 +3202,68 @@ function buildWorkReportText(dateKeys){
       if(!work) return;
       if(work.LC){
         const lcTypes = Array.isArray(work.LC) ? work.LC : [work.LC];
-        if(lcTypes.length) lc.push(site.name + '(' + lcTypes.join('/') + ')');
+        if(lcTypes.length) lc.push(site.name + ' (' + lcTypes.join('/') + ')');
       }
       if(work.RT) rt.push(site.name);
       if(work.AM){
-        const parts = [];
-        if(work.AM.ProfileCorrection) parts.push('Profile');
-        if(work.AM.T21Correction) parts.push('T21');
-        if(work.AM.STBCorrection) parts.push('STB');
-        if(work.AM.ETBCorrection) parts.push('ETB');
-        if(parts.length) am.push(site.name + ' ' + parts.join('/') + ' Correct');
+        if(work.AM.ProfileCorrection) aeroProfile.push(site.name);
+        if(work.AM.T21Correction) aeroT21.push(site.name);
+        if(work.AM.STBCorrection) aeroSTB.push(site.name);
+        if(work.AM.ETBCorrection) aeroETB.push(site.name);
       }
       if(work.MAPE) mape.push(site.name);
       if(work.DaySkip){
-        const parts = [];
-        if(work.DaySkip.T1) parts.push('T1');
-        if(work.DaySkip.T21) parts.push('T21');
-        if(parts.length) daySkip.push(site.name + ' ' + parts.join('/'));
+        if(work.DaySkip.T1) dsT1.push(site.name);
+        if(work.DaySkip.T21) dsT21.push(site.name);
       }
       if(work.ENC) enc.push(site.name);
       if(work.Pref) pref.push(site.name);
       if(work.Others && work.Others.length){
         work.Others.forEach(remark=>{
-          others.push(remark + ' (' + site.name + ')');
+          others.push(site.name + ' ' + remark);
         });
       }
     });
 
+    const aero = [];
+    if(aeroProfile.length) aero.push('Profile Correction(' + aeroProfile.join(', ') + ')');
+    if(aeroT21.length) aero.push('T21 Correction(' + aeroT21.join(', ') + ')');
+    if(aeroSTB.length) aero.push('STB Correction(' + aeroSTB.join(', ') + ')');
+    if(aeroETB.length) aero.push('ETB Correction(' + aeroETB.join(', ') + ')');
+
+    const daySkip = [];
+    if(dsT1.length) daySkip.push('T1(' + dsT1.join(', ') + ')');
+    if(dsT21.length) daySkip.push('T21(' + dsT21.join(', ') + ')');
+
     const cats = [];
-    if(lc.length) cats.push(['LC', lc]);
-    if(rt.length) cats.push(['RT', rt]);
-    if(am.length) cats.push(['AM', am]);
+    if(lc.length) cats.push(['Loss Correction', lc]);
+    if(rt.length) cats.push(['Real Time', rt]);
+    if(aero.length) cats.push(['AeroMAl', aero]);
     if(mape.length) cats.push(['MAPE', mape]);
     if(daySkip.length) cats.push(['Day Skip', daySkip]);
     if(enc.length) cats.push(['EN Combination Change', enc]);
     if(pref.length) cats.push(['Preference Change', pref]);
-    if(others.length) cats.push(['Remarks (PSS Name)', others]);
+    if(others.length) cats.push(['Others', others]);
 
     const extraWorkText = (extraWorkByDate[k] || '').trim();
-    const extraWorkLines = extraWorkText ? extraWorkText.split('\n').map(s=>s.trim()).filter(Boolean) : [];
+    const extraWorkLines = extraWorkText ? htmlNotesToLines(extraWorkText) : [];
 
-    if(!cats.length && !extraWorkLines.length) return; // truly nothing this day -- skip it
+    if(!cats.length && !extraWorkLines.length) return;
 
-    const lines = [reportDateLabel(d)];
-    cats.forEach(([label, entries], ci)=>{
-      lines.push('\t' + (ci+1) + '.' + label);
-      entries.forEach((entry, ei)=>{
-        lines.push('\t   ' + LETTERS[ei] + '.' + entry);
+    const lines = [reportDateLabel(d), ''];
+    let num = 0;
+    cats.forEach(([label, entries])=>{
+      num++;
+      lines.push(num + '. ' + label);
+      entries.forEach((entry, i)=>{
+        lines.push((LETTERS[i] || (i+1)) + '. ' + entry);
       });
       lines.push('');
     });
-    if(extraWorkLines.length){
-      lines.push('\tExtra Work');
-      extraWorkLines.forEach(t=>lines.push('\t   - ' + t));
-    }
+    extraWorkLines.forEach(t=>{
+      num++;
+      lines.push(num + '. ' + t);
+    });
     blocks.push(lines.join('\n'));
   });
   return blocks.join('\n\n');
@@ -2081,7 +3276,7 @@ function exportWorkReport(){
   }
   const text = buildWorkReportText(reportSelectedDates);
   if(!text.trim()){
-    alert('None of the selected days have any PSS work or Extra Work logged yet — nothing to export.');
+    alert('None of the selected days have any PSS work or Other Works logged yet — nothing to export.');
     return;
   }
   const blob = new Blob([text], { type: 'text/plain' });
@@ -2096,7 +3291,121 @@ function exportWorkReport(){
   URL.revokeObjectURL(url);
 }
 
-// ---- Panel exclusivity: only the report panel is toggleable now ----
+// Builds the same report as buildWorkReportText, but as Word-compatible
+// HTML (section headers bold) so it can be saved as a .doc file. Word opens
+// HTML files saved with a .doc extension and the right MIME/header natively
+// -- no external library or server needed for this.
+function buildWorkReportHtml(dateKeys){
+  const sortedKeys = [...dateKeys].sort();
+  const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const blocks = [];
+  sortedKeys.forEach(k=>{
+    const [y,m,day] = k.split('-').map(Number);
+    const d = new Date(y, m-1, day);
+    const dayState = allDatesState[k] || {};
+    const items = allItemsForDate(d);
+
+    const lc = [], rt = [], mape = [], enc = [], pref = [], others = [];
+    const aeroProfile = [], aeroT21 = [], aeroSTB = [], aeroETB = [];
+    const dsT1 = [], dsT21 = [];
+    items.forEach(id=>{
+      const site = getSite(id);
+      if(!site) return;
+      const work = dayState[id+"_work"];
+      if(!work) return;
+      if(work.LC){
+        const lcTypes = Array.isArray(work.LC) ? work.LC : [work.LC];
+        if(lcTypes.length) lc.push(site.name + ' (' + lcTypes.join('/') + ')');
+      }
+      if(work.RT) rt.push(site.name);
+      if(work.AM){
+        if(work.AM.ProfileCorrection) aeroProfile.push(site.name);
+        if(work.AM.T21Correction) aeroT21.push(site.name);
+        if(work.AM.STBCorrection) aeroSTB.push(site.name);
+        if(work.AM.ETBCorrection) aeroETB.push(site.name);
+      }
+      if(work.MAPE) mape.push(site.name);
+      if(work.DaySkip){
+        if(work.DaySkip.T1) dsT1.push(site.name);
+        if(work.DaySkip.T21) dsT21.push(site.name);
+      }
+      if(work.ENC) enc.push(site.name);
+      if(work.Pref) pref.push(site.name);
+      if(work.Others && work.Others.length){
+        work.Others.forEach(remark=>{ others.push(site.name + ' ' + remark); });
+      }
+    });
+
+    const aero = [];
+    if(aeroProfile.length) aero.push('Profile Correction(' + aeroProfile.join(', ') + ')');
+    if(aeroT21.length) aero.push('T21 Correction(' + aeroT21.join(', ') + ')');
+    if(aeroSTB.length) aero.push('STB Correction(' + aeroSTB.join(', ') + ')');
+    if(aeroETB.length) aero.push('ETB Correction(' + aeroETB.join(', ') + ')');
+
+    const daySkip = [];
+    if(dsT1.length) daySkip.push('T1(' + dsT1.join(', ') + ')');
+    if(dsT21.length) daySkip.push('T21(' + dsT21.join(', ') + ')');
+
+    const cats = [];
+    if(lc.length) cats.push(['Loss Correction', lc]);
+    if(rt.length) cats.push(['Real Time', rt]);
+    if(aero.length) cats.push(['AeroMAl', aero]);
+    if(mape.length) cats.push(['MAPE', mape]);
+    if(daySkip.length) cats.push(['Day Skip', daySkip]);
+    if(enc.length) cats.push(['EN Combination Change', enc]);
+    if(pref.length) cats.push(['Preference Change', pref]);
+    if(others.length) cats.push(['Others', others]);
+
+    const extraWorkText = (extraWorkByDate[k] || '').trim();
+    const extraWorkLines = extraWorkText ? htmlNotesToLines(extraWorkText) : [];
+
+    if(!cats.length && !extraWorkLines.length) return;
+
+    const esc = (s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let num = 0;
+    const parts = ['<p><b>' + esc(reportDateLabel(d)) + '</b></p>'];
+    cats.forEach(([label, entries])=>{
+      num++;
+      parts.push('<p><b>' + num + '. ' + esc(label) + '</b></p>');
+      entries.forEach((entry, i)=>{
+        parts.push('<p style="margin-left:20px;">' + (LETTERS[i] || (i+1)) + '. ' + esc(entry) + '</p>');
+      });
+    });
+    extraWorkLines.forEach(t=>{
+      num++;
+      parts.push('<p><b>' + num + '.</b> ' + esc(t) + '</p>');
+    });
+    blocks.push(parts.join(''));
+  });
+  return blocks.join('<p>&nbsp;</p>');
+}
+
+function exportWorkReportDoc(){
+  if(!reportSelectedDates.size){
+    alert('Pick at least one day to export (use a preset or tick a date).');
+    return;
+  }
+  const bodyHtml = buildWorkReportHtml(reportSelectedDates);
+  if(!bodyHtml.trim()){
+    alert('None of the selected days have any PSS work or Other Works logged yet — nothing to export.');
+    return;
+  }
+  const docHtml =
+    '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
+    '<head><meta charset="utf-8"><title>Work Report</title></head>' +
+    '<body style="font-family:Calibri,Arial,sans-serif; font-size:11pt;">' + bodyHtml + '</body></html>';
+  const blob = new Blob(['\ufeff', docHtml], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const sorted = [...reportSelectedDates].sort();
+  a.download = 'Work_Report_' + sorted[0] + '_to_' + sorted[sorted.length-1] + '.doc';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 function closeAllPanels(except){
   if(except !== 'report'){
     reportPanelOpen = false;
@@ -2110,7 +3419,7 @@ document.getElementById('exportWorkReportBtn').addEventListener('click', ()=>{
   document.getElementById('reportPanel').style.display = reportPanelOpen ? 'block' : 'none';
   if(reportPanelOpen){
     if(reportSelectedDates.size === 0){
-      const dow = new Date().getDay(); // 0 Sun .. 6 Sat
+      const dow = new Date().getDay();
       if(dow === 2) applyPresetTue();
       else if(dow === 4) applyPresetThu();
     }
@@ -2127,7 +3436,7 @@ document.getElementById('reportAddDateBtn').addEventListener('click', ()=>{
   reportSelectedDates.add(val);
   renderReportDaysList();
 });
-document.getElementById('doExportReportBtn').addEventListener('click', exportWorkReport);
+document.getElementById('doExportReportDocBtn').addEventListener('click', exportWorkReportDoc);
 
 
 populateStateFilter();
@@ -2220,7 +3529,6 @@ dateInput.addEventListener('change', ()=>{
   applyDate(new Date(y, m-1, d));
 });
 
-// Always default to today's date whenever the file is opened or refreshed.
 applyDate(new Date());
 
 EMP_DOC().onSnapshot(doc=>{
