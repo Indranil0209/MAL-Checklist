@@ -429,7 +429,7 @@
 
   <div class="section">
     <h2>Employees</h2>
-    <p class="section-sub">Add or remove employee accounts, and see live check-in progress for the selected date.</p>
+    <p class="section-sub">Add or remove employee accounts.</p>
 
     <div class="row add-emp-row">
       <input type="text" id="newEmpName" placeholder="Name">
@@ -438,15 +438,10 @@
       <button class="btn" id="addEmpBtn" type="button">Add Employee</button>
       <button class="btn-outline" id="cancelEmpEditBtn" type="button" style="display:none;">Cancel</button>
     </div>
-    <div class="row" style="margin-bottom:12px;">
-      <label style="font-size:10.5px; color:var(--text-faint);">Marking attendance for:</label>
-      <input type="date" id="progressDateInput">
-      <button class="btn-outline" id="openAttendanceSummaryBtn" type="button" style="margin-left:auto;">Attendance Summary</button>
-    </div>
 
     <table class="emp-table">
       <thead>
-        <tr><th>Employee</th><th>Attendance</th><th>Saturday Off</th><th></th></tr>
+        <tr><th>Employee</th><th></th></tr>
       </thead>
       <tbody id="empTableBody"></tbody>
     </table>
@@ -462,16 +457,39 @@
     <p class="section-sub" style="margin-top:8px; margin-bottom:0;">One .txt file with every employee — their name, each date in range, and the PSS work completed that day.</p>
   </div>
 
-  <div class="confirm-overlay" id="attendanceSummaryOverlay">
-    <div class="confirm-box" id="attendanceSummaryBox" style="max-width:640px;">
-      <button type="button" id="attendanceSummaryCloseBtn" aria-label="Close" style="position:absolute; top:14px; right:16px; background:none; border:none; color:var(--text-faint); font-size:20px; cursor:pointer; line-height:1;">&times;</button>
-      <h4>Attendance Summary</h4>
-      <p class="section-sub" style="margin-top:-6px;">Present/absent day counts per employee for a month, based on the attendance marks above.</p>
-      <div class="row" style="margin-bottom:12px;">
-        <label style="font-size:10.5px; color:var(--text-faint);">Month:</label>
-        <input type="month" id="attendanceMonthInput">
+  <div class="section">
+    <h2>Attendance</h2>
+    <p class="section-sub">Mark daily attendance for everyone and view the monthly summary, all in one place.</p>
+    <div class="row" style="align-items:center;">
+      <button class="btn" id="openAttendanceManagerBtn" type="button">Manage Attendance</button>
+    </div>
+  </div>
+
+  <div class="confirm-overlay" id="attendanceManagerOverlay">
+    <div class="confirm-box pss-manager-box">
+      <div class="pss-manager-header">
+        <h4>Attendance</h4>
+        <button type="button" class="m-btn" id="attendanceManagerCloseBtn">Close</button>
       </div>
-      <div style="max-height:55vh; overflow-y:auto;">
+      <div class="pss-manager-body">
+        <div class="row" style="margin-bottom:12px; align-items:center;">
+          <label style="font-size:10.5px; color:var(--text-faint);">Marking attendance for:</label>
+          <input type="date" id="progressDateInput">
+        </div>
+        <table class="emp-table">
+          <thead>
+            <tr><th>Employee</th><th>Attendance</th><th>Saturday Off</th></tr>
+          </thead>
+          <tbody id="attendanceMarkTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="attendanceMarkEmptyState" style="display:none;">No employees yet — add one in the Employees section.</div>
+
+        <h4 style="margin:22px 0 4px; font-size:14px; font-family:var(--font-display); font-weight:700;">Monthly Summary</h4>
+        <p class="section-sub" style="margin-top:-2px;">Present/absent day counts per employee for a month, based on the attendance marks above.</p>
+        <div class="row" style="margin-bottom:12px;">
+          <label style="font-size:10.5px; color:var(--text-faint);">Month:</label>
+          <input type="month" id="attendanceMonthInput">
+        </div>
         <table class="emp-table">
           <thead>
             <tr><th>Employee</th><th>Present</th><th>Half Day</th><th>Absent</th><th>Attendance %</th></tr>
@@ -482,6 +500,7 @@
       </div>
     </div>
   </div>
+
 
   <div class="section">
     <h2>Intimation Sheet</h2>
@@ -690,7 +709,7 @@ progressDateInput.addEventListener('change', ()=>{
   if(!progressDateInput.value) return;
   const [y,m,d] = progressDateInput.value.split('-').map(Number);
   currentProgressDate = new Date(y, m-1, d);
-  renderEmployees();
+  renderAttendanceMarkList();
 });
 
 // ---- PIN reset requests (from Login.html's "Forgot PIN?") ----
@@ -748,10 +767,23 @@ setTimeout(()=>{
   if(overlay) overlay.classList.add('hidden');
 }, 8000);
 
+let attendanceRenderTimer = null;
+function scheduleAttendanceRender(){
+  // Same reasoning as scheduleManageListRender: the employees collection can
+  // update very frequently from live field check-ins. Coalesce those into at
+  // most one attendance-table rebuild per 700ms while the popup is open.
+  if(attendanceRenderTimer) return;
+  attendanceRenderTimer = setTimeout(()=>{
+    attendanceRenderTimer = null;
+    renderAttendanceMarkList();
+    renderAttendanceSummary();
+  }, 700);
+}
+
 db.collection('employees').onSnapshot(snap=>{
   employees = snap.docs.map(doc=>({ id: doc.id, ...doc.data() }));
   renderEmployees();
-  renderAttendanceSummary();
+  scheduleAttendanceRender();
   populateNewPssAssignSelect();
   populateManageAssignFilter();
   scheduleManageListRender();
@@ -794,14 +826,15 @@ const today = new Date();
 attendanceMonthInput.value = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
 attendanceMonthInput.addEventListener('change', renderAttendanceSummary);
 
-(function initAttendanceSummaryModal(){
-  const overlay = document.getElementById('attendanceSummaryOverlay');
-  const openBtn = document.getElementById('openAttendanceSummaryBtn');
-  const closeBtn = document.getElementById('attendanceSummaryCloseBtn');
+(function initAttendanceManagerModal(){
+  const overlay = document.getElementById('attendanceManagerOverlay');
+  const openBtn = document.getElementById('openAttendanceManagerBtn');
+  const closeBtn = document.getElementById('attendanceManagerCloseBtn');
   if(!overlay || !openBtn) return;
   openBtn.addEventListener('click', ()=>{
-    renderAttendanceSummary(); // refresh with latest data each time it's opened
     overlay.classList.add('open');
+    renderAttendanceMarkList(); // refresh both with latest data each time it's opened
+    renderAttendanceSummary();
   });
   closeBtn.addEventListener('click', ()=> overlay.classList.remove('open'));
   overlay.addEventListener('click', (e)=>{ if(e.target === overlay) overlay.classList.remove('open'); });
@@ -809,6 +842,8 @@ attendanceMonthInput.addEventListener('change', renderAttendanceSummary);
 })();
 
 function renderAttendanceSummary(){
+  const overlay = document.getElementById('attendanceManagerOverlay');
+  if(!overlay || !overlay.classList.contains('open')) return;
   const body = document.getElementById('attendanceTableBody');
   const empty = document.getElementById('attendanceEmptyState');
   body.innerHTML = '';
@@ -868,14 +903,51 @@ function renderEmployees(){
     return;
   }
   empty.style.display = 'none';
+  employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td><div class="emp-name">'+escapeHtml(emp.name||emp.id)+'</div><div class="emp-id">'+escapeHtml(emp.id)+'</div></td><td></td>';
+    const actionTd = tr.children[1];
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'del-emp-btn';
+    editBtn.textContent = 'Edit';
+    editBtn.style.marginRight = '6px';
+    editBtn.onclick = ()=> startEditEmployee(emp);
+    actionTd.appendChild(editBtn);
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'del-emp-btn';
+    delBtn.textContent = 'Delete';
+    delBtn.onclick = ()=> deleteEmployee(emp.id, emp.name);
+    actionTd.appendChild(delBtn);
+    body.appendChild(tr);
+  });
+}
+
+// ---- Attendance marking table, lives inside the Attendance popup only.
+// Gated on the popup being open (same pattern as the PSS manager) so the
+// frequent 'employees' snapshot updates from live field check-ins don't
+// force a rebuild -- including a per-employee Firestore read for
+// saturdayOffMode -- while nobody's even looking at this table. ----
+function renderAttendanceMarkList(){
+  const overlay = document.getElementById('attendanceManagerOverlay');
+  if(!overlay || !overlay.classList.contains('open')) return;
+  const body = document.getElementById('attendanceMarkTableBody');
+  const empty = document.getElementById('attendanceMarkEmptyState');
+  body.innerHTML = '';
+  if(!employees.length){
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
   const dKey = dateKey(currentProgressDate);
+  const frag = document.createDocumentFragment();
   employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
     const status = attendanceStatus(emp, dKey);
     const tr = document.createElement('tr');
 
     tr.innerHTML =
       '<td><div class="emp-name">'+escapeHtml(emp.name||emp.id)+'</div><div class="emp-id">'+escapeHtml(emp.id)+'</div></td>' +
-      '<td></td>' +
       '<td></td>' +
       '<td></td>';
 
@@ -913,23 +985,10 @@ function renderEmployees(){
       })
       .catch(e=>console.error('fetch saturdayOffMode failed', e));
 
-    const delTd = tr.children[3];
-    const editBtn = document.createElement('button');
-    editBtn.type = 'button';
-    editBtn.className = 'del-emp-btn';
-    editBtn.textContent = 'Edit';
-    editBtn.style.marginRight = '6px';
-    editBtn.onclick = ()=> startEditEmployee(emp);
-    delTd.appendChild(editBtn);
-    const delBtn = document.createElement('button');
-    delBtn.type = 'button';
-    delBtn.className = 'del-emp-btn';
-    delBtn.textContent = 'Delete';
-    delBtn.onclick = ()=> deleteEmployee(emp.id, emp.name);
-    delTd.appendChild(delBtn);
-
-    body.appendChild(tr);
+    frag.appendChild(tr);
   });
+  body.innerHTML = '';
+  body.appendChild(frag);
 }
 
 async function setSaturdayOffMode(empId, mode){
