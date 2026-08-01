@@ -310,6 +310,22 @@
   .pss-info-val{ color:var(--text); font-family:var(--mono); }
   .m-btn.m-info{ font-style:italic; font-family:Georgia,serif; font-weight:700; width:26px; flex:0 0 auto; padding:0; text-align:center; border-radius:50%; }
 
+  .pss-manager-box{
+    max-width:980px; width:100%; max-height:88vh; display:flex; flex-direction:column;
+    padding:0; overflow:hidden;
+  }
+  .pss-manager-header{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:20px 26px 16px; border-bottom:1px solid var(--line); flex-shrink:0;
+  }
+  .pss-manager-header h4{ margin:0; font-size:16px; font-family:var(--font-display); font-weight:700; }
+  .pss-manager-body{ padding:18px 26px 26px; overflow-y:auto; min-height:0; }
+  @media (max-width: 700px){
+    .pss-manager-box{ max-width:100%; max-height:94vh; border-radius:14px; }
+    .pss-manager-header{ padding:16px 16px 12px; }
+    .pss-manager-body{ padding:14px 16px 20px; }
+  }
+
   .stats-grid{
     display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px;
     margin-bottom:20px;
@@ -469,58 +485,73 @@
 
   <div class="section">
     <h2>Intimation Sheet</h2>
-    <p class="section-sub">Upload the monthly intimation sheet — this updates every employee's checklist live. Add, block, edit, or delete individual PSS below.</p>
-    <div class="row">
-      <button class="btn-outline" id="uploadSheetBtn" type="button">Upload Intimation Sheet</button>
-      <input type="file" id="sheetFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
-      <button class="btn-outline" id="updateCoordsBtn" type="button">Update Lat/Long/Capacity Only</button>
-      <input type="file" id="coordsFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
-      <button class="btn-outline btn-danger" id="clearSheetBtn" type="button">Clear All PSS</button>
+    <p class="section-sub">Upload the monthly intimation sheet, or open the manager to add, edit, block, or delete individual PSS.</p>
+    <div class="row" style="align-items:center;">
+      <button class="btn" id="openPssManagerBtn" type="button">Manage Intimation Sheet &amp; PSS</button>
+      <div class="sheet-info-lbl" id="sheetInfoLblCompact">No sheet loaded.</div>
     </div>
-    <p class="section-sub" style="margin-top:6px; margin-bottom:0;">"Update Lat/Long/Capacity Only" matches PSS by name and refreshes just those three fields &mdash; it never touches frequency, priority, assignments, or the daily rotation order.</p>
-    <div class="sheet-info-lbl" id="sheetInfoLbl">No sheet loaded.</div>
+  </div>
 
-    <div style="margin-top:10px; padding:10px; border:1px solid var(--line); border-radius:8px;">
-      <div class="row" style="align-items:center;">
-        <input type="text" id="linkedFileNameInput" placeholder="Display name, e.g. RAAA Sheet Index" style="flex:1; min-width:160px;">
-        <input type="text" id="linkedFilePathInput" placeholder="Full local path, e.g. D:\Reports\Sheet.xlsx" style="flex:1; min-width:220px;">
-        <button class="btn-outline" id="addLinkedFileBtn" type="button">Add File Link</button>
+  <div class="confirm-overlay" id="pssManagerOverlay">
+    <div class="confirm-box pss-manager-box">
+      <div class="pss-manager-header">
+        <h4>Intimation Sheet &amp; PSS Manager</h4>
+        <button type="button" class="m-btn" id="pssManagerCloseBtn">Close</button>
       </div>
-      <div id="linkedFilesList" style="display:flex; flex-direction:column; gap:6px; margin-top:10px;"></div>
-      <p class="section-sub" style="margin-top:6px; margin-bottom:0;">Saved only on this computer/browser &mdash; each name becomes a clickable link that opens that Excel file directly. Doesn't sync to other devices.</p>
-    </div>
+      <div class="pss-manager-body">
+        <div class="row">
+          <button class="btn-outline" id="uploadSheetBtn" type="button">Upload Intimation Sheet</button>
+          <input type="file" id="sheetFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+          <button class="btn-outline" id="updateCoordsBtn" type="button">Update Lat/Long/Capacity Only</button>
+          <input type="file" id="coordsFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+          <button class="btn-outline btn-danger" id="clearSheetBtn" type="button">Clear All PSS</button>
+        </div>
+        <p class="section-sub" style="margin-top:6px; margin-bottom:0;">"Update Lat/Long/Capacity Only" matches PSS by name and refreshes just those three fields &mdash; it never touches frequency, priority, assignments, or the daily rotation order.</p>
+        <div class="sheet-info-lbl" id="sheetInfoLbl">No sheet loaded.</div>
 
-    <div class="manage-add-row">
-      <input type="text" id="newPssName" placeholder="PSS name">
-      <input type="text" id="newPssState" placeholder="State (e.g. GJ)">
-      <input type="text" id="newPssLat" placeholder="Lat" style="width:80px;">
-      <input type="text" id="newPssLng" placeholder="Long" style="width:80px;">
-      <input type="text" id="newPssCapacity" placeholder="Capacity (MW)" style="width:100px;">
-      <select id="newPssFreq">
-        <option value="E">Everyday</option>
-        <option value="Alt">Alt</option>
-        <option value="Twice in week" selected>Twice in week</option>
-      </select>
-      <select id="newPssPriority">
-        <option>Normal</option><option>High</option><option>Higher</option><option>Highest</option>
-      </select>
-      <select id="newPssAssign">
-        <option value="">Primary (optional)</option>
-      </select>
-      <select id="newPssSecondary">
-        <option value="">Secondary (optional)</option>
-      </select>
-      <button class="btn" id="addPssBtn" type="button">Add PSS</button>
+        <div style="margin-top:10px; padding:10px; border:1px solid var(--line); border-radius:8px;">
+          <div class="row" style="align-items:center;">
+            <input type="text" id="linkedFileNameInput" placeholder="Display name, e.g. RAAA Sheet Index" style="flex:1; min-width:160px;">
+            <input type="text" id="linkedFilePathInput" placeholder="Full local path, e.g. D:\Reports\Sheet.xlsx" style="flex:1; min-width:220px;">
+            <button class="btn-outline" id="addLinkedFileBtn" type="button">Add File Link</button>
+          </div>
+          <div id="linkedFilesList" style="display:flex; flex-direction:column; gap:6px; margin-top:10px;"></div>
+          <p class="section-sub" style="margin-top:6px; margin-bottom:0;">Saved only on this computer/browser &mdash; each name becomes a clickable link that opens that Excel file directly. Doesn't sync to other devices.</p>
+        </div>
+
+        <div class="manage-add-row">
+          <input type="text" id="newPssName" placeholder="PSS name">
+          <input type="text" id="newPssState" placeholder="State (e.g. GJ)">
+          <input type="text" id="newPssLat" placeholder="Lat" style="width:80px;">
+          <input type="text" id="newPssLng" placeholder="Long" style="width:80px;">
+          <input type="text" id="newPssCapacity" placeholder="Capacity (MW)" style="width:100px;">
+          <select id="newPssFreq">
+            <option value="E">Everyday</option>
+            <option value="Alt">Alt</option>
+            <option value="Twice in week" selected>Twice in week</option>
+          </select>
+          <select id="newPssPriority">
+            <option>Normal</option><option>High</option><option>Higher</option><option>Highest</option>
+          </select>
+          <select id="newPssAssign">
+            <option value="">Primary (optional)</option>
+          </select>
+          <select id="newPssSecondary">
+            <option value="">Secondary (optional)</option>
+          </select>
+          <button class="btn" id="addPssBtn" type="button">Add PSS</button>
+        </div>
+        <div class="row" style="margin:10px 0 0;">
+          <input type="text" id="manageSearchBox" class="manage-search" style="margin:0; flex:1; min-width:180px; width:auto;" placeholder="Search PSS to block, edit, or delete&hellip;">
+          <select id="manageAssignFilter" style="background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:6px; padding:7px 10px; font-size:11px;">
+            <option value="">All employees</option>
+            <option value="__unassigned__">Unassigned</option>
+            <option value="__unmatched__">Unmatched names</option>
+          </select>
+        </div>
+        <div class="manage-list" id="manageList"></div>
+      </div>
     </div>
-    <div class="row" style="margin:10px 0 0;">
-      <input type="text" id="manageSearchBox" class="manage-search" style="margin:0; flex:1; min-width:180px; width:auto;" placeholder="Search PSS to block, edit, or delete&hellip;">
-      <select id="manageAssignFilter" style="background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:6px; padding:7px 10px; font-size:11px;">
-        <option value="">All employees</option>
-        <option value="__unassigned__">Unassigned</option>
-        <option value="__unmatched__">Unmatched names</option>
-      </select>
-    </div>
-    <div class="manage-list" id="manageList"></div>
   </div>
 
 </div>
@@ -1438,14 +1469,18 @@ async function saveSheetDoc(extra){
 
 function updateSheetInfoLbl(){
   const lbl = document.getElementById('sheetInfoLbl');
+  const compactLbl = document.getElementById('sheetInfoLblCompact');
+  let text;
   if(sheetInfo.sourceName){
     const when = sheetInfo.uploadedAt ? new Date(sheetInfo.uploadedAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '';
-    lbl.textContent = SITES.length + ' PSS \u2014 from ' + sheetInfo.sourceName + (when ? ' (uploaded ' + when + ')' : '');
+    text = SITES.length + ' PSS \u2014 from ' + sheetInfo.sourceName + (when ? ' (uploaded ' + when + ')' : '');
   } else if(SITES.length){
-    lbl.textContent = SITES.length + ' PSS (added manually).';
+    text = SITES.length + ' PSS (added manually).';
   } else {
-    lbl.textContent = 'No sheet loaded.';
+    text = 'No sheet loaded.';
   }
+  lbl.textContent = text;
+  if(compactLbl) compactLbl.textContent = text;
 }
 
 function priorityRank(p){ return ['Highest','Higher','High','Normal'].indexOf(p); }
@@ -1755,6 +1790,18 @@ function showPssInfo(site){
 document.getElementById('pssInfoCloseBtn').addEventListener('click', ()=> document.getElementById('pssInfoOverlay').classList.remove('open'));
 document.getElementById('pssInfoOverlay').addEventListener('click', (e)=>{ if(e.target.id === 'pssInfoOverlay') e.currentTarget.classList.remove('open'); });
 document.addEventListener('keydown', e=>{ if(e.key === 'Escape') document.getElementById('pssInfoOverlay').classList.remove('open'); });
+
+// ---- Intimation Sheet & PSS manager modal ----
+document.getElementById('openPssManagerBtn').addEventListener('click', ()=>{
+  document.getElementById('pssManagerOverlay').classList.add('open');
+});
+document.getElementById('pssManagerCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('pssManagerOverlay').classList.remove('open');
+});
+document.getElementById('pssManagerOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'pssManagerOverlay') e.currentTarget.classList.remove('open');
+});
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape') document.getElementById('pssManagerOverlay').classList.remove('open'); });
 
 function priorityClass(p){
   if(!p) return '';
