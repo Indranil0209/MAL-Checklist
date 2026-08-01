@@ -312,7 +312,7 @@
 
   .pss-manager-box{
     max-width:980px; width:100%; max-height:88vh; display:flex; flex-direction:column;
-    padding:0; overflow:hidden;
+    padding:0; overflow:hidden; backdrop-filter:none; -webkit-backdrop-filter:none;
   }
   .pss-manager-header{
     display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -1794,6 +1794,7 @@ document.addEventListener('keydown', e=>{ if(e.key === 'Escape') document.getEle
 // ---- Intimation Sheet & PSS manager modal ----
 document.getElementById('openPssManagerBtn').addEventListener('click', ()=>{
   document.getElementById('pssManagerOverlay').classList.add('open');
+  renderManageList();
 });
 document.getElementById('pssManagerCloseBtn').addEventListener('click', ()=>{
   document.getElementById('pssManagerOverlay').classList.remove('open');
@@ -1834,6 +1835,8 @@ function populateManageAssignFilter(){
 }
 
 function renderManageList(){
+  const overlay = document.getElementById('pssManagerOverlay');
+  if(!overlay || !overlay.classList.contains('open')) return; // no point rendering hundreds of rows while hidden
   const list = document.getElementById('manageList');
   const term = manageSearchTerm.trim().toLowerCase();
   const sites = SITES.filter(s=>{
@@ -1843,14 +1846,15 @@ function renderManageList(){
     if(manageAssignFilterVal) return s.assignedToId === manageAssignFilterVal;
     return true;
   });
-  list.innerHTML = '';
   if(!sites.length){
+    list.innerHTML = '';
     const empty = document.createElement('div');
     empty.className = 'empty-state';
     empty.textContent = SITES.length ? 'No PSS matches that search/filter.' : 'No PSS yet — upload a sheet or add one above.';
     list.appendChild(empty);
     return;
   }
+  const frag = document.createDocumentFragment();
   sites.forEach(site=>{
     const isBlocked = blockedNames.has(site.name);
     const row = document.createElement('div');
@@ -1926,7 +1930,7 @@ function renderManageList(){
       cancelBtn.className = 'm-btn'; cancelBtn.textContent = 'Cancel';
       cancelBtn.onclick = cancelPssEdit;
       row.appendChild(cancelBtn);
-      list.appendChild(row);
+      frag.appendChild(row);
       return;
     }
 
@@ -1964,13 +1968,20 @@ function renderManageList(){
     delBtn.className = 'm-btn danger'; delBtn.textContent = 'Delete';
     delBtn.onclick = ()=> deletePss(site.id);
     row.appendChild(delBtn);
-    list.appendChild(row);
+    frag.appendChild(row);
   });
+  list.innerHTML = '';
+  list.appendChild(frag);
 }
 
+let manageSearchDebounceTimer = null;
 document.getElementById('manageSearchBox').addEventListener('input', (e)=>{
-  manageSearchTerm = e.target.value;
-  renderManageList();
+  const val = e.target.value;
+  clearTimeout(manageSearchDebounceTimer);
+  manageSearchDebounceTimer = setTimeout(()=>{
+    manageSearchTerm = val;
+    renderManageList();
+  }, 200);
 });
 document.getElementById('manageAssignFilter').addEventListener('change', (e)=>{
   manageAssignFilterVal = e.target.value;
