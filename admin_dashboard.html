@@ -754,7 +754,7 @@ db.collection('employees').onSnapshot(snap=>{
   renderAttendanceSummary();
   populateNewPssAssignSelect();
   populateManageAssignFilter();
-  renderManageList();
+  scheduleManageListRender();
   employeesLoadedOnceForOverlay = true;
   maybeHideLoadingOverlay();
   // Re-attempt PSS-to-employee name matching whenever the employee list
@@ -1832,6 +1832,20 @@ function populateManageAssignFilter(){
     sel.appendChild(opt);
   });
   if([...sel.options].some(o=>o.value === prevValue)) sel.value = prevValue;
+}
+
+let manageListRenderTimer = null;
+function scheduleManageListRender(){
+  // Used only by passive Firestore listeners (employees/sheet snapshots), which can
+  // fire very frequently (e.g. every field check-in). Coalesces bursts into at most
+  // one render per 700ms so the manager modal doesn't rebuild hundreds of rows on
+  // every unrelated update elsewhere in the app. Direct user actions (search, edit,
+  // filter, open) still call renderManageList() immediately for instant feedback.
+  if(manageListRenderTimer) return;
+  manageListRenderTimer = setTimeout(()=>{
+    manageListRenderTimer = null;
+    renderManageList();
+  }, 700);
 }
 
 function renderManageList(){
