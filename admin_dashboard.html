@@ -428,36 +428,6 @@
   </div>
 
   <div class="section">
-    <h2>Employees</h2>
-    <p class="section-sub">Add or remove employee accounts.</p>
-
-    <div class="row add-emp-row">
-      <input type="text" id="newEmpName" placeholder="Name">
-      <input type="text" id="newEmpId" placeholder="Login ID (e.g. emp3)">
-      <input type="password" id="newEmpPin" placeholder="PIN">
-      <button class="btn" id="addEmpBtn" type="button">Add Employee</button>
-      <button class="btn-outline" id="cancelEmpEditBtn" type="button" style="display:none;">Cancel</button>
-    </div>
-
-    <table class="emp-table">
-      <thead>
-        <tr><th>Employee</th><th></th></tr>
-      </thead>
-      <tbody id="empTableBody"></tbody>
-    </table>
-    <div class="empty-state" id="empEmptyState" style="display:none;">No employees yet — add one above.</div>
-
-    <div class="row" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line);">
-      <label style="font-size:10.5px; color:var(--text-faint);">From:</label>
-      <input type="date" id="summaryFromDate">
-      <label style="font-size:10.5px; color:var(--text-faint);">To:</label>
-      <input type="date" id="summaryToDate">
-      <button class="btn" id="downloadAllDocBtn" type="button">Download All Employee Summaries (.doc)</button>
-    </div>
-    <p class="section-sub" style="margin-top:8px; margin-bottom:0;">One .txt file with every employee — their name, each date in range, and the PSS work completed that day.</p>
-  </div>
-
-  <div class="section">
     <h2>Attendance</h2>
     <p class="section-sub">Mark daily attendance for everyone and view the monthly summary, all in one place.</p>
     <div class="row" style="align-items:center;">
@@ -571,6 +541,55 @@
         <div class="manage-list" id="manageList"></div>
       </div>
     </div>
+  </div>
+
+  <div class="section">
+    <h2>Employees</h2>
+    <p class="section-sub">Add, edit, or remove employee accounts.</p>
+    <div class="row" style="align-items:center;">
+      <button class="btn" id="openEmployeeManagerBtn" type="button">Manage Employees</button>
+      <div class="sheet-info-lbl" id="empCountLbl">No employees yet.</div>
+    </div>
+  </div>
+
+  <div class="confirm-overlay" id="employeeManagerOverlay">
+    <div class="confirm-box pss-manager-box">
+      <div class="pss-manager-header">
+        <h4>Manage Employees</h4>
+        <button type="button" class="m-btn" id="employeeManagerCloseBtn">Close</button>
+      </div>
+      <div class="pss-manager-body">
+        <div class="row add-emp-row">
+          <input type="text" id="newEmpName" placeholder="Name">
+          <input type="text" id="newEmpId" placeholder="Login ID (e.g. emp3)">
+          <input type="password" id="newEmpPin" placeholder="PIN">
+          <button class="btn" id="addEmpBtn" type="button">Add Employee</button>
+          <button class="btn-outline" id="cancelEmpEditBtn" type="button" style="display:none;">Cancel</button>
+        </div>
+
+        <table class="emp-table">
+          <thead>
+            <tr><th>Employee</th><th></th></tr>
+          </thead>
+          <tbody id="empTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="empEmptyState" style="display:none;">No employees yet — add one above.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Employee Summary</h2>
+    <p class="section-sub">Download a consolidated work &amp; attendance summary for every employee across a date range.</p>
+    <div class="row" style="align-items:center;">
+      <label style="font-size:10.5px; color:var(--text-faint);">From:</label>
+      <input type="date" id="summaryFromDate">
+      <label style="font-size:10.5px; color:var(--text-faint);">To:</label>
+      <input type="date" id="summaryToDate">
+      <button class="btn" id="downloadAllDocBtn" type="button">Download All Employees Summary</button>
+    </div>
+    <p class="section-sub" id="summaryDateError" style="margin-top:8px; margin-bottom:0; color:var(--red); display:none;">"To" date can't be earlier than "From" date.</p>
+    <p class="section-sub" style="margin-top:8px; margin-bottom:0;">Includes every employee &mdash; their attendance and the PSS work completed each day in the selected range. Not limited to any filtered or currently-open view.</p>
   </div>
 
 </div>
@@ -841,6 +860,20 @@ attendanceMonthInput.addEventListener('change', renderAttendanceSummary);
   document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') overlay.classList.remove('open'); });
 })();
 
+(function initEmployeeManagerModal(){
+  const overlay = document.getElementById('employeeManagerOverlay');
+  const openBtn = document.getElementById('openEmployeeManagerBtn');
+  const closeBtn = document.getElementById('employeeManagerCloseBtn');
+  if(!overlay || !openBtn) return;
+  openBtn.addEventListener('click', ()=>{
+    overlay.classList.add('open');
+    renderEmployees(); // refresh with latest data each time it's opened
+  });
+  closeBtn.addEventListener('click', ()=> overlay.classList.remove('open'));
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) overlay.classList.remove('open'); });
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') overlay.classList.remove('open'); });
+})();
+
 function renderAttendanceSummary(){
   const overlay = document.getElementById('attendanceManagerOverlay');
   if(!overlay || !overlay.classList.contains('open')) return;
@@ -895,6 +928,8 @@ function attendanceStatus(emp, dKey){
 }
 
 function renderEmployees(){
+  const countLbl = document.getElementById('empCountLbl');
+  if(countLbl) countLbl.textContent = employees.length ? (employees.length + ' employee' + (employees.length===1?'':'s')) : 'No employees yet.';
   const body = document.getElementById('empTableBody');
   const empty = document.getElementById('empEmptyState');
   body.innerHTML = '';
@@ -1132,6 +1167,17 @@ const summaryToDate = document.getElementById('summaryToDate');
 summaryFromDate.value = dateKey(new Date());
 summaryToDate.value = dateKey(new Date());
 
+function validateSummaryDateRange(){
+  const errLbl = document.getElementById('summaryDateError');
+  const invalid = !!(summaryFromDate.value && summaryToDate.value && summaryToDate.value < summaryFromDate.value);
+  if(errLbl) errLbl.style.display = invalid ? 'block' : 'none';
+  summaryToDate.min = summaryFromDate.value || '';
+  return !invalid;
+}
+summaryFromDate.addEventListener('change', validateSummaryDateRange);
+summaryToDate.addEventListener('change', validateSummaryDateRange);
+validateSummaryDateRange();
+
 function dateRangeKeys(fromStr, toStr){
   const keys = [];
   if(!fromStr || !toStr) return keys;
@@ -1330,6 +1376,10 @@ function buildEmployeeSummaryBlockHtml(emp, dKeys){
 }
 
 function downloadAllSummariesDoc(){
+  if(!validateSummaryDateRange()){
+    showToast('"To" date can\'t be earlier than "From" date.');
+    return;
+  }
   const dKeys = dateRangeKeys(summaryFromDate.value, summaryToDate.value);
   if(!dKeys.length){
     showToast('Pick a valid From/To date range first.');
