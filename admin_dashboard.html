@@ -240,6 +240,12 @@
   .manage-search:focus{ outline:none; border-color:var(--teal); box-shadow:0 0 0 4px var(--teal-glow), inset 0 2px 4px rgba(0,0,0,.15); }
   .manage-add-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
   .manage-add-row input[type=text]{ flex:1; min-width:130px; }
+  .add-pss-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px 14px; margin-bottom:16px; }
+  .add-pss-grid .full-row{ grid-column:1 / -1; }
+  .add-pss-grid input, .add-pss-grid select{ width:100%; margin:0; }
+  @media (max-width:700px){
+    .add-pss-grid{ grid-template-columns:1fr; }
+  }
   .manage-list{ max-height:360px; overflow-y:auto; border-top:1.5px solid var(--line); padding-top:8px; }
   .manage-row{
     display:flex; align-items:center; gap:10px; padding:10px 8px; font-size:12px;
@@ -498,12 +504,35 @@
         <p class="section-sub" style="margin-top:6px; margin-bottom:0;">"Update Lat/Long/Capacity Only" matches PSS by name and refreshes just those three fields &mdash; it never touches frequency, priority, assignments, or the daily rotation order.</p>
         <div class="sheet-info-lbl" id="sheetInfoLbl">No sheet loaded.</div>
 
-        <div class="manage-add-row">
-          <input type="text" id="newPssName" placeholder="PSS name">
+        <div class="row" style="margin:4px 0 10px; justify-content:flex-end;">
+          <button class="btn" id="openAddPssBtn" type="button">+ Add PSS</button>
+        </div>
+        <div class="row" style="margin:10px 0 0;">
+          <input type="text" id="manageSearchBox" class="manage-search" style="margin:0; flex:1; min-width:180px; width:auto;" placeholder="Search PSS to block, edit, or delete&hellip;">
+          <select id="manageAssignFilter" style="background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:6px; padding:7px 10px; font-size:11px;">
+            <option value="">All employees</option>
+            <option value="__unassigned__">Unassigned</option>
+            <option value="__unmatched__">Unmatched names</option>
+          </select>
+        </div>
+        <div class="manage-list" id="manageList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="confirm-overlay" id="addPssOverlay">
+    <div class="confirm-box pss-manager-box" style="max-width:560px; max-height:none;">
+      <div class="pss-manager-header">
+        <h4>Add PSS</h4>
+        <button type="button" class="m-btn" id="addPssCloseBtn">Close</button>
+      </div>
+      <div class="pss-manager-body">
+        <div class="add-pss-grid">
+          <input type="text" id="newPssName" placeholder="PSS name" class="full-row">
           <input type="text" id="newPssState" placeholder="State (e.g. GJ)">
-          <input type="text" id="newPssLat" placeholder="Lat" style="width:80px;">
-          <input type="text" id="newPssLng" placeholder="Long" style="width:80px;">
-          <input type="text" id="newPssCapacity" placeholder="Capacity (MW)" style="width:100px;">
+          <input type="text" id="newPssCapacity" placeholder="Capacity (MW)">
+          <input type="text" id="newPssLat" placeholder="Latitude">
+          <input type="text" id="newPssLng" placeholder="Longitude">
           <select id="newPssFreq">
             <option value="E">Everyday</option>
             <option value="Alt">Alt</option>
@@ -518,17 +547,12 @@
           <select id="newPssSecondary">
             <option value="">Secondary (optional)</option>
           </select>
+        </div>
+        <p class="section-sub" id="addPssError" style="display:none; color:var(--red); margin:0 0 12px;"></p>
+        <div class="row" style="justify-content:flex-end; gap:10px; margin:0;">
+          <button class="btn-outline" id="addPssCancelBtn" type="button">Cancel</button>
           <button class="btn" id="addPssBtn" type="button">Add PSS</button>
         </div>
-        <div class="row" style="margin:10px 0 0;">
-          <input type="text" id="manageSearchBox" class="manage-search" style="margin:0; flex:1; min-width:180px; width:auto;" placeholder="Search PSS to block, edit, or delete&hellip;">
-          <select id="manageAssignFilter" style="background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:6px; padding:7px 10px; font-size:11px;">
-            <option value="">All employees</option>
-            <option value="__unassigned__">Unassigned</option>
-            <option value="__unmatched__">Unmatched names</option>
-          </select>
-        </div>
-        <div class="manage-list" id="manageList"></div>
       </div>
     </div>
   </div>
@@ -862,6 +886,24 @@ attendanceMonthInput.addEventListener('change', renderAttendanceSummary);
   closeBtn.addEventListener('click', ()=> overlay.classList.remove('open'));
   overlay.addEventListener('click', (e)=>{ if(e.target === overlay) overlay.classList.remove('open'); });
   document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') overlay.classList.remove('open'); });
+})();
+
+(function initAddPssModal(){
+  const overlay = document.getElementById('addPssOverlay');
+  const openBtn = document.getElementById('openAddPssBtn');
+  const closeBtn = document.getElementById('addPssCloseBtn');
+  const cancelBtn = document.getElementById('addPssCancelBtn');
+  if(!overlay || !openBtn) return;
+  function closeAddPssModal(){
+    overlay.classList.remove('open');
+    const errLbl = document.getElementById('addPssError');
+    if(errLbl) errLbl.style.display = 'none';
+  }
+  openBtn.addEventListener('click', ()=> overlay.classList.add('open'));
+  closeBtn.addEventListener('click', closeAddPssModal);
+  cancelBtn.addEventListener('click', closeAddPssModal);
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeAddPssModal(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && overlay.classList.contains('open')) closeAddPssModal(); });
 })();
 
 function renderAttendanceSummary(){
@@ -1707,6 +1749,8 @@ function populateNewPssAssignSelect(){
 }
 
 document.getElementById('addPssBtn').addEventListener('click', async ()=>{
+  const addBtn = document.getElementById('addPssBtn');
+  const errLbl = document.getElementById('addPssError');
   const nameInput = document.getElementById('newPssName');
   const stateInput = document.getElementById('newPssState');
   const freqSel = document.getElementById('newPssFreq');
@@ -1717,31 +1761,57 @@ document.getElementById('addPssBtn').addEventListener('click', async ()=>{
   const lngInput = document.getElementById('newPssLng');
   const capInput = document.getElementById('newPssCapacity');
   const name = nameInput.value.trim();
-  if(!name){ nameInput.focus(); return; }
+  const latVal = latInput.value.trim();
+  const lngVal = lngInput.value.trim();
+  const capVal = capInput.value.trim();
 
-  const assignedToId = assignSel.value;
-  const assignedEmp = employees.find(e=>e.id === assignedToId);
-  const secondaryToId = secSel.value;
-  const secondaryEmp = employees.find(e=>e.id === secondaryToId);
+  function showAddPssError(msg){
+    if(errLbl){ errLbl.textContent = msg; errLbl.style.display = 'block'; }
+  }
 
-  SITES = [...SITES, {
-    id: nextCustomId(),
-    name,
-    state: stateInput.value.trim() || '\u2014',
-    freq: freqSel.value,
-    priority: prioSel.value,
-    assignedToId: assignedToId || '',
-    assignedTo: assignedEmp ? (assignedEmp.name || assignedEmp.id) : '',
-    secondaryToId: secondaryToId || '',
-    secondaryTo: secondaryEmp ? (secondaryEmp.name || secondaryEmp.id) : '',
-    lat: latInput.value.trim() || '',
-    lng: lngInput.value.trim() || '',
-    capacityMw: capInput.value.trim() || ''
-  }];
-  await saveSheetDoc();
-  nameInput.value = ''; stateInput.value = ''; assignSel.value = ''; secSel.value = '';
-  latInput.value = ''; lngInput.value = ''; capInput.value = '';
-  showToast('PSS added.');
+  if(!name){ showAddPssError('PSS name is required.'); nameInput.focus(); return; }
+  if(latVal){
+    const latNum = Number(latVal);
+    if(isNaN(latNum) || latNum < -90 || latNum > 90){ showAddPssError('Latitude must be a number between -90 and 90.'); latInput.focus(); return; }
+  }
+  if(lngVal){
+    const lngNum = Number(lngVal);
+    if(isNaN(lngNum) || lngNum < -180 || lngNum > 180){ showAddPssError('Longitude must be a number between -180 and 180.'); lngInput.focus(); return; }
+  }
+  if(capVal){
+    const capNum = Number(capVal);
+    if(isNaN(capNum) || capNum <= 0){ showAddPssError('Capacity must be a positive number.'); capInput.focus(); return; }
+  }
+  if(errLbl) errLbl.style.display = 'none';
+
+  addBtn.disabled = true; // prevent duplicate submissions while the write is in flight
+  try{
+    const assignedToId = assignSel.value;
+    const assignedEmp = employees.find(e=>e.id === assignedToId);
+    const secondaryToId = secSel.value;
+    const secondaryEmp = employees.find(e=>e.id === secondaryToId);
+
+    SITES = [...SITES, {
+      id: nextCustomId(),
+      name,
+      state: stateInput.value.trim() || '\u2014',
+      freq: freqSel.value,
+      priority: prioSel.value,
+      assignedToId: assignedToId || '',
+      assignedTo: assignedEmp ? (assignedEmp.name || assignedEmp.id) : '',
+      secondaryToId: secondaryToId || '',
+      secondaryTo: secondaryEmp ? (secondaryEmp.name || secondaryEmp.id) : '',
+      lat: latVal, lng: lngVal, capacityMw: capVal
+    }];
+    await saveSheetDoc();
+    renderManageList();
+    nameInput.value = ''; stateInput.value = ''; assignSel.value = ''; secSel.value = '';
+    latInput.value = ''; lngInput.value = ''; capInput.value = '';
+    document.getElementById('addPssOverlay').classList.remove('open');
+    showToast('PSS added.');
+  } finally {
+    addBtn.disabled = false;
+  }
 });
 
 async function toggleBlock(name){
