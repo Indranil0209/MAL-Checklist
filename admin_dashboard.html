@@ -498,16 +498,6 @@
         <p class="section-sub" style="margin-top:6px; margin-bottom:0;">"Update Lat/Long/Capacity Only" matches PSS by name and refreshes just those three fields &mdash; it never touches frequency, priority, assignments, or the daily rotation order.</p>
         <div class="sheet-info-lbl" id="sheetInfoLbl">No sheet loaded.</div>
 
-        <div style="margin-top:10px; padding:10px; border:1px solid var(--line); border-radius:8px;">
-          <div class="row" style="align-items:center;">
-            <input type="text" id="linkedFileNameInput" placeholder="Display name, e.g. RAAA Sheet Index" style="flex:1; min-width:160px;">
-            <input type="text" id="linkedFilePathInput" placeholder="Full local path, e.g. D:\Reports\Sheet.xlsx" style="flex:1; min-width:220px;">
-            <button class="btn-outline" id="addLinkedFileBtn" type="button">Add File Link</button>
-          </div>
-          <div id="linkedFilesList" style="display:flex; flex-direction:column; gap:6px; margin-top:10px;"></div>
-          <p class="section-sub" style="margin-top:6px; margin-bottom:0;">Saved only on this computer/browser &mdash; each name becomes a clickable link that opens that Excel file directly. Doesn't sync to other devices.</p>
-        </div>
-
         <div class="manage-add-row">
           <input type="text" id="newPssName" placeholder="PSS name">
           <input type="text" id="newPssState" placeholder="State (e.g. GJ)">
@@ -1059,107 +1049,6 @@ function downloadFile(filename, content, mime){
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
-
-// ---- Local linked-files shortcuts ----
-// Lets the admin save shortcuts to Excel workbooks on this computer, each
-// shown as a clickable name that opens that file directly. Saved in
-// localStorage (per browser/device only -- there is no way to share local
-// file paths across machines). Only works when this dashboard itself is
-// opened as a local file:// page; browsers block file:// links from a page
-// served over http(s). No file contents are read, stored, or processed --
-// this is purely a shortcut, same as a desktop icon.
-const LINKED_FILES_KEY = 'intimation-linked-files';
-const DEFAULT_LINKED_FILES = [
-  { name: 'RAAA Sheet Index', path: 'D:\\Users\\indranil.s\\Desktop\\Personal\\MAL_RAAA_012_RAAA Sheet Index.xlsx' }
-];
-
-function pathToFileUrl(path){
-  let p = path.trim().replace(/\\/g, '/');
-  let drivePrefix = '';
-  const driveMatch = p.match(/^([a-zA-Z]:)\/(.*)$/);
-  if(driveMatch){
-    drivePrefix = '/' + driveMatch[1]; // keep "C:" literal, browsers expect file:///C:/...
-    p = driveMatch[2];
-  }
-  return 'file://' + drivePrefix + '/' + p.split('/').map(encodeURIComponent).join('/');
-}
-
-function loadLinkedFiles(){
-  try{
-    const raw = localStorage.getItem(LINKED_FILES_KEY);
-    if(raw) return JSON.parse(raw);
-  }catch(e){ console.error('loadLinkedFiles failed', e); }
-  return DEFAULT_LINKED_FILES.slice();
-}
-
-function saveLinkedFiles(list){
-  localStorage.setItem(LINKED_FILES_KEY, JSON.stringify(list));
-}
-
-function renderLinkedFiles(){
-  const wrap = document.getElementById('linkedFilesList');
-  const list = loadLinkedFiles();
-  wrap.innerHTML = '';
-  if(!list.length){
-    const empty = document.createElement('div');
-    empty.className = 'section-sub';
-    empty.style.margin = '0';
-    empty.textContent = 'No files linked yet.';
-    wrap.appendChild(empty);
-    return;
-  }
-  list.forEach((file, idx)=>{
-    const row = document.createElement('div');
-    row.style.display = 'flex';
-    row.style.alignItems = 'center';
-    row.style.gap = '10px';
-    row.style.padding = '6px 0';
-    row.style.borderBottom = idx < list.length - 1 ? '1px solid var(--line)' : 'none';
-
-    const link = document.createElement('a');
-    link.href = pathToFileUrl(file.path);
-    link.textContent = file.name + ' \u2197';
-    link.style.color = 'var(--teal)';
-    link.style.textDecoration = 'underline';
-    link.style.fontSize = '12px';
-    link.style.flex = '1';
-    link.title = file.path;
-    row.appendChild(link);
-
-    const removeBtn = document.createElement('button');
-    removeBtn.type = 'button';
-    removeBtn.className = 'del-emp-btn';
-    removeBtn.textContent = 'Remove';
-    removeBtn.onclick = ()=>{
-      const current = loadLinkedFiles();
-      current.splice(idx, 1);
-      saveLinkedFiles(current);
-      renderLinkedFiles();
-    };
-    row.appendChild(removeBtn);
-
-    wrap.appendChild(row);
-  });
-}
-renderLinkedFiles();
-
-document.getElementById('addLinkedFileBtn').addEventListener('click', ()=>{
-  const nameInput = document.getElementById('linkedFileNameInput');
-  const pathInput = document.getElementById('linkedFilePathInput');
-  const name = nameInput.value.trim();
-  const path = pathInput.value.trim();
-  if(!name || !path){
-    showToast('Please enter both a display name and a file path.');
-    return;
-  }
-  const current = loadLinkedFiles();
-  current.push({ name, path });
-  saveLinkedFiles(current);
-  nameInput.value = '';
-  pathInput.value = '';
-  renderLinkedFiles();
-  showToast('File link added.');
-});
 
 // ---- All-employee multi-day summary (one .txt per employee, zipped) ----
 const summaryFromDate = document.getElementById('summaryFromDate');
