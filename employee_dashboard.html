@@ -725,7 +725,7 @@
      the main dashboard on smaller screens. */
   .side-widget{
     position:fixed; top:50%; right:18px; transform:translateY(-50%);
-    width:184px; z-index:60; display:flex; flex-direction:column; gap:10px;
+    width:184px; z-index:40; display:flex; flex-direction:column; gap:10px;
   }
   @media (max-width: 1300px){ .side-widget{ display:none; } }
 
@@ -747,6 +747,30 @@
     color-scheme: dark;
   }
   .sw-break-input:focus{ outline:none; border-color:var(--teal); color:var(--text); }
+
+  /* Break reminder popup -- a standalone notification card (distinct from
+     the small text toast), slides in top-right, auto-dismisses. */
+  .break-popup-stack{
+    position:fixed; top:18px; right:18px; z-index:250;
+    display:flex; flex-direction:column; gap:10px; pointer-events:none;
+  }
+  .break-popup{
+    width:min(300px, 80vw); background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-card);
+    box-shadow:0 16px 40px rgba(0,0,0,.55); padding:13px 16px; display:flex; gap:11px; align-items:flex-start;
+    opacity:0; transform:translateX(24px); transition:opacity .25s ease, transform .25s ease;
+    pointer-events:auto; position:relative; overflow:hidden;
+  }
+  .break-popup::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--card-top-accent); }
+  .break-popup.show{ opacity:1; transform:translateX(0); }
+  .break-popup-icon{ font-size:22px; line-height:1; flex-shrink:0; margin-top:1px; }
+  .break-popup-title{ font-size:13px; font-weight:700; color:var(--text); }
+  .break-popup-msg{ font-size:11.5px; color:var(--text-dim); margin-top:3px; line-height:1.4; }
+  .break-popup-close{
+    position:absolute; top:8px; right:9px; background:none; border:none; color:var(--text-faint);
+    font-size:15px; cursor:pointer; line-height:1; padding:2px;
+  }
+  .break-popup-close:hover{ color:var(--text); }
+  @media (max-width:520px){ .break-popup-stack{ left:12px; right:12px; top:12px; } .break-popup{ width:100%; } }
 
   /* ---- Team chat ---- */
   #chatLauncherBtn{
@@ -920,6 +944,7 @@
 </head>
 <body>
   <div class="toast" id="toast"></div>
+  <div class="break-popup-stack" id="breakPopupStack" aria-live="polite"></div>
 
   <div class="side-widget" id="sideWidget">
     <div class="sw-card">
@@ -1541,6 +1566,8 @@ if(!sessionStorage.getItem(ROLE_SESSION_KEY) || !employeeId){
     panelOpen = true;
     overlay.style.display = 'block';
     panel.style.display = 'flex';
+    const sw = document.getElementById('sideWidget');
+    if(sw) sw.style.display = 'none';
     if(activeTab === 'team'){
       subscribeTeam();
       setLastSeen('team', Date.now());
@@ -1558,6 +1585,8 @@ if(!sessionStorage.getItem(ROLE_SESSION_KEY) || !employeeId){
       panel.style.display = 'none';
       panel.classList.remove('closing');
       overlay.classList.remove('closing');
+      const sw = document.getElementById('sideWidget');
+      if(sw) sw.style.display = '';
     }, 180);
     if(teamUnsub){ teamUnsub(); teamUnsub = null; }
     if(dmUnsub){ dmUnsub(); dmUnsub = null; }
@@ -3672,17 +3701,36 @@ loadState();
     localStorage.removeItem('checklist_waterBreakFiredOn');
   });
 
+  function showBreakPopup(icon, title, message){
+    const stack = document.getElementById('breakPopupStack');
+    if(!stack) return;
+    const card = document.createElement('div');
+    card.className = 'break-popup';
+    card.innerHTML =
+      '<div class="break-popup-icon">'+icon+'</div>' +
+      '<div><div class="break-popup-title">'+title+'</div><div class="break-popup-msg">'+message+'</div></div>' +
+      '<button type="button" class="break-popup-close" aria-label="Dismiss">&times;</button>';
+    stack.appendChild(card);
+    requestAnimationFrame(()=> card.classList.add('show'));
+    const remove = ()=>{
+      card.classList.remove('show');
+      setTimeout(()=> card.remove(), 250);
+    };
+    card.querySelector('.break-popup-close').onclick = remove;
+    setTimeout(remove, 8000);
+  }
+
   function checkReminders(){
     const now = new Date();
     const hhmm = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
     const todayKey = now.toDateString();
 
     if(teaInput.value && teaInput.value === hhmm && localStorage.getItem('checklist_teaBreakFiredOn') !== todayKey){
-      if(typeof showToast === 'function') showToast('\u2615 Tea Break Time \u2014 it\u2019s time to take your tea break.', false, 6000);
+      showBreakPopup('&#9749;', 'Tea Break Time', "It's time to take your tea break.");
       localStorage.setItem('checklist_teaBreakFiredOn', todayKey);
     }
     if(waterInput.value && waterInput.value === hhmm && localStorage.getItem('checklist_waterBreakFiredOn') !== todayKey){
-      if(typeof showToast === 'function') showToast('\uD83D\uDCA7 Water Break Reminder \u2014 time to drink some water and stay hydrated.', false, 6000);
+      showBreakPopup('&#128167;', 'Water Break Reminder', 'Time to drink some water and stay hydrated.');
       localStorage.setItem('checklist_waterBreakFiredOn', todayKey);
     }
   }
