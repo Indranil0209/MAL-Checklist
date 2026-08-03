@@ -1187,17 +1187,15 @@ function buildDayWorkSection(workItems, extraWorkLines){
   const uncategorized = workItems.filter(item=>!item.work && item.remark).map(item=>item.name + ': ' + item.remark);
 
   // Verification log: every single check-off gets a line here regardless of
-  // category, showing the reading/value the employee entered and flagging
-  // any that were completed suspiciously fast after the previous one --
-  // this is the actual "did they really check it" evidence trail, since we
-  // have no visibility into what they did inside the separate SCADA portal.
+  // category, flagging any that were completed suspiciously fast after the
+  // previous one -- since we have no visibility into what they did inside
+  // the separate SCADA portal.
   const QUICK_CHECK_THRESHOLD_SEC = 20;
   const verification = workItems.map(item=>{
-    const readingPart = item.reading ? ('Reading: ' + item.reading) : 'No reading recorded \u26A0';
     const timePart = item.time ? (' @ ' + item.time) : '';
     const flagPart = (typeof item.gapSec === 'number' && item.gapSec < QUICK_CHECK_THRESHOLD_SEC)
       ? '  \u26A0 checked ' + item.gapSec + 's after the previous one' : '';
-    return item.name + timePart + ' \u2014 ' + readingPart + flagPart;
+    return item.name + timePart + flagPart;
   });
 
   const cats = [];
