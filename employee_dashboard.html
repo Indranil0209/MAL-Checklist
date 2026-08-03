@@ -749,28 +749,26 @@
   .sw-break-input:focus{ outline:none; border-color:var(--teal); color:var(--text); }
 
   /* Break reminder popup -- a standalone notification card (distinct from
-     the small text toast), slides in top-right, auto-dismisses. */
+     the small text toast), pops up center-screen, auto-dismisses. */
   .break-popup-stack{
-    position:fixed; top:18px; right:18px; z-index:250;
-    display:flex; flex-direction:column; gap:10px; pointer-events:none;
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:250;
+    display:flex; flex-direction:column; gap:12px; pointer-events:none; align-items:center;
   }
   .break-popup{
-    width:min(300px, 80vw); background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-card);
-    box-shadow:0 16px 40px rgba(0,0,0,.55); padding:13px 16px; display:flex; gap:11px; align-items:flex-start;
-    opacity:0; transform:translateX(24px); transition:opacity .25s ease, transform .25s ease;
+    width:min(320px, 86vw); background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-card);
+    box-shadow:0 24px 60px rgba(0,0,0,.6); padding:22px 24px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px;
+    opacity:0; transform:scale(.85); transition:opacity .28s cubic-bezier(.34,1.4,.64,1), transform .28s cubic-bezier(.34,1.4,.64,1);
     pointer-events:auto; position:relative; overflow:hidden;
   }
-  .break-popup::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--card-top-accent); }
-  .break-popup.show{ opacity:1; transform:translateX(0); }
-  .break-popup-icon{ font-size:22px; line-height:1; flex-shrink:0; margin-top:1px; }
-  .break-popup-title{ font-size:13px; font-weight:700; color:var(--text); }
-  .break-popup-msg{ font-size:11.5px; color:var(--text-dim); margin-top:3px; line-height:1.4; }
+  .break-popup::before{ content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--card-top-accent); }
+  .break-popup.show{ opacity:1; transform:scale(1); }
+  .break-popup-msg{ font-size:19px; font-weight:800; color:var(--text); line-height:1.35; }
   .break-popup-close{
-    position:absolute; top:8px; right:9px; background:none; border:none; color:var(--text-faint);
-    font-size:15px; cursor:pointer; line-height:1; padding:2px;
+    position:absolute; top:9px; right:11px; background:none; border:none; color:var(--text-faint);
+    font-size:16px; cursor:pointer; line-height:1; padding:2px;
   }
   .break-popup-close:hover{ color:var(--text); }
-  @media (max-width:520px){ .break-popup-stack{ left:12px; right:12px; top:12px; } .break-popup{ width:100%; } }
+  @media (max-width:520px){ .break-popup{ width:100%; } }
 
   /* ---- Team chat ---- */
   #chatLauncherBtn{
@@ -3701,14 +3699,13 @@ loadState();
     localStorage.removeItem('checklist_waterBreakFiredOn');
   });
 
-  function showBreakPopup(icon, title, message){
+  function showBreakPopup(message){
     const stack = document.getElementById('breakPopupStack');
     if(!stack) return;
     const card = document.createElement('div');
     card.className = 'break-popup';
     card.innerHTML =
-      '<div class="break-popup-icon">'+icon+'</div>' +
-      '<div><div class="break-popup-title">'+title+'</div><div class="break-popup-msg">'+message+'</div></div>' +
+      '<div class="break-popup-msg">'+message+'</div>' +
       '<button type="button" class="break-popup-close" aria-label="Dismiss">&times;</button>';
     stack.appendChild(card);
     requestAnimationFrame(()=> card.classList.add('show'));
@@ -3717,8 +3714,12 @@ loadState();
       setTimeout(()=> card.remove(), 250);
     };
     card.querySelector('.break-popup-close').onclick = remove;
-    setTimeout(remove, 8000);
+    const stayMs = 20000 + Math.random()*10000; // stays 20-30s
+    setTimeout(remove, stayMs);
   }
+
+  const TEA_MESSAGES = ['Chai Peelo\u2615', 'Chai Pe Chalein\u2615'];
+  const WATER_MESSAGE = 'Paani Peelo Plzzzzz\uD83E\uDD7A\uD83E\uDD5B';
 
   function checkReminders(){
     const now = new Date();
@@ -3726,11 +3727,12 @@ loadState();
     const todayKey = now.toDateString();
 
     if(teaInput.value && teaInput.value === hhmm && localStorage.getItem('checklist_teaBreakFiredOn') !== todayKey){
-      showBreakPopup('&#9749;', 'Tea Break Time', "It's time to take your tea break.");
+      const msg = TEA_MESSAGES[Math.floor(Math.random()*TEA_MESSAGES.length)];
+      showBreakPopup(msg);
       localStorage.setItem('checklist_teaBreakFiredOn', todayKey);
     }
     if(waterInput.value && waterInput.value === hhmm && localStorage.getItem('checklist_waterBreakFiredOn') !== todayKey){
-      showBreakPopup('&#128167;', 'Water Break Reminder', 'Time to drink some water and stay hydrated.');
+      showBreakPopup(WATER_MESSAGE);
       localStorage.setItem('checklist_waterBreakFiredOn', todayKey);
     }
   }
