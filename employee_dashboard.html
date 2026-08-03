@@ -3172,6 +3172,7 @@ document.getElementById('snLockOverlay').addEventListener('click', (e)=>{
   if(e.target.id === 'snLockOverlay' && e.currentTarget.dataset.mode === 'setup' && !stickyNotePin){
     e.currentTarget.style.display = 'none';
     document.getElementById('personalNoteContent').classList.remove('sn-blurred');
+    document.getElementById('snSetPinBtn').style.display = '';
   }
 });
 
@@ -3195,7 +3196,7 @@ let stateSaveTimer = null;
 async function saveState(){
   try{
     await EMP_STATE_DOC().set({
-      allDatesState, pendingMap, autoResolvedUntil, extraItemsByDate, extraWorkByDate, saturdayOffMode, personalNote,
+      allDatesState, pendingMap, autoResolvedUntil, extraItemsByDate, extraWorkByDate, saturdayOffMode, personalNote, stickyNotePin,
       updatedAt: new Date().toISOString()
     }, { merge: true });
   }catch(e){
@@ -3264,6 +3265,7 @@ async function loadState(){
       extraWorkByDate = (d.extraWorkByDate && typeof d.extraWorkByDate === 'object') ? d.extraWorkByDate : {};
       saturdayOffMode = ['firstThird','secondFourth','none'].includes(d.saturdayOffMode) ? d.saturdayOffMode : 'firstThird';
       personalNote = typeof d.personalNote === 'string' ? d.personalNote : '';
+      stickyNotePin = typeof d.stickyNotePin === 'string' ? d.stickyNotePin : '';
     }
     extraWorkLoaded = true;
   }catch(e){
@@ -3272,6 +3274,7 @@ async function loadState(){
   }
   const noteTextarea = document.getElementById('personalNoteText');
   if(noteTextarea && noteTextarea.value !== personalNote) noteTextarea.value = personalNote;
+  snInitLockUI();
   populateStateFilter();
   const satSel = document.getElementById('saturdayOffSelect');
   if(satSel) satSel.value = saturdayOffMode;
