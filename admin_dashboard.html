@@ -219,6 +219,8 @@
   }
   .attendance-select.st-absent{ color:var(--red); border-color:var(--red-dim); background:rgba(248,113,113,.08); }
   .attendance-select.st-half{ color:var(--amber); border-color:var(--amber-dim); background:rgba(255,209,102,.08); }
+  .attendance-select.st-shortLeave{ color:var(--violet); border-color:var(--violet-dim); background:rgba(103,232,249,.08); }
+  .attendance-select.st-lateAttendance{ color:var(--pink); border-color:var(--pink-glow); background:rgba(255,107,157,.08); }
 
   .del-emp-btn{
     background:var(--glass); border:1.5px solid var(--glass-border); color:var(--text-faint);
@@ -468,7 +470,7 @@
         </div>
         <table class="emp-table">
           <thead>
-            <tr><th>Employee</th><th>Present</th><th>Half Day</th><th>Absent</th><th>Attendance %</th></tr>
+            <tr><th>Employee</th><th>Present</th><th>Half Day</th><th>Short Leave</th><th>Late Attendance</th><th>Absent</th><th>Attendance %</th></tr>
           </thead>
           <tbody id="attendanceTableBody"></tbody>
         </table>
@@ -929,23 +931,43 @@ function renderAttendanceSummary(){
   employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
     let absentCount = 0;
     let halfCount = 0;
+    let shortLeaveCount = 0;
+    let lateCount = 0;
+    let effectivePresentDays = 0; // for the % calc, per the Attendance & Punctuality Policy
     const absences = emp.absences || {};
     for(let day=1; day<=lastDayToCount; day++){
       const k = year + '-' + String(month+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
       const v = absences[k];
-      if(v === true || v === 'absent') absentCount++;
-      else if(v === 'half') halfCount++;
+      if(v === true || v === 'absent'){
+        absentCount++;
+      } else if(v === 'half'){
+        halfCount++;
+        effectivePresentDays += 0.5;
+      } else if(v === 'shortLeave'){
+        shortLeaveCount++;
+        // Policy: 2 short leaves/month are free (full day). The 3rd and any
+        // beyond that in the same month are treated as a half-day leave.
+        effectivePresentDays += (shortLeaveCount <= 2) ? 1 : 0.5;
+      } else if(v === 'lateAttendance'){
+        lateCount++;
+        // Policy: 3 late marks/month are free (full day). The 4th and any
+        // beyond that in the same month deduct 0.5 day.
+        effectivePresentDays += (lateCount <= 3) ? 1 : 0.5;
+      } else {
+        effectivePresentDays += 1;
+      }
     }
     const totalDays = lastDayToCount;
-    const presentCount = totalDays - absentCount - halfCount;
-    // A half day counts as half a present day toward the attendance %.
-    const pct = totalDays ? Math.round((presentCount + halfCount*0.5)/totalDays*100) : 0;
+    const presentCount = totalDays - absentCount - halfCount - shortLeaveCount - lateCount;
+    const pct = totalDays ? Math.round(effectivePresentDays/totalDays*100) : 0;
 
     const tr = document.createElement('tr');
     tr.innerHTML =
       '<td><div class="emp-name">'+escapeHtml(emp.name||emp.id)+'</div><div class="emp-id">'+escapeHtml(emp.id)+'</div></td>' +
       '<td>'+presentCount+' / '+totalDays+'</td>' +
       '<td>'+(halfCount ? '<span class="pending-lbl" style="color:var(--amber);">'+halfCount+'</span>' : '<span class="no-data-lbl">0</span>')+'</td>' +
+      '<td>'+(shortLeaveCount ? '<span class="pending-lbl" style="color:var(--violet);">'+shortLeaveCount+(shortLeaveCount>2?' \u26A0':'')+'</span>' : '<span class="no-data-lbl">0</span>')+'</td>' +
+      '<td>'+(lateCount ? '<span class="pending-lbl" style="color:var(--pink);">'+lateCount+(lateCount>3?' \u26A0':'')+'</span>' : '<span class="no-data-lbl">0</span>')+'</td>' +
       '<td>'+(absentCount ? '<span class="pending-lbl" style="color:var(--red);">'+absentCount+'</span>' : '<span class="no-data-lbl">0</span>')+'</td>' +
       '<td>'+pct+'%</td>';
     body.appendChild(tr);
@@ -956,6 +978,8 @@ function attendanceStatus(emp, dKey){
   const v = emp.absences && emp.absences[dKey];
   if(v === true || v === 'absent') return 'absent';
   if(v === 'half') return 'half';
+  if(v === 'shortLeave') return 'shortLeave';
+  if(v === 'lateAttendance') return 'lateAttendance';
   return 'present';
 }
 
@@ -1021,7 +1045,7 @@ function renderAttendanceMarkList(){
     const attTd = tr.children[1];
     const attSel = document.createElement('select');
     attSel.className = 'attendance-select st-' + status;
-    [['present','Present'],['half','Half Day'],['absent','Absent']].forEach(([val,label])=>{
+    [['present','Present'],['half','Half Day'],['shortLeave','Short Leave'],['lateAttendance','Late Attendance'],['absent','Absent']].forEach(([val,label])=>{
       const opt = document.createElement('option');
       opt.value = val; opt.textContent = label;
       if(status === val) opt.selected = true;
@@ -1073,7 +1097,8 @@ async function setAttendanceStatus(empId, dKey, status){
     await db.collection('employees').doc(empId).set({
       absences: { [dKey]: status }
     }, { merge: true });
-    showToast(status === 'present' ? 'Marked present' : status === 'half' ? 'Marked half day' : 'Marked absent');
+    const labels = { present:'Marked present', half:'Marked half day', shortLeave:'Marked short leave', lateAttendance:'Marked late attendance', absent:'Marked absent' };
+    showToast(labels[status] || 'Attendance updated');
   }catch(e){
     console.error('setAttendanceStatus failed', e);
     showToast('Could not update attendance.');
@@ -1231,6 +1256,7 @@ function buildDayWorkSection(workItems, extraWorkLines){
 }
 
 function buildEmployeeSummaryBlock(emp, dKeys){
+  const STATUS_LABEL = { shortLeave: 'Short Leave', lateAttendance: 'Late Attendance' };
   const lines = [(emp.name || emp.id) + " (" + emp.id + ")", ""];
   let anyContent = false;
   dKeys.forEach(dKey=>{
@@ -1247,12 +1273,21 @@ function buildEmployeeSummaryBlock(emp, dKeys){
       anyContent = true;
       return;
     }
+    if((status === 'shortLeave' || status === 'lateAttendance') && !prog){
+      lines.push("Date \u2013 " + dKey);
+      lines.push(STATUS_LABEL[status]);
+      extraWorkLines.forEach((text, i)=>{ lines.push((i+1) + '. ' + text); });
+      lines.push("");
+      anyContent = true;
+      return;
+    }
     if(!prog) return; // no activity, no extra work, and not marked absent -- skip the date entirely
     const hasWorkItems = !!(prog.workItems && prog.workItems.length);
     const daySection = buildDayWorkSection(hasWorkItems ? prog.workItems : [], extraWorkLines);
     if(!daySection.length) return; // nothing to report this day
     anyContent = true;
     lines.push("Date \u2013 " + dKey);
+    if(STATUS_LABEL[status]) lines.push(STATUS_LABEL[status]);
     lines.push("");
     lines.push(...daySection);
   });
@@ -1285,6 +1320,7 @@ function downloadAllSummaries(){
 // numbered section headers) so it can be saved as a .doc file -- Word
 // opens HTML saved with a .doc extension natively, no library needed.
 function buildEmployeeSummaryBlockHtml(emp, dKeys){
+  const STATUS_LABEL = { shortLeave: 'Short Leave', lateAttendance: 'Late Attendance' };
   const esc = (s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const parts = ['<p><b style="font-size:13pt;">' + esc(emp.name || emp.id) + ' (' + esc(emp.id) + ')</b></p>'];
   let anyContent = false;
@@ -1300,12 +1336,19 @@ function buildEmployeeSummaryBlockHtml(emp, dKeys){
       anyContent = true;
       return;
     }
+    if((status === 'shortLeave' || status === 'lateAttendance') && !prog){
+      parts.push('<p><b>Date \u2013 ' + esc(dKey) + '</b></p><p>' + esc(STATUS_LABEL[status]) + '</p>');
+      extraWorkLines.forEach((text,i)=>{ parts.push('<p><b>' + (i+1) + '.</b> ' + esc(text) + '</p>'); });
+      anyContent = true;
+      return;
+    }
     if(!prog) return;
     const hasWorkItems = !!(prog.workItems && prog.workItems.length);
     const daySection = buildDayWorkSection(hasWorkItems ? prog.workItems : [], extraWorkLines);
     if(!daySection.length) return;
     anyContent = true;
     parts.push('<p><b>Date \u2013 ' + esc(dKey) + '</b></p>');
+    if(STATUS_LABEL[status]) parts.push('<p>' + esc(STATUS_LABEL[status]) + '</p>');
     daySection.forEach(line=>{
       if(!line){ return; }
       const isSectionHeader = /^\d+\.\s/.test(line);
