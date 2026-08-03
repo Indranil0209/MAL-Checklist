@@ -1133,6 +1133,7 @@
         <h3 style="margin:0; font-size:13px; color:var(--teal);">&#128204; Sticky Note</h3>
         <span style="display:flex; align-items:center; gap:10px;">
           <span id="snSetPinBtn" class="sn-lock-change" style="display:none;">🔒 Set passcode</span>
+          <span id="snLockNowBtn" class="sn-lock-change" style="display:none;">🔒 Lock now</span>
           <span id="snChangePinBtn" class="sn-lock-change" style="display:none;">Change passcode</span>
           <span id="personalNoteSavedLbl" style="font-size:10px; color:var(--text-faint);"></span>
         </span>
@@ -3077,6 +3078,7 @@ function snShowOverlay(mode){ // mode: 'setup' | 'unlock'
   const content = document.getElementById('personalNoteContent');
   const changeBtn = document.getElementById('snChangePinBtn');
   const setBtn = document.getElementById('snSetPinBtn');
+  const lockNowBtn = document.getElementById('snLockNowBtn');
   if(!overlay || !content) return;
   content.classList.add('sn-blurred');
   overlay.style.display = 'flex';
@@ -3087,6 +3089,7 @@ function snShowOverlay(mode){ // mode: 'setup' | 'unlock'
   document.getElementById('snLockSub').textContent = mode === 'setup' ? 'This locks your sticky note \u2014 you\u2019ll need it every time you open it.' : 'Your sticky note is locked.';
   if(changeBtn) changeBtn.style.display = 'none';
   if(setBtn) setBtn.style.display = 'none';
+  if(lockNowBtn) lockNowBtn.style.display = 'none';
   setTimeout(()=> document.getElementById('snLockInput').focus(), 50);
 }
 
@@ -3096,7 +3099,9 @@ function snUnlock(){
   document.getElementById('snLockOverlay').style.display = 'none';
   const changeBtn = document.getElementById('snChangePinBtn');
   const setBtn = document.getElementById('snSetPinBtn');
+  const lockNowBtn = document.getElementById('snLockNowBtn');
   if(changeBtn) changeBtn.style.display = stickyNotePin ? '' : 'none';
+  if(lockNowBtn) lockNowBtn.style.display = stickyNotePin ? '' : 'none';
   if(setBtn) setBtn.style.display = 'none';
   snResetIdleTimer();
 }
@@ -3165,6 +3170,9 @@ document.getElementById('snChangePinBtn').addEventListener('click', ()=>{
 });
 document.getElementById('snSetPinBtn').addEventListener('click', ()=>{
   snShowOverlay('setup');
+});
+document.getElementById('snLockNowBtn').addEventListener('click', ()=>{
+  snLockNow();
 });
 document.getElementById('snLockOverlay').addEventListener('click', (e)=>{
   // Clicking the dimmed backdrop (outside the card content) during first-time
