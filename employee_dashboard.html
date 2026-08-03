@@ -1132,6 +1132,7 @@
       <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
         <h3 style="margin:0; font-size:13px; color:var(--teal);">&#128204; Sticky Note</h3>
         <span style="display:flex; align-items:center; gap:10px;">
+          <span id="snSetPinBtn" class="sn-lock-change" style="display:none;">🔒 Set passcode</span>
           <span id="snChangePinBtn" class="sn-lock-change" style="display:none;">Change passcode</span>
           <span id="personalNoteSavedLbl" style="font-size:10px; color:var(--text-faint);"></span>
         </span>
@@ -3075,6 +3076,7 @@ function snShowOverlay(mode){ // mode: 'setup' | 'unlock'
   const overlay = document.getElementById('snLockOverlay');
   const content = document.getElementById('personalNoteContent');
   const changeBtn = document.getElementById('snChangePinBtn');
+  const setBtn = document.getElementById('snSetPinBtn');
   if(!overlay || !content) return;
   content.classList.add('sn-blurred');
   overlay.style.display = 'flex';
@@ -3084,6 +3086,7 @@ function snShowOverlay(mode){ // mode: 'setup' | 'unlock'
   document.getElementById('snLockTitle').textContent = mode === 'setup' ? 'Set a 6-digit passcode' : 'Enter passcode to unlock';
   document.getElementById('snLockSub').textContent = mode === 'setup' ? 'This locks your sticky note \u2014 you\u2019ll need it every time you open it.' : 'Your sticky note is locked.';
   if(changeBtn) changeBtn.style.display = 'none';
+  if(setBtn) setBtn.style.display = 'none';
   setTimeout(()=> document.getElementById('snLockInput').focus(), 50);
 }
 
@@ -3092,7 +3095,9 @@ function snUnlock(){
   document.getElementById('personalNoteContent').classList.remove('sn-blurred');
   document.getElementById('snLockOverlay').style.display = 'none';
   const changeBtn = document.getElementById('snChangePinBtn');
-  if(changeBtn) changeBtn.style.display = '';
+  const setBtn = document.getElementById('snSetPinBtn');
+  if(changeBtn) changeBtn.style.display = stickyNotePin ? '' : 'none';
+  if(setBtn) setBtn.style.display = 'none';
   snResetIdleTimer();
 }
 
@@ -3103,10 +3108,24 @@ function snLockNow(){
   snShowOverlay('unlock');
 }
 
+// Called once on page load, after stickyNotePin has been loaded from Firestore.
+function snInitLockUI(){
+  const setBtn = document.getElementById('snSetPinBtn');
+  const changeBtn = document.getElementById('snChangePinBtn');
+  if(stickyNotePin){
+    snLockNow(); // pin exists -> stay blurred until unlocked
+  } else {
+    document.getElementById('personalNoteContent').classList.remove('sn-blurred');
+    document.getElementById('snLockOverlay').style.display = 'none';
+    if(setBtn) setBtn.style.display = '';
+    if(changeBtn) changeBtn.style.display = 'none';
+  }
+}
+
 function snResetIdleTimer(){
   clearTimeout(snIdleTimer);
   if(!snUnlocked) return;
-  snIdleTimer = setTimeout(snLockNow, 5 * 60 * 1000); // 5 min inactivity
+  snIdleTimer = setTimeout(snLockNow, 10 * 60 * 1000); // 10 min inactivity
 }
 ['mousemove','keydown','click','scroll','touchstart'].forEach(evt=>{
   document.addEventListener(evt, ()=>{ if(snUnlocked) snResetIdleTimer(); }, { passive:true });
@@ -3143,6 +3162,17 @@ document.getElementById('snChangePinBtn').addEventListener('click', ()=>{
   snUnlocked = false;
   clearTimeout(snIdleTimer);
   snShowOverlay('setup');
+});
+document.getElementById('snSetPinBtn').addEventListener('click', ()=>{
+  snShowOverlay('setup');
+});
+document.getElementById('snLockOverlay').addEventListener('click', (e)=>{
+  // Clicking the dimmed backdrop (outside the card content) during first-time
+  // setup lets the employee back out without being forced to set a passcode.
+  if(e.target.id === 'snLockOverlay' && e.currentTarget.dataset.mode === 'setup' && !stickyNotePin){
+    e.currentTarget.style.display = 'none';
+    document.getElementById('personalNoteContent').classList.remove('sn-blurred');
+  }
 });
 
 const EMP_STATE_DOC = () => db.collection('employees').doc(employeeId).collection('state').doc('main');
