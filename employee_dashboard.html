@@ -748,6 +748,26 @@
   }
   .sw-break-input:focus{ outline:none; border-color:var(--teal); color:var(--text); }
 
+  /* ---- Sticky Note passcode lock ---- */
+  #personalNoteContent.sn-blurred{ filter:blur(6px); pointer-events:none; user-select:none; }
+  .sn-lock-overlay{
+    position:absolute; inset:0; background:rgba(10,8,20,.6); backdrop-filter:blur(1px);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px;
+    border-radius:10px; z-index:5; padding:16px; text-align:center;
+  }
+  .sn-lock-icon{ font-size:21px; }
+  .sn-lock-title{ font-size:12.5px; font-weight:700; color:var(--text); }
+  .sn-lock-sub{ font-size:10.5px; color:var(--text-dim); max-width:220px; }
+  .sn-lock-input{
+    width:140px; text-align:center; letter-spacing:7px; font-size:16px; font-family:var(--mono);
+    background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:8px 6px 8px 12px;
+    color-scheme:dark;
+  }
+  .sn-lock-input:focus{ outline:none; border-color:var(--teal); }
+  .sn-lock-error{ font-size:10px; color:var(--red); min-height:12px; }
+  .sn-lock-change{ font-size:10px; color:var(--text-faint); cursor:pointer; text-decoration:underline; }
+  .sn-lock-change:hover{ color:var(--text-dim); }
+
   /* Break reminder popup -- a standalone notification card (distinct from
      the small text toast), pops up center-screen, auto-dismisses. */
   .break-popup-stack{
@@ -1107,13 +1127,26 @@
     <div id="extraWorkText" class="rte-editor" contenteditable="true" spellcheck="false" data-placeholder="e.g. Helped troubleshoot SCADA connectivity at site X. Attended vendor call re: meter replacement" role="textbox" aria-multiline="true" aria-label="Other Works notes"></div>
   </div>
 
-  <div id="personalNotePanel" style="background:var(--panel); border:1px solid var(--teal); border-left:4px solid var(--teal); border-radius:10px; padding:14px 16px; margin-bottom:16px;">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-      <h3 style="margin:0; font-size:13px; color:var(--teal);">&#128204; Sticky Note</h3>
-      <span id="personalNoteSavedLbl" style="font-size:10px; color:var(--text-faint);"></span>
+  <div id="personalNotePanel" style="background:var(--panel); border:1px solid var(--teal); border-left:4px solid var(--teal); border-radius:10px; padding:14px 16px; margin-bottom:16px; position:relative; overflow:hidden;">
+    <div id="personalNoteContent">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <h3 style="margin:0; font-size:13px; color:var(--teal);">&#128204; Sticky Note</h3>
+        <span style="display:flex; align-items:center; gap:10px;">
+          <span id="snChangePinBtn" class="sn-lock-change" style="display:none;">Change passcode</span>
+          <span id="personalNoteSavedLbl" style="font-size:10px; color:var(--text-faint);"></span>
+        </span>
+      </div>
+      <p style="margin:6px 0 10px; font-size:11px; color:var(--text-dim);">Your own personal notes &mdash; anything you want to jot down and keep. Unlike Other Works, this never resets; it stays exactly as you left it every day.</p>
+      <textarea id="personalNoteText" placeholder="e.g. Ideas, reminders, things to follow up on&hellip;" style="width:100%; min-height:70px; background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:7px; padding:10px; font-family:var(--font); font-size:12.5px; resize:vertical; box-sizing:border-box;"></textarea>
     </div>
-    <p style="margin:6px 0 10px; font-size:11px; color:var(--text-dim);">Your own personal notes &mdash; anything you want to jot down and keep. Unlike Other Works, this never resets; it stays exactly as you left it every day.</p>
-    <textarea id="personalNoteText" placeholder="e.g. Ideas, reminders, things to follow up on&hellip;" style="width:100%; min-height:70px; background:var(--card); border:1px solid var(--line); color:var(--text); border-radius:7px; padding:10px; font-family:var(--font); font-size:12.5px; resize:vertical; box-sizing:border-box;"></textarea>
+    <div id="snLockOverlay" class="sn-lock-overlay" style="display:none;">
+      <div class="sn-lock-icon">&#128274;</div>
+      <div class="sn-lock-title" id="snLockTitle">Enter passcode to unlock</div>
+      <div class="sn-lock-sub" id="snLockSub">Your sticky note is locked.</div>
+      <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="snLockInput" class="sn-lock-input" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="off">
+      <button type="button" class="btn" id="snLockBtn" style="padding:7px 18px; font-size:11.5px;">Unlock</button>
+      <div class="sn-lock-error" id="snLockError"></div>
+    </div>
   </div>
 
   <div id="pendingPanel" class="pending-panel collapsed" style="display:none;">
@@ -1343,6 +1376,7 @@ function htmlNotesToLines(html){
 }
 
 let personalNote = ''; // permanent sticky note, not tied to any date -- never resets
+let stickyNotePin = ''; // hashed 6-digit passcode locking the sticky note (empty = never set)
 
 function escapeHtml(str){
   return String(str == null ? '' : str).replace(/[&<>"']/g, c=>({
@@ -3018,6 +3052,97 @@ document.getElementById('personalNoteText').addEventListener('input', (e)=>{
     if(savedLbl) savedLbl.textContent = 'Saved';
   }, 600);
   pendingSaveFlush = { timer: personalNoteSaveTimer };
+});
+
+// ---- Sticky Note passcode lock: blurs the note until a 6-digit passcode is
+// entered, and re-locks after 5 minutes of inactivity. The passcode is
+// hashed (SHA-256) before it's ever saved to Firestore, so the raw digits
+// never leave this device. ----
+let snUnlocked = false;
+let snIdleTimer = null;
+
+async function snHashPin(pin){
+  try{
+    const enc = new TextEncoder().encode('checklistStickyNote:' + pin);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }catch(e){
+    return pin; // very old browser fallback
+  }
+}
+
+function snShowOverlay(mode){ // mode: 'setup' | 'unlock'
+  const overlay = document.getElementById('snLockOverlay');
+  const content = document.getElementById('personalNoteContent');
+  const changeBtn = document.getElementById('snChangePinBtn');
+  if(!overlay || !content) return;
+  content.classList.add('sn-blurred');
+  overlay.style.display = 'flex';
+  overlay.dataset.mode = mode;
+  document.getElementById('snLockError').textContent = '';
+  document.getElementById('snLockInput').value = '';
+  document.getElementById('snLockTitle').textContent = mode === 'setup' ? 'Set a 6-digit passcode' : 'Enter passcode to unlock';
+  document.getElementById('snLockSub').textContent = mode === 'setup' ? 'This locks your sticky note \u2014 you\u2019ll need it every time you open it.' : 'Your sticky note is locked.';
+  if(changeBtn) changeBtn.style.display = 'none';
+  setTimeout(()=> document.getElementById('snLockInput').focus(), 50);
+}
+
+function snUnlock(){
+  snUnlocked = true;
+  document.getElementById('personalNoteContent').classList.remove('sn-blurred');
+  document.getElementById('snLockOverlay').style.display = 'none';
+  const changeBtn = document.getElementById('snChangePinBtn');
+  if(changeBtn) changeBtn.style.display = '';
+  snResetIdleTimer();
+}
+
+function snLockNow(){
+  if(!stickyNotePin) return; // no passcode ever set, nothing to lock
+  snUnlocked = false;
+  clearTimeout(snIdleTimer);
+  snShowOverlay('unlock');
+}
+
+function snResetIdleTimer(){
+  clearTimeout(snIdleTimer);
+  if(!snUnlocked) return;
+  snIdleTimer = setTimeout(snLockNow, 5 * 60 * 1000); // 5 min inactivity
+}
+['mousemove','keydown','click','scroll','touchstart'].forEach(evt=>{
+  document.addEventListener(evt, ()=>{ if(snUnlocked) snResetIdleTimer(); }, { passive:true });
+});
+
+async function snHandleSubmit(){
+  const overlay = document.getElementById('snLockOverlay');
+  const input = document.getElementById('snLockInput');
+  const err = document.getElementById('snLockError');
+  const val = (input.value || '').trim();
+  if(!/^\d{6}$/.test(val)){
+    err.textContent = 'Enter a 6-digit code.';
+    return;
+  }
+  if(overlay.dataset.mode === 'setup'){
+    stickyNotePin = await snHashPin(val);
+    await saveState();
+    snUnlock();
+    showToast('Passcode set for your sticky note.');
+    return;
+  }
+  const attemptHash = await snHashPin(val);
+  if(attemptHash === stickyNotePin){
+    snUnlock();
+  } else {
+    err.textContent = 'Incorrect passcode.';
+    input.value = '';
+    input.focus();
+  }
+}
+document.getElementById('snLockBtn').addEventListener('click', snHandleSubmit);
+document.getElementById('snLockInput').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') snHandleSubmit(); });
+document.getElementById('snChangePinBtn').addEventListener('click', ()=>{
+  snUnlocked = false;
+  clearTimeout(snIdleTimer);
+  snShowOverlay('setup');
 });
 
 const EMP_STATE_DOC = () => db.collection('employees').doc(employeeId).collection('state').doc('main');
