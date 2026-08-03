@@ -464,9 +464,10 @@
 
         <h4 style="margin:22px 0 4px; font-size:14px; font-family:var(--font-display); font-weight:700;">Monthly Summary</h4>
         <p class="section-sub" style="margin-top:-2px;">Present/absent day counts per employee for a month, based on the attendance marks above.</p>
-        <div class="row" style="margin-bottom:12px;">
+        <div class="row" style="margin-bottom:12px; align-items:center; gap:10px;">
           <label style="font-size:10.5px; color:var(--text-faint);">Month:</label>
           <input type="month" id="attendanceMonthInput">
+          <button type="button" class="m-btn" id="downloadAttendanceReportBtn" style="margin-left:auto;">Download Report</button>
         </div>
         <table class="emp-table">
           <thead>
@@ -908,27 +909,15 @@ attendanceMonthInput.addEventListener('change', renderAttendanceSummary);
   document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && overlay.classList.contains('open')) closeAddPssModal(); });
 })();
 
-function renderAttendanceSummary(){
-  const overlay = document.getElementById('attendanceManagerOverlay');
-  if(!overlay || !overlay.classList.contains('open')) return;
-  const body = document.getElementById('attendanceTableBody');
-  const empty = document.getElementById('attendanceEmptyState');
-  body.innerHTML = '';
-  if(!employees.length){
-    empty.style.display = 'block';
-    return;
-  }
-  empty.style.display = 'none';
-
-  const [yStr, mStr] = (attendanceMonthInput.value || '').split('-');
-  const year = Number(yStr) || today.getFullYear();
-  const month = (Number(mStr) || (today.getMonth()+1)) - 1; // 0-indexed
-
+// Shared by the on-screen Monthly Summary table and the Download Report
+// button, so both always agree with each other and with the Attendance &
+// Punctuality Policy's excess-conversion rules.
+function computeAttendanceStatsForMonth(year, month /* 0-indexed */){
   const isCurrentMonth = (year === today.getFullYear() && month === today.getMonth());
   const daysInMonth = new Date(year, month+1, 0).getDate();
   const lastDayToCount = isCurrentMonth ? today.getDate() : (year > today.getFullYear() || (year === today.getFullYear() && month > today.getMonth()) ? 0 : daysInMonth);
 
-  employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
+  return employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).map(emp=>{
     let absentCount = 0;
     let halfCount = 0;
     let shortLeaveCount = 0;
@@ -960,7 +949,28 @@ function renderAttendanceSummary(){
     const totalDays = lastDayToCount;
     const presentCount = totalDays - absentCount - halfCount - shortLeaveCount - lateCount;
     const pct = totalDays ? Math.round(effectivePresentDays/totalDays*100) : 0;
+    return { emp, totalDays, presentCount, halfCount, shortLeaveCount, lateCount, absentCount, pct };
+  });
+}
 
+function renderAttendanceSummary(){
+  const overlay = document.getElementById('attendanceManagerOverlay');
+  if(!overlay || !overlay.classList.contains('open')) return;
+  const body = document.getElementById('attendanceTableBody');
+  const empty = document.getElementById('attendanceEmptyState');
+  body.innerHTML = '';
+  if(!employees.length){
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const [yStr, mStr] = (attendanceMonthInput.value || '').split('-');
+  const year = Number(yStr) || today.getFullYear();
+  const month = (Number(mStr) || (today.getMonth()+1)) - 1; // 0-indexed
+
+  computeAttendanceStatsForMonth(year, month).forEach(row=>{
+    const { emp, totalDays, presentCount, halfCount, shortLeaveCount, lateCount, absentCount, pct } = row;
     const tr = document.createElement('tr');
     tr.innerHTML =
       '<td><div class="emp-name">'+escapeHtml(emp.name||emp.id)+'</div><div class="emp-id">'+escapeHtml(emp.id)+'</div></td>' +
@@ -973,6 +983,36 @@ function renderAttendanceSummary(){
     body.appendChild(tr);
   });
 }
+
+// CSV export of the same Monthly Summary data, for HR/payroll (matches the
+// SOP's monthly Late Mark / Short Leave summary handed to the payroll team).
+function downloadAttendanceReport(){
+  if(!employees.length){
+    showToast('No employees yet.');
+    return;
+  }
+  const [yStr, mStr] = (attendanceMonthInput.value || '').split('-');
+  const year = Number(yStr) || today.getFullYear();
+  const month = (Number(mStr) || (today.getMonth()+1)) - 1; // 0-indexed
+  const monthLabel = new Date(year, month, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+  const rows = computeAttendanceStatsForMonth(year, month);
+  const csvEsc = (v)=> {
+    const s = String(v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  };
+  const header = ['Employee ID','Employee Name','Total Days','Present','Half Day','Short Leave','Late Attendance','Absent','Attendance %'];
+  const lines = [header.join(',')];
+  rows.forEach(row=>{
+    lines.push([
+      row.emp.id, row.emp.name || row.emp.id, row.totalDays, row.presentCount,
+      row.halfCount, row.shortLeaveCount, row.lateCount, row.absentCount, row.pct + '%'
+    ].map(csvEsc).join(','));
+  });
+  downloadFile('Attendance_Report_' + monthLabel.replace(' ', '_') + '.csv', lines.join('\n'), 'text/csv');
+}
+
+document.getElementById('downloadAttendanceReportBtn').addEventListener('click', downloadAttendanceReport);
 
 function attendanceStatus(emp, dKey){
   const v = emp.absences && emp.absences[dKey];
