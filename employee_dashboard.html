@@ -719,6 +719,35 @@
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   .toast.error{ border-color:var(--red); color:var(--red); }
 
+  /* ---- Side widget: live clock + tea/water break reminders ----
+     Fixed to the unused viewport space beside the centered .wrap
+     (max-width:960px). Hidden below 1300px so it never competes with
+     the main dashboard on smaller screens. */
+  .side-widget{
+    position:fixed; top:50%; right:18px; transform:translateY(-50%);
+    width:184px; z-index:60; display:flex; flex-direction:column; gap:10px;
+  }
+  @media (max-width: 1300px){ .side-widget{ display:none; } }
+
+  .sw-card{
+    background:var(--panel); border:var(--border-w) solid var(--line); border-radius:var(--radius-card);
+    padding:13px 14px; box-shadow:var(--shadow-card); position:relative; overflow:hidden;
+  }
+  .sw-card::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--card-top-accent); }
+
+  .sw-clock-time{ font-family:var(--mono); font-size:21px; font-weight:700; letter-spacing:.4px; color:var(--text); line-height:1.15; }
+  .sw-clock-date{ font-size:10.5px; color:var(--text-dim); margin-top:5px; }
+
+  .sw-break-card{ padding:11px 14px; }
+  .sw-break-label{ display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text); }
+  .sw-break-next{ font-size:10px; color:var(--text-faint); margin-top:3px; font-family:var(--mono); }
+  .sw-break-input{
+    margin-top:8px; width:100%; background:rgba(255,255,255,.04); border:1px solid var(--line);
+    border-radius:8px; color:var(--text-dim); font-size:11px; padding:5px 8px; font-family:var(--font);
+    color-scheme: dark;
+  }
+  .sw-break-input:focus{ outline:none; border-color:var(--teal); color:var(--text); }
+
   /* ---- Team chat ---- */
   #chatLauncherBtn{
     position:relative; display:flex; align-items:center; justify-content:center;
@@ -891,6 +920,24 @@
 </head>
 <body>
   <div class="toast" id="toast"></div>
+
+  <div class="side-widget" id="sideWidget">
+    <div class="sw-card">
+      <div class="sw-clock-time" id="swClockTime">--:--:--</div>
+      <div class="sw-clock-date" id="swClockDate">&hellip;</div>
+    </div>
+    <div class="sw-card sw-break-card">
+      <div class="sw-break-label">&#9749; Tea Break</div>
+      <div class="sw-break-next">Next reminder: <span id="swTeaNext">--</span></div>
+      <input type="time" id="swTeaTime" class="sw-break-input" aria-label="Tea break reminder time">
+    </div>
+    <div class="sw-card sw-break-card">
+      <div class="sw-break-label">&#128167; Water Break</div>
+      <div class="sw-break-next">Next reminder: <span id="swWaterNext">--</span></div>
+      <input type="time" id="swWaterTime" class="sw-break-input" aria-label="Water break reminder time">
+    </div>
+  </div>
+
   <div id="appLoadingOverlay">
     <div class="loading-spinner"></div>
     <div class="loading-text">Loading your checklist&hellip;</div>
@@ -3565,6 +3612,83 @@ EMP_DOC().onSnapshot(doc=>{
 
 subscribeSheet();
 loadState();
+
+// ---- Side widget: live clock + tea/water break reminders (cosmetic only,
+// doesn't touch any existing dashboard state or Firestore data). ----
+(function initSideWidget(){
+  const timeEl = document.getElementById('swClockTime');
+  if(!timeEl) return; // widget markup not present, nothing to do
+  const dateEl = document.getElementById('swClockDate');
+
+  function fmtTime12(d){
+    let h = d.getHours(); const m = d.getMinutes(); const s = d.getSeconds();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if(h === 0) h = 12;
+    const pad = n=>String(n).padStart(2,'0');
+    return pad(h)+':'+pad(m)+':'+pad(s)+' '+ampm;
+  }
+  function fmtDateLong(d){
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    return days[d.getDay()]+', '+String(d.getDate()).padStart(2,'0')+' '+months[d.getMonth()]+' '+d.getFullYear();
+  }
+  function to12hLabel(hhmm){
+    if(!hhmm) return '--';
+    const [hh,mm] = hhmm.split(':').map(Number);
+    let h = hh % 12; if(h === 0) h = 12;
+    const ampm = hh >= 12 ? 'PM' : 'AM';
+    return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0')+' '+ampm;
+  }
+
+  function tickClock(){
+    const now = new Date();
+    timeEl.textContent = fmtTime12(now);
+    if(dateEl) dateEl.textContent = fmtDateLong(now);
+  }
+  tickClock();
+  setInterval(tickClock, 1000);
+
+  const teaInput = document.getElementById('swTeaTime');
+  const waterInput = document.getElementById('swWaterTime');
+  const teaNextEl = document.getElementById('swTeaNext');
+  const waterNextEl = document.getElementById('swWaterNext');
+  if(!teaInput || !waterInput) return;
+
+  const savedTea = localStorage.getItem('checklist_teaBreakTime') || '16:30';
+  const savedWater = localStorage.getItem('checklist_waterBreakTime') || '15:00';
+  teaInput.value = savedTea;
+  waterInput.value = savedWater;
+  teaNextEl.textContent = to12hLabel(savedTea);
+  waterNextEl.textContent = to12hLabel(savedWater);
+
+  teaInput.addEventListener('change', ()=>{
+    localStorage.setItem('checklist_teaBreakTime', teaInput.value);
+    teaNextEl.textContent = to12hLabel(teaInput.value);
+    localStorage.removeItem('checklist_teaBreakFiredOn');
+  });
+  waterInput.addEventListener('change', ()=>{
+    localStorage.setItem('checklist_waterBreakTime', waterInput.value);
+    waterNextEl.textContent = to12hLabel(waterInput.value);
+    localStorage.removeItem('checklist_waterBreakFiredOn');
+  });
+
+  function checkReminders(){
+    const now = new Date();
+    const hhmm = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    const todayKey = now.toDateString();
+
+    if(teaInput.value && teaInput.value === hhmm && localStorage.getItem('checklist_teaBreakFiredOn') !== todayKey){
+      if(typeof showToast === 'function') showToast('\u2615 Tea Break Time \u2014 it\u2019s time to take your tea break.', false, 6000);
+      localStorage.setItem('checklist_teaBreakFiredOn', todayKey);
+    }
+    if(waterInput.value && waterInput.value === hhmm && localStorage.getItem('checklist_waterBreakFiredOn') !== todayKey){
+      if(typeof showToast === 'function') showToast('\uD83D\uDCA7 Water Break Reminder \u2014 time to drink some water and stay hydrated.', false, 6000);
+      localStorage.setItem('checklist_waterBreakFiredOn', todayKey);
+    }
+  }
+  checkReminders();
+  setInterval(checkReminders, 20000);
+})();
 </script>
 </body>
 </html>
