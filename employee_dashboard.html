@@ -1109,6 +1109,11 @@
   <div class="work-popup">
     <h4 id="workPopupTitle">Work completed</h4>
     <p class="wp-sub-heading">Select what was done for this PSS.</p>
+    <div class="work-sub" style="margin-bottom:10px;">
+      <div class="work-sub-label">Reading / value observed in SCADA (required)</div>
+      <input type="text" id="wpReading" placeholder="e.g. generation value, meter reading, or what you observed" style="width:100%;">
+      <div class="work-error" id="wpReadingError" style="display:none;">Enter the reading/value you observed before confirming.</div>
+    </div>
     <div class="work-cat-row">
       <label><input type="checkbox" id="wpLC"> LC</label>
       <label><input type="checkbox" id="wpRT"> RT</label>
@@ -1974,6 +1979,12 @@ function showConfirm(title, message){
 
 let workPopupKey = null;
 let workPopupPendingId = null;
+// Tracks when the previous PSS check-off completed in this browser session,
+// so we can flag suspiciously rapid back-to-back checks for admin review.
+// Resets on page reload -- that's fine, since the point is catching a burst
+// of clicks within one sitting, not tracking across sessions.
+let lastCheckCompletedAt = null;
+const QUICK_CHECK_THRESHOLD_SEC = 20;
 
 function workPopupTargetState(){
   if(workPopupPendingId){
@@ -2059,6 +2070,9 @@ function openWorkPopup(id, key, site, pendingId){
   workPopupPendingId = pendingId || null;
   document.getElementById('workPopupTitle').textContent = 'Work completed \u2014 ' + site.name;
 
+  document.getElementById('wpReading').value = workPopupTargetState()[key+"_reading"] || '';
+  document.getElementById('wpReadingError').style.display = 'none';
+
   document.getElementById('wpLC').checked = false;
   document.getElementById('wpRT').checked = false;
   document.getElementById('wpAM').checked = false;
@@ -2139,6 +2153,22 @@ async function confirmWorkPopup(){
   const key = workPopupKey;
   if(!key) return;
 
+  const readingInput = document.getElementById('wpReading');
+  const reading = readingInput.value.trim();
+  if(!reading){
+    document.getElementById('wpReadingError').style.display = 'block';
+    readingInput.focus();
+    return;
+  }
+  document.getElementById('wpReadingError').style.display = 'none';
+
+  function recordGapAndAdvanceSession(s, key){
+    const now = Date.now();
+    const gapSec = (lastCheckCompletedAt !== null) ? Math.round((now - lastCheckCompletedAt) / 1000) : null;
+    s[key+"_gapSec"] = gapSec;
+    lastCheckCompletedAt = now;
+  }
+
   const s = workPopupTargetState();
   const pendingId = workPopupPendingId;
   const pendingRemark = pendingId ? pendingEntryRemark(pendingMap[pendingId]).trim() : '';
@@ -2160,6 +2190,8 @@ async function confirmWorkPopup(){
   if(document.getElementById('wpNone').checked){
     s[key] = true;
     s[key+"_time"] = new Date().toLocaleString();
+    s[key+"_reading"] = reading;
+    recordGapAndAdvanceSession(s, key);
     delete s[key+"_work"];
     if(pendingRemark) s[key+"_remark"] = pendingRemark;
     else delete s[key+"_remark"];
@@ -2234,6 +2266,8 @@ async function confirmWorkPopup(){
 
   s[key] = true;
   s[key+"_time"] = new Date().toLocaleString();
+  s[key+"_reading"] = reading;
+  recordGapAndAdvanceSession(s, key);
   if(parts.length){
     s[key+"_remark"] = parts.join('; ');
     s[key+"_work"] = work;
@@ -2976,9 +3010,14 @@ async function updateProgressSummary(){
     const workItems = doneItems
       .map(id=>{
         const site = getSite(id);
-        const remark = s[siteKey(id)+"_remark"];
-        const work = s[siteKey(id)+"_work"] || null;
-        return (site && remark) ? { name: site.name, remark, work } : null;
+        if(!site) return null;
+        const kk = siteKey(id);
+        const remark = s[kk+"_remark"] || '';
+        const work = s[kk+"_work"] || null;
+        const reading = s[kk+"_reading"] || '';
+        const gapSec = (typeof s[kk+"_gapSec"] === 'number') ? s[kk+"_gapSec"] : null;
+        const time = s[kk+"_time"] || '';
+        return { name: site.name, remark, work, reading, gapSec, time };
       })
       .filter(Boolean);
     const extraWorkText = stripHtmlToText(extraWorkByDate[k] || '');
