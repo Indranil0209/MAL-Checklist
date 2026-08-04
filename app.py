@@ -31,10 +31,8 @@
 +
 +if "forgot_open" not in st.session_state:
 +    st.session_state.forgot_open = False
-+
 +if "login_error" not in st.session_state:
 +    st.session_state.login_error = ""
-+
 +if "forgot_status" not in st.session_state:
 +    st.session_state.forgot_status = ""
 +
@@ -43,7 +41,7 @@
 +with left:
 +    st.title("Checklist")
 +    st.subheader("Secure Access")
-+    st.write("Sign in with your employee ID to access your workspace.")
++    st.write("Sign in with your employee ID to access your secure workspace.")
 +    st.info("Streamlit version of the login page")
 +
 +with right:
