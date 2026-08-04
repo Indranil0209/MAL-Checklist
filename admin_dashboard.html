@@ -86,7 +86,29 @@
 
   :focus-visible{ outline:2px solid var(--teal); outline-offset:3px; border-radius:6px; }
 
-  .wrap{ max-width:1080px; margin:0 auto; position:relative; }
+  .app-shell{ display:flex; gap:22px; max-width:1280px; margin:0 auto; align-items:flex-start; }
+  .team-sidebar{
+    width:196px; flex-shrink:0; position:sticky; top:20px; display:flex; flex-direction:column; gap:5px;
+    background:var(--panel); border:1px solid var(--glass-border); border-radius:18px;
+    padding:14px 12px; box-shadow:0 8px 32px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .team-sidebar-title{ font-size:10px; text-transform:uppercase; letter-spacing:.09em; color:var(--text-faint); margin:2px 8px 8px; }
+  .team-nav-btn{
+    display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:none;
+    border:1px solid transparent; border-radius:8px; padding:10px 12px; color:var(--text-dim);
+    font-size:13px; font-weight:600; font-family:var(--font); cursor:pointer;
+    transition:background .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
+  }
+  .team-nav-btn:hover{ background:rgba(255,255,255,.03); color:var(--text); transform:translateX(2px); }
+  .team-nav-btn.active{ background:var(--card); border-color:var(--line-strong); color:var(--text); }
+  .team-nav-btn.active::before{ content:''; }
+  @media (max-width:860px){
+    .app-shell{ flex-direction:column; }
+    .team-sidebar{ width:100%; flex-direction:row; overflow-x:auto; position:static; gap:6px; }
+    .team-sidebar-title{ display:none; }
+    .team-nav-btn{ flex-shrink:0; white-space:nowrap; }
+  }
+  .wrap{ max-width:1080px; margin:0; flex:1; min-width:0; position:relative; }
 
   .masthead{
     display:flex; justify-content:space-between; align-items:center;
@@ -400,6 +422,14 @@
     <div class="loading-spinner"></div>
     <div class="loading-text">Loading dashboard&hellip;</div>
   </div>
+<div class="app-shell">
+  <aside class="team-sidebar" id="teamSidebar">
+    <div class="team-sidebar-title">Teams</div>
+    <button class="team-nav-btn active" data-team="SOLAR" type="button">Solar Team</button>
+    <button class="team-nav-btn" data-team="WIND" type="button">Wind Team</button>
+    <button class="team-nav-btn" data-team="SCADA" type="button">SCADA Team</button>
+    <button class="team-nav-btn" data-team="MIS" type="button">MIS Team</button>
+  </aside>
 <div class="wrap">
 
   <div class="masthead">
@@ -419,11 +449,11 @@
       <div class="stat-num" id="statEmpCount">0</div>
       <div class="stat-label">Employees</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card solar-only-section">
       <div class="stat-num" id="statPssCount">0</div>
       <div class="stat-label">PSS Sites</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card solar-only-section">
       <div class="stat-num" id="statBlockedCount">0</div>
       <div class="stat-label">Blocked</div>
     </div>
@@ -437,7 +467,7 @@
 
   <div class="section">
     <h2>Attendance</h2>
-    <p class="section-sub">Mark daily attendance for everyone and view the monthly summary, all in one place.</p>
+    <p class="section-sub">Mark daily attendance for everyone and download a report for any date range, all in one place.</p>
     <div class="row" style="align-items:center;">
       <button class="btn" id="openAttendanceManagerBtn" type="button">Manage Attendance</button>
     </div>
@@ -462,13 +492,16 @@
         </table>
         <div class="empty-state" id="attendanceMarkEmptyState" style="display:none;">No employees yet — add one in the Employees section.</div>
 
-        <h4 style="margin:22px 0 4px; font-size:14px; font-family:var(--font-display); font-weight:700;">Monthly Summary</h4>
-        <p class="section-sub" style="margin-top:-2px;">Present/absent day counts per employee for a month, based on the attendance marks above.</p>
-        <div class="row" style="margin-bottom:12px; align-items:center; gap:10px;">
-          <label style="font-size:10.5px; color:var(--text-faint);">Month:</label>
-          <input type="month" id="attendanceMonthInput">
+        <h4 style="margin:22px 0 4px; font-size:14px; font-family:var(--font-display); font-weight:700;">Attendance Report</h4>
+        <p class="section-sub" style="margin-top:-2px;">Pick any date range &mdash; a single day, half a month, a full month, or anything in between.</p>
+        <div class="row" style="margin-bottom:6px; align-items:center; gap:10px;">
+          <label style="font-size:10.5px; color:var(--text-faint);">From:</label>
+          <input type="date" id="attendanceFromDate">
+          <label style="font-size:10.5px; color:var(--text-faint);">To:</label>
+          <input type="date" id="attendanceToDate">
           <button type="button" class="btn" id="downloadAttendanceReportBtn" style="margin-left:auto;">Download Report</button>
         </div>
+        <p class="section-sub" id="attendanceRangeError" style="margin-top:0; margin-bottom:10px; color:var(--red); display:none;">"To" date can't be earlier than "From" date.</p>
         <table class="emp-table">
           <thead>
             <tr><th>Employee</th><th>Present</th><th>Half Day</th><th>Short Leave</th><th>Late Attendance</th><th>Absent</th><th>Attendance %</th></tr>
@@ -481,7 +514,7 @@
   </div>
 
 
-  <div class="section">
+  <div class="section solar-only-section">
     <h2>Intimation Sheet</h2>
     <p class="section-sub">Upload the monthly intimation sheet, or open the manager to add, edit, block, or delete individual PSS.</p>
     <div class="row" style="align-items:center;">
@@ -595,7 +628,7 @@
     </div>
   </div>
 
-  <div class="section">
+  <div class="section solar-only-section">
     <h2>Employee Summary</h2>
     <p class="section-sub">Download a consolidated work &amp; attendance summary for every employee across a date range.</p>
     <div class="row" style="align-items:center;">
@@ -606,9 +639,10 @@
       <button class="btn" id="downloadAllDocBtn" type="button">Download All Employees Summary</button>
     </div>
     <p class="section-sub" id="summaryDateError" style="margin-top:8px; margin-bottom:0; color:var(--red); display:none;">"To" date can't be earlier than "From" date.</p>
-    <p class="section-sub" style="margin-top:8px; margin-bottom:0;">Includes every employee &mdash; their attendance and the PSS work completed each day in the selected range. Not limited to any filtered or currently-open view.</p>
+    <p class="section-sub" style="margin-top:8px; margin-bottom:0;">Includes every Solar Team employee &mdash; their attendance and the PSS work completed each day in the selected range. Not limited to any filtered or currently-open view.</p>
   </div>
 
+</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -847,20 +881,63 @@ db.collection('employees').onSnapshot(snap=>{
   maybeHideLoadingOverlay();
 });
 
+// ---- Multi-team scoping ----
+// Every employee belongs to a team (SOLAR/WIND/SCADA/MIS). Existing employees
+// created before this feature have no `team` field at all -- they're treated
+// as SOLAR so nothing about the existing Solar workflow changes for them.
+let currentTeam = 'SOLAR';
+function empTeam(emp){ return emp.team || 'SOLAR'; }
+function teamEmployees(team){ return employees.filter(e => empTeam(e) === (team || currentTeam)); }
+
+function applyTeamVisibility(){
+  document.querySelectorAll('.solar-only-section').forEach(el=>{
+    el.style.display = (currentTeam === 'SOLAR') ? '' : 'none';
+  });
+}
+
+function setActiveTeam(team){
+  currentTeam = team;
+  document.querySelectorAll('.team-nav-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.team === team);
+  });
+  applyTeamVisibility();
+  renderEmployees();
+  renderAttendanceMarkList();
+  renderAttendanceSummary();
+  updateStats();
+}
+
+document.querySelectorAll('.team-nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> setActiveTeam(btn.dataset.team));
+});
+applyTeamVisibility();
+
 // ---- Stats ----
 function updateStats(){
   const grid = document.getElementById('statsGrid');
   grid.style.display = 'grid';
-  document.getElementById('statEmpCount').textContent = employees.length;
+  document.getElementById('statEmpCount').textContent = teamEmployees().length;
   document.getElementById('statPssCount').textContent = (typeof SITES !== 'undefined' && SITES) ? SITES.length : 0;
   document.getElementById('statBlockedCount').textContent = (typeof blockedNames !== 'undefined' && blockedNames) ? blockedNames.size : 0;
 }
 
-// ---- Attendance summary (monthly) ----
-const attendanceMonthInput = document.getElementById('attendanceMonthInput');
+// ---- Attendance summary (flexible date range) ----
+const attendanceFromDate = document.getElementById('attendanceFromDate');
+const attendanceToDate = document.getElementById('attendanceToDate');
 const today = new Date();
-attendanceMonthInput.value = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
-attendanceMonthInput.addEventListener('change', renderAttendanceSummary);
+attendanceFromDate.value = dateKey(today);
+attendanceToDate.value = dateKey(today);
+
+function validateAttendanceRange(){
+  const errLbl = document.getElementById('attendanceRangeError');
+  const invalid = !!(attendanceFromDate.value && attendanceToDate.value && attendanceToDate.value < attendanceFromDate.value);
+  if(errLbl) errLbl.style.display = invalid ? 'block' : 'none';
+  attendanceToDate.min = attendanceFromDate.value || '';
+  return !invalid;
+}
+attendanceFromDate.addEventListener('change', ()=>{ validateAttendanceRange(); renderAttendanceSummary(); });
+attendanceToDate.addEventListener('change', ()=>{ validateAttendanceRange(); renderAttendanceSummary(); });
+validateAttendanceRange();
 
 (function initAttendanceManagerModal(){
   const overlay = document.getElementById('attendanceManagerOverlay');
@@ -909,48 +986,74 @@ attendanceMonthInput.addEventListener('change', renderAttendanceSummary);
   document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && overlay.classList.contains('open')) closeAddPssModal(); });
 })();
 
-// Shared by the on-screen Monthly Summary table and the Download Report
-// button, so both always agree with each other and with the Attendance &
-// Punctuality Policy's excess-conversion rules.
-function computeAttendanceStatsForMonth(year, month /* 0-indexed */){
-  const isCurrentMonth = (year === today.getFullYear() && month === today.getMonth());
-  const daysInMonth = new Date(year, month+1, 0).getDate();
-  const lastDayToCount = isCurrentMonth ? today.getDate() : (year > today.getFullYear() || (year === today.getFullYear() && month > today.getMonth()) ? 0 : daysInMonth);
+// Builds the list of date keys (YYYY-MM-DD) in [fromKey, toKey], capped at
+// today so a range reaching into the future doesn't count days that haven't
+// happened yet. Shared by the on-screen Attendance table and the Download
+// Report CSV, so both always agree with each other and with the Attendance
+// & Punctuality Policy's excess-conversion rules. NOTE: the "2 free short
+// leaves" / "3 free late marks" allowance is applied *within the selected
+// range* (not the full calendar month) -- so a custom 1-15 Aug range and a
+// custom 16-31 Aug range each get their own fresh allowance, rather than
+// splitting one shared monthly quota across the two. Selecting a full
+// calendar month reproduces the original monthly behavior exactly.
+function attendanceRangeDateKeys(fromKey, toKey){
+  const keys = [];
+  if(!fromKey || !toKey) return keys;
+  const [fy,fm,fd] = fromKey.split('-').map(Number);
+  const [ty,tm,td] = toKey.split('-').map(Number);
+  let cur = new Date(fy, fm-1, fd);
+  const end = new Date(ty, tm-1, td);
+  const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const cappedEnd = end > todayEnd ? todayEnd : end;
+  if(cur > cappedEnd) return keys;
+  let guard = 0;
+  while(cur <= cappedEnd && guard < 366){
+    keys.push(dateKey(cur));
+    cur.setDate(cur.getDate()+1);
+    guard++;
+  }
+  return keys;
+}
 
-  return employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).map(emp=>{
+function computeAttendanceStatsForRange(fromKey, toKey, teamList){
+  const dateKeys = attendanceRangeDateKeys(fromKey, toKey);
+  const rows = teamList.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).map(emp=>{
     let absentCount = 0;
     let halfCount = 0;
     let shortLeaveCount = 0;
     let lateCount = 0;
     let effectivePresentDays = 0; // for the % calc, per the Attendance & Punctuality Policy
     const absences = emp.absences || {};
-    for(let day=1; day<=lastDayToCount; day++){
-      const k = year + '-' + String(month+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+    const dayStatuses = {};
+    dateKeys.forEach(k=>{
       const v = absences[k];
       if(v === true || v === 'absent'){
-        absentCount++;
+        absentCount++; dayStatuses[k] = 'absent';
       } else if(v === 'half'){
-        halfCount++;
-        effectivePresentDays += 0.5;
+        halfCount++; effectivePresentDays += 0.5; dayStatuses[k] = 'half';
       } else if(v === 'shortLeave'){
         shortLeaveCount++;
-        // Policy: 2 short leaves/month are free (full day). The 3rd and any
-        // beyond that in the same month are treated as a half-day leave.
+        // Policy: 2 short leaves/range are free (full day). The 3rd and any
+        // beyond that in the same range are treated as a half-day leave.
         effectivePresentDays += (shortLeaveCount <= 2) ? 1 : 0.5;
+        dayStatuses[k] = 'shortLeave';
       } else if(v === 'lateAttendance'){
         lateCount++;
-        // Policy: 3 late marks/month are free (full day). The 4th and any
-        // beyond that in the same month deduct 0.5 day.
+        // Policy: 3 late marks/range are free (full day). The 4th and any
+        // beyond that in the same range deduct 0.5 day.
         effectivePresentDays += (lateCount <= 3) ? 1 : 0.5;
+        dayStatuses[k] = 'lateAttendance';
       } else {
         effectivePresentDays += 1;
+        dayStatuses[k] = 'present';
       }
-    }
-    const totalDays = lastDayToCount;
+    });
+    const totalDays = dateKeys.length;
     const presentCount = totalDays - absentCount - halfCount - shortLeaveCount - lateCount;
     const pct = totalDays ? Math.round(effectivePresentDays/totalDays*100) : 0;
-    return { emp, totalDays, presentCount, halfCount, shortLeaveCount, lateCount, absentCount, pct };
+    return { emp, totalDays, presentCount, halfCount, shortLeaveCount, lateCount, absentCount, pct, dayStatuses };
   });
+  return { dateKeys, rows };
 }
 
 function renderAttendanceSummary(){
@@ -959,17 +1062,16 @@ function renderAttendanceSummary(){
   const body = document.getElementById('attendanceTableBody');
   const empty = document.getElementById('attendanceEmptyState');
   body.innerHTML = '';
-  if(!employees.length){
+  const list = teamEmployees();
+  if(!list.length){
     empty.style.display = 'block';
     return;
   }
   empty.style.display = 'none';
+  if(!validateAttendanceRange()) return;
 
-  const [yStr, mStr] = (attendanceMonthInput.value || '').split('-');
-  const year = Number(yStr) || today.getFullYear();
-  const month = (Number(mStr) || (today.getMonth()+1)) - 1; // 0-indexed
-
-  computeAttendanceStatsForMonth(year, month).forEach(row=>{
+  const { rows } = computeAttendanceStatsForRange(attendanceFromDate.value, attendanceToDate.value, list);
+  rows.forEach(row=>{
     const { emp, totalDays, presentCount, halfCount, shortLeaveCount, lateCount, absentCount, pct } = row;
     const tr = document.createElement('tr');
     tr.innerHTML =
@@ -984,32 +1086,41 @@ function renderAttendanceSummary(){
   });
 }
 
-// CSV export of the same Monthly Summary data, for HR/payroll (matches the
-// SOP's monthly Late Mark / Short Leave summary handed to the payroll team).
+const ATTENDANCE_STATUS_LABEL = { present:'Present', half:'Half Day', shortLeave:'Short Leave', lateAttendance:'Late Attendance', absent:'Absent' };
+
+// CSV export with one column per day in the selected range (day-wise, per
+// the Attendance & Punctuality Policy's reporting format) plus the same
+// aggregate totals shown on-screen. Scoped to the current team only.
 function downloadAttendanceReport(){
-  if(!employees.length){
-    showToast('No employees yet.');
+  const list = teamEmployees();
+  if(!list.length){
+    showToast('No employees yet for this team.');
     return;
   }
-  const [yStr, mStr] = (attendanceMonthInput.value || '').split('-');
-  const year = Number(yStr) || today.getFullYear();
-  const month = (Number(mStr) || (today.getMonth()+1)) - 1; // 0-indexed
-  const monthLabel = new Date(year, month, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' });
-
-  const rows = computeAttendanceStatsForMonth(year, month);
+  if(!validateAttendanceRange()){
+    showToast('"To" date can\'t be earlier than "From" date.');
+    return;
+  }
+  const { dateKeys, rows } = computeAttendanceStatsForRange(attendanceFromDate.value, attendanceToDate.value, list);
+  if(!dateKeys.length){
+    showToast('Pick a valid date range first.');
+    return;
+  }
   const csvEsc = (v)=> {
     const s = String(v);
     return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
   };
-  const header = ['Employee ID','Employee Name','Total Days','Present','Half Day','Short Leave','Late Attendance','Absent','Attendance %'];
+  const header = ['Employee ID','Employee Name', ...dateKeys, 'Present','Half Day','Short Leave','Late Attendance','Absent','Attendance %'];
   const lines = [header.join(',')];
   rows.forEach(row=>{
+    const dayCells = dateKeys.map(k => ATTENDANCE_STATUS_LABEL[row.dayStatuses[k]] || 'Present');
     lines.push([
-      row.emp.id, row.emp.name || row.emp.id, row.totalDays, row.presentCount,
-      row.halfCount, row.shortLeaveCount, row.lateCount, row.absentCount, row.pct + '%'
+      row.emp.id, row.emp.name || row.emp.id, ...dayCells,
+      row.presentCount, row.halfCount, row.shortLeaveCount, row.lateCount, row.absentCount, row.pct + '%'
     ].map(csvEsc).join(','));
   });
-  downloadFile('Attendance_Report_' + monthLabel.replace(' ', '_') + '.csv', lines.join('\n'), 'text/csv');
+  const rangeLabel = dateKeys[0] + '_to_' + dateKeys[dateKeys.length-1];
+  downloadFile('Attendance_Report_' + currentTeam + '_' + rangeLabel + '.csv', lines.join('\n'), 'text/csv');
 }
 
 document.getElementById('downloadAttendanceReportBtn').addEventListener('click', downloadAttendanceReport);
@@ -1024,17 +1135,19 @@ function attendanceStatus(emp, dKey){
 }
 
 function renderEmployees(){
+  const list = teamEmployees();
   const countLbl = document.getElementById('empCountLbl');
-  if(countLbl) countLbl.textContent = employees.length ? (employees.length + ' employee' + (employees.length===1?'':'s')) : 'No employees yet.';
+  if(countLbl) countLbl.textContent = list.length ? (list.length + ' employee' + (list.length===1?'':'s') + ' \u2014 ' + currentTeam) : 'No employees yet for ' + currentTeam + '.';
   const body = document.getElementById('empTableBody');
   const empty = document.getElementById('empEmptyState');
   body.innerHTML = '';
-  if(!employees.length){
+  if(!list.length){
     empty.style.display = 'block';
+    empty.textContent = 'No employees yet for ' + currentTeam + ' \u2014 add one above.';
     return;
   }
   empty.style.display = 'none';
-  employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
+  list.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
     const tr = document.createElement('tr');
     tr.innerHTML = '<td><div class="emp-name">'+escapeHtml(emp.name||emp.id)+'</div><div class="emp-id">'+escapeHtml(emp.id)+'</div></td><td></td>';
     const actionTd = tr.children[1];
@@ -1066,14 +1179,16 @@ function renderAttendanceMarkList(){
   const body = document.getElementById('attendanceMarkTableBody');
   const empty = document.getElementById('attendanceMarkEmptyState');
   body.innerHTML = '';
-  if(!employees.length){
+  const list = teamEmployees();
+  if(!list.length){
     empty.style.display = 'block';
+    empty.textContent = 'No employees yet for ' + currentTeam + ' \u2014 add one in the Employees section.';
     return;
   }
   empty.style.display = 'none';
   const dKey = dateKey(currentProgressDate);
   const frag = document.createDocumentFragment();
-  employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
+  list.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
     const status = attendanceStatus(emp, dKey);
     const tr = document.createElement('tr');
 
@@ -1412,12 +1527,13 @@ function downloadAllSummariesDoc(){
     showToast('Pick a valid From/To date range first.');
     return;
   }
-  if(!employees.length){
-    showToast('No employees yet.');
+  const solarEmployees = employees.filter(e => empTeam(e) === 'SOLAR');
+  if(!solarEmployees.length){
+    showToast('No Solar-team employees yet.');
     return;
   }
   const headerHtml = '<h2>Employee Work Summaries: ' + dKeys[0] + (dKeys.length>1 ? ' to ' + dKeys[dKeys.length-1] : '') + '</h2>';
-  const bodyHtml = employees.slice()
+  const bodyHtml = solarEmployees.slice()
     .sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id))
     .map(emp => buildEmployeeSummaryBlockHtml(emp, dKeys))
     .join('<p>&nbsp;</p><hr><p>&nbsp;</p>');
@@ -1532,7 +1648,7 @@ document.getElementById('addEmpBtn').addEventListener('click', async ()=>{
       showToast('That ID is already in use.');
       return;
     }
-    await db.collection('employees').doc(id).set({ name, pin, active: true });
+    await db.collection('employees').doc(id).set({ name, pin, active: true, team: currentTeam });
     nameInput.value = ''; idInput.value = ''; pinInput.value = '';
     showToast('Employee added.');
   }catch(e){
@@ -1832,7 +1948,7 @@ function populateNewPssAssignSelect(){
   const prevSecValue = secSel.value;
   sel.innerHTML = '<option value="">Primary (optional)</option>';
   secSel.innerHTML = '<option value="">Secondary (optional)</option>';
-  employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
+  employees.filter(e => empTeam(e) === 'SOLAR').sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
     const opt = document.createElement('option');
     opt.value = emp.id;
     opt.textContent = emp.name || emp.id;
@@ -1988,7 +2104,7 @@ function populateManageAssignFilter(){
     '<option value="">All employees (' + SITES.length + ')</option>' +
     '<option value="__unassigned__">Unassigned (' + unassignedCount + ')</option>' +
     '<option value="__unmatched__">Unmatched names (' + unmatchedCount + ')</option>';
-  employees.slice().sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
+  employees.filter(e => empTeam(e) === 'SOLAR').sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id)).forEach(emp=>{
     const count = SITES.filter(s=>s.assignedToId === emp.id).length;
     const opt = document.createElement('option');
     opt.value = emp.id;
