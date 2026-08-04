@@ -3946,6 +3946,7 @@ loadState();
     if(teaInput.value && teaInput.value === hhmm && localStorage.getItem('checklist_teaBreakFiredOn') !== todayKey){
       const msg = TEA_MESSAGES[Math.floor(Math.random()*TEA_MESSAGES.length)];
       showBreakPopup(msg);
+      sendOsNotification('Tea Break', msg);
       localStorage.setItem('checklist_teaBreakFiredOn', todayKey);
     }
 
