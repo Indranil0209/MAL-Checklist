@@ -977,7 +977,7 @@
     <div class="sw-card sw-break-card">
       <div class="sw-break-label">&#128167; Water Break</div>
       <div class="sw-break-next">Next reminder: <span id="swWaterNext">--</span></div>
-      <input type="time" id="swWaterTime" class="sw-break-input" aria-label="Water break reminder time">
+      <button type="button" id="swWaterToggle" class="sw-break-input" style="cursor:pointer; text-align:center;" aria-pressed="false">Turn on (every 30 min)</button>
     </div>
   </div>
 
@@ -3825,6 +3825,13 @@ loadState();
     const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     return days[d.getDay()]+', '+String(d.getDate()).padStart(2,'0')+' '+months[d.getMonth()]+' '+d.getFullYear();
   }
+  function fmtTime12NoSec(d){
+    let h = d.getHours(); const m = d.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if(h === 0) h = 12;
+    const pad = n=>String(n).padStart(2,'0');
+    return pad(h)+':'+pad(m)+' '+ampm;
+  }
   function to12hLabel(hhmm){
     if(!hhmm) return '--';
     const [hh,mm] = hhmm.split(':').map(Number);
@@ -3842,27 +3849,63 @@ loadState();
   setInterval(tickClock, 1000);
 
   const teaInput = document.getElementById('swTeaTime');
-  const waterInput = document.getElementById('swWaterTime');
+  const waterToggle = document.getElementById('swWaterToggle');
   const teaNextEl = document.getElementById('swTeaNext');
   const waterNextEl = document.getElementById('swWaterNext');
-  if(!teaInput || !waterInput) return;
+  if(!teaInput || !waterToggle) return;
+
+  const WATER_INTERVAL_MS = 30 * 60 * 1000; // every 30 minutes, regardless of clock time
 
   const savedTea = localStorage.getItem('checklist_teaBreakTime') || '16:30';
-  const savedWater = localStorage.getItem('checklist_waterBreakTime') || '15:00';
   teaInput.value = savedTea;
-  waterInput.value = savedWater;
   teaNextEl.textContent = to12hLabel(savedTea);
-  waterNextEl.textContent = to12hLabel(savedWater);
 
   teaInput.addEventListener('change', ()=>{
     localStorage.setItem('checklist_teaBreakTime', teaInput.value);
     teaNextEl.textContent = to12hLabel(teaInput.value);
     localStorage.removeItem('checklist_teaBreakFiredOn');
   });
-  waterInput.addEventListener('change', ()=>{
-    localStorage.setItem('checklist_waterBreakTime', waterInput.value);
-    waterNextEl.textContent = to12hLabel(waterInput.value);
-    localStorage.removeItem('checklist_waterBreakFiredOn');
+
+  // Water reminder: an on/off toggle that fires every 30 minutes from the
+  // moment it's turned on, independent of the tab being focused -- it uses
+  // a real timestamp (not a daily HH:MM match) so it keeps firing even if
+  // the browser throttles background timers, and it raises an OS-level
+  // notification (via the Notification API) so it's visible even while
+  // you're working in a different window.
+  let waterEnabled = localStorage.getItem('checklist_waterReminderEnabled') === '1';
+  let waterLastFired = Number(localStorage.getItem('checklist_waterLastFired')) || 0;
+
+  function refreshWaterUI(){
+    waterToggle.setAttribute('aria-pressed', String(waterEnabled));
+    waterToggle.textContent = waterEnabled ? 'Turn off' : 'Turn on (every 30 min)';
+    waterToggle.style.color = waterEnabled ? 'var(--teal)' : '';
+    waterToggle.style.borderColor = waterEnabled ? 'var(--teal-dim)' : '';
+    if(!waterEnabled || !waterLastFired){
+      waterNextEl.textContent = waterEnabled ? 'starting now' : '--';
+      return;
+    }
+    const nextAt = new Date(waterLastFired + WATER_INTERVAL_MS);
+    waterNextEl.textContent = fmtTime12NoSec(nextAt);
+  }
+  refreshWaterUI();
+
+  if('Notification' in window && Notification.permission === 'default'){
+    // Ask once, quietly -- if they say no, we just fall back to the
+    // in-page popup only.
+    Notification.requestPermission().catch(()=>{});
+  }
+
+  waterToggle.addEventListener('click', ()=>{
+    waterEnabled = !waterEnabled;
+    localStorage.setItem('checklist_waterReminderEnabled', waterEnabled ? '1' : '0');
+    if(waterEnabled){
+      waterLastFired = Date.now();
+      localStorage.setItem('checklist_waterLastFired', String(waterLastFired));
+      if('Notification' in window && Notification.permission === 'default'){
+        Notification.requestPermission().catch(()=>{});
+      }
+    }
+    refreshWaterUI();
   });
 
   function showBreakPopup(message){
@@ -3887,6 +3930,14 @@ loadState();
   const TEA_MESSAGES = ['Chai Peelo\u2615', 'Chai Pe Chalein\u2615'];
   const WATER_MESSAGE = 'Paani Peelo Plzzzzz\uD83E\uDD7A\uD83E\uDD5B';
 
+  function sendOsNotification(title, body){
+    if(!('Notification' in window) || Notification.permission !== 'granted') return;
+    try{
+      const n = new Notification(title, { body, tag: 'water-break-reminder', renotify: true });
+      n.onclick = ()=>{ window.focus(); n.close(); };
+    }catch(e){ /* some browsers restrict constructing Notification directly; safe to ignore */ }
+  }
+
   function checkReminders(){
     const now = new Date();
     const hhmm = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
@@ -3897,10 +3948,14 @@ loadState();
       showBreakPopup(msg);
       localStorage.setItem('checklist_teaBreakFiredOn', todayKey);
     }
-    if(waterInput.value && waterInput.value === hhmm && localStorage.getItem('checklist_waterBreakFiredOn') !== todayKey){
+
+    if(waterEnabled && (now.getTime() - waterLastFired >= WATER_INTERVAL_MS)){
       showBreakPopup(WATER_MESSAGE);
-      localStorage.setItem('checklist_waterBreakFiredOn', todayKey);
+      sendOsNotification('Water Break', 'Time to drink some water \uD83E\uDD5B');
+      waterLastFired = now.getTime();
+      localStorage.setItem('checklist_waterLastFired', String(waterLastFired));
     }
+    if(waterEnabled) refreshWaterUI();
   }
   checkReminders();
   setInterval(checkReminders, 20000);
