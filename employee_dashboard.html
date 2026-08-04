@@ -798,6 +798,14 @@
     transition:border-color .15s ease, color .15s ease, background .15s ease;
   }
   #chatLauncherBtn:hover{ border-color:var(--teal); color:var(--teal); background:rgba(101,255,199,.08); }
+  #missingDataLink{
+    display:flex; align-items:center; gap:5px; height:28px; padding:0 10px; border-radius:8px;
+    border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--text-dim);
+    cursor:pointer; text-decoration:none; font-size:11px; font-family:var(--font); white-space:nowrap;
+    transition:border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  #missingDataLink:hover{ border-color:var(--amber); color:var(--amber); background:rgba(245,158,11,.08); }
+  #missingDataLink svg{ width:14px; height:14px; flex:none; }
   .chat-unread-dot{
     position:absolute; top:-2px; right:-2px; width:9px; height:9px; border-radius:50%;
     background:var(--red); border:2px solid var(--bg);
@@ -977,7 +985,7 @@
     <div class="sw-card sw-break-card">
       <div class="sw-break-label">&#128167; Water Break</div>
       <div class="sw-break-next">Next reminder: <span id="swWaterNext">--</span></div>
-      <button type="button" id="swWaterToggle" class="sw-break-input" style="cursor:pointer; text-align:center;" aria-pressed="false">Turn on (every 30 min)</button>
+      <input type="time" id="swWaterTime" class="sw-break-input" aria-label="Water break reminder time">
     </div>
   </div>
 
@@ -1055,6 +1063,10 @@
     </div>
     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
       <div class="role-badge-wrap">
+        <a id="missingDataLink" href="https://indranil0209.github.io/Missing-Data-Check/" target="_blank" rel="noopener noreferrer" title="Open Missing Data audit tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L14.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          Missing Data
+        </a>
         <button id="chatLauncherBtn" type="button" aria-label="Open team chat">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
           <span id="chatUnreadDot" class="chat-unread-dot" style="display:none;"></span>
@@ -3825,13 +3837,6 @@ loadState();
     const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     return days[d.getDay()]+', '+String(d.getDate()).padStart(2,'0')+' '+months[d.getMonth()]+' '+d.getFullYear();
   }
-  function fmtTime12NoSec(d){
-    let h = d.getHours(); const m = d.getMinutes();
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    h = h % 12; if(h === 0) h = 12;
-    const pad = n=>String(n).padStart(2,'0');
-    return pad(h)+':'+pad(m)+' '+ampm;
-  }
   function to12hLabel(hhmm){
     if(!hhmm) return '--';
     const [hh,mm] = hhmm.split(':').map(Number);
@@ -3849,63 +3854,27 @@ loadState();
   setInterval(tickClock, 1000);
 
   const teaInput = document.getElementById('swTeaTime');
-  const waterToggle = document.getElementById('swWaterToggle');
+  const waterInput = document.getElementById('swWaterTime');
   const teaNextEl = document.getElementById('swTeaNext');
   const waterNextEl = document.getElementById('swWaterNext');
-  if(!teaInput || !waterToggle) return;
-
-  const WATER_INTERVAL_MS = 30 * 60 * 1000; // every 30 minutes, regardless of clock time
+  if(!teaInput || !waterInput) return;
 
   const savedTea = localStorage.getItem('checklist_teaBreakTime') || '16:30';
+  const savedWater = localStorage.getItem('checklist_waterBreakTime') || '15:00';
   teaInput.value = savedTea;
+  waterInput.value = savedWater;
   teaNextEl.textContent = to12hLabel(savedTea);
+  waterNextEl.textContent = to12hLabel(savedWater);
 
   teaInput.addEventListener('change', ()=>{
     localStorage.setItem('checklist_teaBreakTime', teaInput.value);
     teaNextEl.textContent = to12hLabel(teaInput.value);
     localStorage.removeItem('checklist_teaBreakFiredOn');
   });
-
-  // Water reminder: an on/off toggle that fires every 30 minutes from the
-  // moment it's turned on, independent of the tab being focused -- it uses
-  // a real timestamp (not a daily HH:MM match) so it keeps firing even if
-  // the browser throttles background timers, and it raises an OS-level
-  // notification (via the Notification API) so it's visible even while
-  // you're working in a different window.
-  let waterEnabled = localStorage.getItem('checklist_waterReminderEnabled') === '1';
-  let waterLastFired = Number(localStorage.getItem('checklist_waterLastFired')) || 0;
-
-  function refreshWaterUI(){
-    waterToggle.setAttribute('aria-pressed', String(waterEnabled));
-    waterToggle.textContent = waterEnabled ? 'Turn off' : 'Turn on (every 30 min)';
-    waterToggle.style.color = waterEnabled ? 'var(--teal)' : '';
-    waterToggle.style.borderColor = waterEnabled ? 'var(--teal-dim)' : '';
-    if(!waterEnabled || !waterLastFired){
-      waterNextEl.textContent = waterEnabled ? 'starting now' : '--';
-      return;
-    }
-    const nextAt = new Date(waterLastFired + WATER_INTERVAL_MS);
-    waterNextEl.textContent = fmtTime12NoSec(nextAt);
-  }
-  refreshWaterUI();
-
-  if('Notification' in window && Notification.permission === 'default'){
-    // Ask once, quietly -- if they say no, we just fall back to the
-    // in-page popup only.
-    Notification.requestPermission().catch(()=>{});
-  }
-
-  waterToggle.addEventListener('click', ()=>{
-    waterEnabled = !waterEnabled;
-    localStorage.setItem('checklist_waterReminderEnabled', waterEnabled ? '1' : '0');
-    if(waterEnabled){
-      waterLastFired = Date.now();
-      localStorage.setItem('checklist_waterLastFired', String(waterLastFired));
-      if('Notification' in window && Notification.permission === 'default'){
-        Notification.requestPermission().catch(()=>{});
-      }
-    }
-    refreshWaterUI();
+  waterInput.addEventListener('change', ()=>{
+    localStorage.setItem('checklist_waterBreakTime', waterInput.value);
+    waterNextEl.textContent = to12hLabel(waterInput.value);
+    localStorage.removeItem('checklist_waterBreakFiredOn');
   });
 
   function showBreakPopup(message){
@@ -3927,16 +3896,8 @@ loadState();
     setTimeout(remove, stayMs);
   }
 
-  const TEA_MESSAGES = ['Chai Peelo\u2615', 'Chai Pe Chalein\u2615'];
+  const TEA_MESSAGES = ['Chai Peelo\u2615', 'Chai Peene Chalein\u2615'];
   const WATER_MESSAGE = 'Paani Peelo Plzzzzz\uD83E\uDD7A\uD83E\uDD5B';
-
-  function sendOsNotification(title, body){
-    if(!('Notification' in window) || Notification.permission !== 'granted') return;
-    try{
-      const n = new Notification(title, { body, tag: 'water-break-reminder', renotify: true });
-      n.onclick = ()=>{ window.focus(); n.close(); };
-    }catch(e){ /* some browsers restrict constructing Notification directly; safe to ignore */ }
-  }
 
   function checkReminders(){
     const now = new Date();
@@ -3946,17 +3907,12 @@ loadState();
     if(teaInput.value && teaInput.value === hhmm && localStorage.getItem('checklist_teaBreakFiredOn') !== todayKey){
       const msg = TEA_MESSAGES[Math.floor(Math.random()*TEA_MESSAGES.length)];
       showBreakPopup(msg);
-      sendOsNotification('Tea Break', msg);
       localStorage.setItem('checklist_teaBreakFiredOn', todayKey);
     }
-
-    if(waterEnabled && (now.getTime() - waterLastFired >= WATER_INTERVAL_MS)){
+    if(waterInput.value && waterInput.value === hhmm && localStorage.getItem('checklist_waterBreakFiredOn') !== todayKey){
       showBreakPopup(WATER_MESSAGE);
-      sendOsNotification('Water Break', 'Time to drink some water \uD83E\uDD5B');
-      waterLastFired = now.getTime();
-      localStorage.setItem('checklist_waterLastFired', String(waterLastFired));
+      localStorage.setItem('checklist_waterBreakFiredOn', todayKey);
     }
-    if(waterEnabled) refreshWaterUI();
   }
   checkReminders();
   setInterval(checkReminders, 20000);
