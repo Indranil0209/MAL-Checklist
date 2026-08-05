@@ -321,36 +321,6 @@
       box-shadow: 0 0 12px var(--green);
     }
 
-    .horizon {
-      position: absolute;
-      right: 0;
-      bottom: 67px;
-      left: 0;
-      height: 74px;
-      overflow: hidden;
-      border-top: 1px solid rgba(83,199,232,.38);
-      background:
-        linear-gradient(135deg, transparent 48%, rgba(83,199,232,.28) 49%, transparent 50%) 0 0 / 42px 28px,
-        linear-gradient(45deg, transparent 48%, rgba(83,199,232,.2) 49%, transparent 50%) 0 0 / 42px 28px,
-        #071d31;
-      clip-path: polygon(
-        0 38%, 13% 27%, 26% 41%, 40% 17%,
-        53% 37%, 68% 22%, 82% 40%, 100% 18%,
-        100% 100%, 0 100%
-      );
-    }
-
-    .wave {
-      position: absolute;
-      bottom: 0;
-      left: -50%;
-      width: 200%;
-      height: 18px;
-      background: linear-gradient(90deg, transparent, rgba(83,199,232,.22), transparent);
-      filter: blur(2px);
-      animation: waveMove 5s linear infinite;
-    }
-
     .forecast-label {
       position: absolute;
       bottom: 0;
@@ -849,10 +819,6 @@
           <div class="orbit orbit-2" aria-hidden="true">
             <div class="satellite"></div>
           </div>
-        </div>
-
-        <div class="horizon" aria-hidden="true">
-          <div class="wave"></div>
         </div>
 
         <div class="forecast-label">
