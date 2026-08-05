@@ -3,715 +3,814 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Checklist // Secure Access</title>
+  <title>RAAA // Renewable Specialist</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg: #05040a;
-      --bg-elevated: #0a0914;
-      --panel: rgba(14, 12, 30, .92);
-      --panel-hover: rgba(18, 16, 38, .95);
-      --pink: #ff6b9d;
-      --pink-glow: rgba(255, 107, 157, .4);
-      --yellow: #ffd166;
-      --yellow-glow: rgba(255, 209, 102, .3);
-      --green: #6ee7b7;
-      --green-glow: rgba(110, 231, 183, .35);
-      --cyan: #67e8f9;
-      --cyan-glow: rgba(103, 232, 249, .3);
-      --red: #f87171;
-      --red-glow: rgba(248, 113, 113, .3);
-      --text: #f0eefc;
-      --muted: #9ca3af;
-      --line: rgba(190, 164, 255, .18);
-      --line-strong: rgba(190, 164, 255, .35);
-      --glass: rgba(255, 255, 255, .03);
-      --glass-border: rgba(255, 255, 255, .08);
-      --font: 'Inter', system-ui, -apple-system, sans-serif;
-      --mono: 'JetBrains Mono', 'Consolas', monospace;
+      --navy: #071a2c;
+      --blue: #176b9d;
+      --sky: #53c7e8;
+      --sun: #ffc857;
+      --sun-dark: #ef9f28;
+      --green: #48c78e;
+      --white: #f7fbfc;
+      --muted: #8ca7b7;
+      --border: rgba(160, 215, 230, .2);
+      --danger: #ff7b7b;
+      --sans: "DM Sans", sans-serif;
+      --heading: Manrope, sans-serif;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html{ scroll-behavior:smooth; }
-    button, select, input, a{ transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, opacity .18s ease, transform .15s cubic-bezier(.34,1.4,.64,1); }
-    button:active{ transform:scale(.97); }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       min-height: 100vh;
       display: grid;
       place-items: center;
       overflow: hidden;
-      color: var(--text);
-      font-family: var(--font);
-      background: var(--bg);
-      position: relative;
+      color: var(--white);
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at 15% 20%, rgba(83,199,232,.13), transparent 27%),
+        radial-gradient(circle at 85% 85%, rgba(255,200,87,.12), transparent 28%),
+        var(--navy);
     }
 
-    /* Animated background mesh */
     body::before {
       content: "";
       position: fixed;
       inset: 0;
-      z-index: 0;
-      background:
-        radial-gradient(ellipse 80% 50% at 20% 40%, rgba(255, 107, 157, .15), transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 60%, rgba(103, 232, 249, .12), transparent 55%),
-        radial-gradient(ellipse 50% 50% at 50% 100%, rgba(110, 231, 183, .08), transparent 50%);
-      animation: bgShift 20s ease-in-out infinite;
-    }
-
-    /* Grid overlay */
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      opacity: .04;
       pointer-events: none;
+      opacity: .3;
       background-image:
-        linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px);
-      background-size: 60px 60px;
-      mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 0%, transparent 70%);
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 55px 55px;
     }
 
-    /* Floating particles */
-    .particles {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .particle {
-      position: absolute;
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--pink);
-      box-shadow: 0 0 12px 2px var(--pink-glow);
-      opacity: 0;
-      animation: particleFloat 12s ease-in-out infinite;
-    }
-    .particle:nth-child(1) { left: 10%; top: 20%; animation-delay: 0s; background: var(--pink); }
-    .particle:nth-child(2) { left: 80%; top: 15%; animation-delay: 2s; background: var(--cyan); box-shadow: 0 0 12px 2px var(--cyan-glow); }
-    .particle:nth-child(3) { left: 30%; top: 70%; animation-delay: 4s; background: var(--green); box-shadow: 0 0 12px 2px var(--green-glow); }
-    .particle:nth-child(4) { left: 70%; top: 60%; animation-delay: 1s; background: var(--yellow); box-shadow: 0 0 12px 2px var(--yellow-glow); }
-    .particle:nth-child(5) { left: 50%; top: 30%; animation-delay: 3s; background: var(--cyan); }
-    .particle:nth-child(6) { left: 15%; top: 80%; animation-delay: 5s; background: var(--pink); }
-
-    button, input, a { cursor: pointer; font-family: var(--font); }
-
-    .page {
+    .app {
       position: relative;
-      z-index: 10;
-      width: min(92%, 920px);
-      min-height: 520px;
+      z-index: 1;
+      width: min(94%, 1060px);
+      min-height: 620px;
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1.12fr .88fr;
       overflow: hidden;
-      background: var(--panel);
-      border: 1px solid var(--glass-border);
+      border: 1px solid var(--border);
       border-radius: 24px;
+      background: rgba(8,28,45,.94);
       box-shadow:
-        0 0 60px rgba(255, 107, 157, .1),
-        0 30px 80px rgba(0, 0, 0, .5),
-        inset 0 1px 0 rgba(255, 255, 255, .06);
-      backdrop-filter: blur(24px) saturate(1.2);
-      -webkit-backdrop-filter: blur(24px) saturate(1.2);
-      animation: enter .9s cubic-bezier(.16, 1, .3, 1) both;
+        0 30px 90px rgba(0,0,0,.42),
+        0 0 70px rgba(83,199,232,.09);
+      animation: enter .7s ease both;
     }
 
-    /* Corner accents */
-    .page::before, .page::after {
+    .app::before,
+    .app::after {
       content: "";
       position: absolute;
-      z-index: 20;
-      width: 80px;
-      height: 14px;
+      z-index: 5;
+      width: 70px;
+      height: 15px;
       pointer-events: none;
     }
-    .page::before {
-      top: 16px; left: 16px;
-      border-top: 2px solid var(--pink);
-      border-left: 2px solid var(--pink);
-      border-radius: 4px 0 0 0;
-      opacity: .7;
-    }
-    .page::after {
-      right: 16px; bottom: 16px;
-      border-right: 2px solid var(--cyan);
-      border-bottom: 2px solid var(--cyan);
-      border-radius: 0 0 4px 0;
-      opacity: .7;
+
+    .app::before {
+      top: 18px;
+      left: 18px;
+      border-top: 2px solid var(--sun);
+      border-left: 2px solid var(--sun);
     }
 
-    /* Top gradient line */
-    .top-line {
-      position: absolute;
-      top: 0; left: 10%; right: 10%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--pink), var(--cyan), var(--green), transparent);
-      opacity: .6;
-      z-index: 20;
+    .app::after {
+      right: 18px;
+      bottom: 18px;
+      border-right: 2px solid var(--green);
+      border-bottom: 2px solid var(--green);
     }
 
     .visual {
       position: relative;
+      overflow: hidden;
+      padding: 34px;
+      border-right: 1px solid var(--border);
+      background:
+        linear-gradient(180deg, rgba(13,58,77,.72), rgba(5,24,40,.94)),
+        radial-gradient(circle at 50% 30%, rgba(255,200,87,.25), transparent 20rem);
+    }
+
+    .visual-header,
+    .brand-line {
+      position: relative;
+      z-index: 3;
       display: flex;
       align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      border-right: 1px solid var(--glass-border);
-      background:
-        radial-gradient(circle at 50% 45%, rgba(255, 107, 157, .12), transparent 18rem),
-        radial-gradient(circle at 30% 70%, rgba(103, 232, 249, .08), transparent 15rem),
-        linear-gradient(160deg, rgba(14, 12, 30, .98), rgba(8, 7, 20, .98));
+      justify-content: space-between;
     }
 
-    /* Orbital rings */
-    .orbit-ring {
-      position: absolute;
-      border: 1px solid rgba(255, 107, 157, .12);
-      border-radius: 50%;
-      pointer-events: none;
-    }
-    .orbit-ring-1 { width: 320px; height: 320px; animation: orbitSpin 20s linear infinite; }
-    .orbit-ring-2 { width: 240px; height: 240px; animation: orbitSpin 15s linear infinite reverse; border-color: rgba(103, 232, 249, .1); }
-    .orbit-ring-3 { width: 180px; height: 180px; animation: orbitSpin 10s linear infinite; border-color: rgba(110, 231, 183, .08); }
-
-    /* Orbiting dots on rings */
-    .orbit-dot {
-      position: absolute;
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--pink);
-      box-shadow: 0 0 14px 3px var(--pink-glow);
-    }
-    .orbit-ring-1 .orbit-dot { top: -4px; left: 50%; transform: translateX(-50%); }
-    .orbit-ring-2 .orbit-dot { bottom: -4px; left: 50%; transform: translateX(-50%); background: var(--cyan); box-shadow: 0 0 14px 3px var(--cyan-glow); }
-    .orbit-ring-3 .orbit-dot { right: -4px; top: 50%; transform: translateY(-50%); background: var(--green); box-shadow: 0 0 14px 3px var(--green-glow); }
-
-    .mascot {
-      position: relative;
-      z-index: 5;
-      width: 190px;
-      height: 240px;
-      animation: float 5s ease-in-out infinite;
+    .brand-line {
+      justify-content: flex-start;
+      gap: 11px;
+      margin-bottom: 48px;
     }
 
-    .mascot-glow {
-      position: absolute;
-      top: 46%; left: 50%;
-      width: 220px; height: 220px;
-      background: radial-gradient(circle, rgba(255, 107, 157, .25), transparent 65%);
-      transform: translate(-50%, -50%);
-      filter: blur(8px);
-      pointer-events: none;
-      animation: glowPulse 4s ease-in-out infinite;
+    .logo {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      color: var(--navy);
+      border-radius: 12px;
+      background: var(--sun);
+      box-shadow: 0 0 25px rgba(255,200,87,.35);
+      font-size: 19px;
+      font-weight: 800;
+      animation: logoPulse 3s ease-in-out infinite;
     }
 
-    .antenna {
-      position: absolute;
-      top: -28px; left: 50%;
-      width: 3px; height: 28px;
-      background: linear-gradient(180deg, var(--green), transparent);
-      transform: translateX(-50%);
+    .brand-name {
+      font: 800 13px var(--heading);
+      letter-spacing: .08em;
     }
-    .antenna-bulb {
-      position: absolute;
-      top: -7px; left: 50%;
-      width: 12px; height: 12px;
+
+    .brand-name span {
+      display: block;
+      margin-top: 2px;
+      color: var(--sky);
+      font-size: 9px;
+      letter-spacing: .17em;
+      text-transform: uppercase;
+    }
+
+    .live {
+      color: var(--green);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .1em;
+    }
+
+    .live i {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-right: 6px;
       border-radius: 50%;
       background: var(--green);
-      box-shadow: 0 0 16px 5px var(--green-glow), 0 0 30px 8px rgba(110,231,183,.15);
-      transform: translateX(-50%);
-      animation: blinkCentered 2.4s ease-in-out infinite;
+      box-shadow: 0 0 12px var(--green);
+      animation: pulse 1.5s infinite;
     }
 
-    .mascot-head {
-      position: relative;
-      z-index: 2;
-      width: 132px; height: 100px;
-      margin: 0 auto;
-      background: linear-gradient(165deg, #2d2658, #1a1538);
-      border: 2.5px solid rgba(255, 255, 255, .75);
-      border-radius: 28px;
-      box-shadow:
-        0 12px 30px rgba(0, 0, 0, .5),
-        0 0 28px rgba(255, 107, 157, .2),
-        inset 0 1px 0 rgba(255,255,255,.1);
-    }
-
-    .mascot-visor {
+    .stars {
       position: absolute;
-      top: 32px; left: 50%;
-      display: flex;
-      gap: 18px;
-      width: 92px; height: 32px;
-      padding: 0 12px;
-      background: #070514;
-      border-radius: 16px;
-      transform: translateX(-50%);
-      align-items: center;
-      justify-content: center;
-      box-shadow: inset 0 2px 8px rgba(0,0,0,.6);
-    }
-
-    .eye {
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: var(--pink);
-      box-shadow: 0 0 12px 4px var(--pink-glow);
-      animation: blink 3s ease-in-out infinite;
-    }
-    .eye-r { animation-delay: .15s; background: var(--cyan); box-shadow: 0 0 12px 4px var(--cyan-glow); }
-
-    .mascot-body {
-      position: relative;
+      inset: 0;
       z-index: 1;
-      width: 112px; height: 96px;
-      margin: -16px auto 0;
-      background: linear-gradient(165deg, #252050, #141030);
-      border: 2.5px solid rgba(255, 255, 255, .6);
-      border-radius: 24px;
-      box-shadow: 0 16px 32px rgba(0, 0, 0, .45);
-    }
-
-    .chest-dot {
-      position: absolute;
-      top: 18px; left: 50%;
-      width: 18px; height: 18px;
-      border-radius: 50%;
-      background: var(--yellow);
-      box-shadow: 0 0 18px 5px var(--yellow-glow), 0 0 40px 10px rgba(255,209,102,.1);
-      transform: translateX(-50%);
-      animation: cardPulse 2.4s ease-in-out infinite;
-    }
-
-    .panel-line {
-      position: absolute;
-      left: 50%;
-      height: 3px;
-      border-radius: 2px;
-      background: rgba(255, 255, 255, .15);
-      transform: translateX(-50%);
-    }
-    .panel-line { top: 48px; width: 64px; }
-    .panel-line.short { top: 62px; width: 42px; }
-
-    .mascot-arm {
-      position: absolute;
-      top: 132px;
-      width: 16px; height: 50px;
-      background: linear-gradient(180deg, #2d2658, #1a1538);
-      border: 2.5px solid rgba(255, 255, 255, .6);
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,.3);
-    }
-    .arm-l { left: 22px; transform-origin: top center; animation: idleRock 3s ease-in-out infinite; }
-    .arm-r { right: 22px; transform-origin: top center; animation: wave 2s ease-in-out infinite; }
-
-    .hi-bubble {
-      position: absolute;
-      top: 88px; right: -10px;
-      padding: 6px 14px;
-      background: linear-gradient(135deg, #fdfaf1, #fff8e7);
-      color: #1a1538;
-      font-family: var(--font);
-      font-weight: 800;
-      font-size: 14px;
-      letter-spacing: .02em;
-      border-radius: 14px;
-      box-shadow: 0 8px 24px rgba(0,0,0,.3), 0 0 20px rgba(255,209,102,.3);
-      animation: bubbleBob 2s ease-in-out infinite;
-      transform-origin: bottom left;
-    }
-    .hi-bubble::after {
-      content: "";
-      position: absolute;
-      bottom: -7px; left: 16px;
-      width: 12px; height: 12px;
-      background: #fdfaf1;
-      clip-path: polygon(0 0, 100% 0, 0 100%);
-    }
-
-    .spark {
-      position: absolute;
-      width: 6px; height: 6px;
-      border-radius: 50%;
+      overflow: hidden;
       pointer-events: none;
     }
-    .spark.one { top: 16px; left: 170px; background: var(--yellow); box-shadow: 0 0 16px 4px var(--yellow-glow); animation: sparkle 2.2s ease-in-out infinite; }
-    .spark.two { top: 160px; right: 22px; background: var(--cyan); box-shadow: 0 0 16px 4px var(--cyan-glow); animation: sparkle 2.8s ease-in-out infinite .6s; }
-    .spark.three { bottom: 44px; left: 48px; background: var(--pink); box-shadow: 0 0 16px 4px var(--pink-glow); animation: sparkle 2.5s ease-in-out infinite 1.2s; }
 
-    .visual-label {
+    .stars::before {
+      content: "";
       position: absolute;
-      bottom: 28px; left: 32px;
-      z-index: 10;
+      inset: 0;
+      background-image:
+        radial-gradient(1.5px 1.5px at 12% 18%, rgba(255,255,255,.9), transparent),
+        radial-gradient(1px 1px at 22% 12%, rgba(255,255,255,.75), transparent),
+        radial-gradient(1.5px 1.5px at 38% 8%, rgba(255,255,255,.8), transparent),
+        radial-gradient(1px 1px at 48% 24%, rgba(255,255,255,.6), transparent),
+        radial-gradient(2px 2px at 58% 15%, rgba(255,255,255,.85), transparent),
+        radial-gradient(1px 1px at 72% 22%, rgba(255,255,255,.65), transparent),
+        radial-gradient(1.5px 1.5px at 82% 10%, rgba(255,255,255,.8), transparent),
+        radial-gradient(1px 1px at 92% 28%, rgba(255,255,255,.55), transparent),
+        radial-gradient(1.5px 1.5px at 18% 55%, rgba(255,255,255,.7), transparent),
+        radial-gradient(1px 1px at 32% 62%, rgba(255,255,255,.5), transparent),
+        radial-gradient(2px 2px at 44% 48%, rgba(255,255,255,.75), transparent),
+        radial-gradient(1px 1px at 68% 58%, rgba(255,255,255,.6), transparent),
+        radial-gradient(1.5px 1.5px at 78% 52%, rgba(255,255,255,.8), transparent),
+        radial-gradient(1px 1px at 88% 65%, rgba(255,255,255,.55), transparent),
+        radial-gradient(1.5px 1.5px at 5% 85%, rgba(255,255,255,.7), transparent),
+        radial-gradient(1px 1px at 15% 92%, rgba(255,255,255,.5), transparent),
+        radial-gradient(2px 2px at 28% 82%, rgba(255,255,255,.8), transparent),
+        radial-gradient(1px 1px at 42% 95%, rgba(255,255,255,.6), transparent),
+        radial-gradient(1.5px 1.5px at 60% 88%, rgba(255,255,255,.75), transparent),
+        radial-gradient(1px 1px at 75% 96%, rgba(255,255,255,.55), transparent);
+      opacity: .9;
+      animation: twinkle 6s ease-in-out infinite alternate;
+    }
+
+    .sunrise {
+      position: relative;
+      height: 405px;
+      display: grid;
+      place-items: center;
+    }
+
+    .solar-system {
+      position: relative;
+      width: 340px;
+      height: 340px;
+      display: grid;
+      place-items: center;
+    }
+
+    .corona {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,200,87,.18), transparent 70%);
+      filter: blur(10px);
+      animation: coronaPulse 5s ease-in-out infinite;
+    }
+
+    .sun-rays {
+      position: absolute;
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      background: repeating-conic-gradient(
+        rgba(255, 200, 87, .08) 0deg 12deg,
+        transparent 12deg 24deg
+      );
+      animation: sunRaysSpin 40s linear infinite;
+    }
+
+    .sun {
+      position: relative;
+      z-index: 2;
+      width: 142px;
+      height: 142px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 35% 32%, #fff5b1, var(--sun) 45%, var(--sun-dark)),
+        radial-gradient(circle at 65% 70%, rgba(239,159,40,.5), transparent 60%);
+      box-shadow:
+        0 0 30px rgba(255,200,87,.75),
+        0 0 100px rgba(255,166,36,.28);
+      animation: sunFloat 5s ease-in-out infinite, sunGlow 3s ease-in-out infinite;
+    }
+
+    .sun::before {
+      content: "";
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 65% 60%, rgba(255,243,191,.4), transparent 50%);
+      filter: blur(4px);
+      animation: surfaceShift 8s linear infinite;
+    }
+
+    .sun::after {
+      content: "";
+      position: absolute;
+      inset: -28px;
+      border: 1px solid rgba(255,200,87,.3);
+      border-radius: 50%;
+      box-shadow:
+        0 0 0 14px rgba(255,200,87,.06),
+        0 0 0 29px rgba(255,200,87,.04);
+      animation: sunRings 4s ease-in-out infinite;
+    }
+
+    .orbit {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      border: 1px dashed rgba(83,199,232,.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: orbitSpin linear infinite;
+    }
+
+    .orbit-1 {
+      width: 260px;
+      height: 260px;
+      animation-duration: 18s;
+    }
+
+    .orbit-2 {
+      width: 320px;
+      height: 200px;
+      animation-duration: 26s;
+      animation-direction: reverse;
+    }
+
+    .satellite {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--sky);
+      box-shadow: 0 0 14px var(--sky), 0 0 8px var(--white);
+      transform: translate(-50%, -50%);
+    }
+
+    .orbit-2 .satellite {
+      width: 7px;
+      height: 7px;
+      background: var(--green);
+      box-shadow: 0 0 12px var(--green);
+    }
+
+    .horizon {
+      position: absolute;
+      right: 0;
+      bottom: 67px;
+      left: 0;
+      height: 74px;
+      overflow: hidden;
+      border-top: 1px solid rgba(83,199,232,.38);
+      background:
+        linear-gradient(135deg, transparent 48%, rgba(83,199,232,.28) 49%, transparent 50%) 0 0 / 42px 28px,
+        linear-gradient(45deg, transparent 48%, rgba(83,199,232,.2) 49%, transparent 50%) 0 0 / 42px 28px,
+        #071d31;
+      clip-path: polygon(
+        0 38%, 13% 27%, 26% 41%, 40% 17%,
+        53% 37%, 68% 22%, 82% 40%, 100% 18%,
+        100% 100%, 0 100%
+      );
+    }
+
+    .wave {
+      position: absolute;
+      bottom: 0;
+      left: -50%;
+      width: 200%;
+      height: 18px;
+      background: linear-gradient(90deg, transparent, rgba(83,199,232,.22), transparent);
+      filter: blur(2px);
+      animation: waveMove 5s linear infinite;
+    }
+
+    .forecast-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.8;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .forecast-label strong {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--sun);
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-shadow: 0 0 16px rgba(255,200,87,.5);
+      animation: labelGlow 2.5s ease-in-out infinite alternate;
+    }
+
+    .metrics {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      justify-content: center;
+    }
+
+    .metric {
+      width: 190px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(4,20,34,.55);
+      text-align: center;
+      transition: transform .3s ease, box-shadow .3s ease;
+      animation: metricFloat 6s ease-in-out infinite;
+    }
+
+    .metric:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 14px 35px rgba(0,0,0,.35), 0 0 25px rgba(83,199,232,.1);
+      border-color: rgba(83,199,232,.35);
+    }
+
+    .metric small {
+      display: block;
+      margin-bottom: 7px;
       color: var(--muted);
       font-size: 9px;
-      letter-spacing: .18em;
       text-transform: uppercase;
-      font-family: var(--mono);
     }
-    .visual-label span { color: var(--green); text-shadow: 0 0 10px var(--green-glow); animation: pulseDot 2s ease-in-out infinite; }
+
+    .metric strong {
+      color: var(--white);
+      font: 700 18px var(--heading);
+    }
+
+    .metric strong span {
+      color: var(--green);
+      font-size: 10px;
+    }
 
     .login {
       display: flex;
       align-items: center;
-      padding: 52px clamp(30px, 5vw, 58px);
+      padding: 52px clamp(30px, 5vw, 62px);
+      background: rgba(5,19,32,.92);
       position: relative;
     }
 
-    .login-content {
-      width: 100%;
-      max-width: 340px;
-      margin: auto;
-      animation: slideUp .8s cubic-bezier(.16, 1, .3, 1) .3s both;
+    .login::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at -10% 20%, rgba(83,199,232,.07), transparent 30%),
+        radial-gradient(circle at 110% 70%, rgba(255,200,87,.06), transparent 30%);
+      pointer-events: none;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 40px;
+    .login-content {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 350px;
+      animation: slideIn .7s .15s both;
     }
-    .brand-mark {
-      width: 36px; height: 36px;
-      display: grid;
-      place-items: center;
-      color: #1a0a1c;
-      background: linear-gradient(135deg, var(--pink), var(--yellow));
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(255, 107, 157, .4), 0 4px 12px rgba(0,0,0,.3);
-      font-size: 18px;
-      font-weight: 800;
-      animation: markGlow 3s ease-in-out infinite;
-    }
-    .brand-text {
-      color: var(--pink);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .22em;
+
+    .eyebrow {
+      margin-bottom: 17px;
+      color: var(--sky);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .16em;
       text-transform: uppercase;
+      animation: fadeInUp .6s .35s both;
     }
 
     h1 {
-      margin: 0 0 10px;
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: -.04em;
-      background: linear-gradient(135deg, var(--text), var(--muted));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+      color: var(--white);
+      font: 800 30px var(--heading);
+      letter-spacing: -.05em;
+      animation: fadeInUp .6s .42s both;
+    }
+
+    h1 span {
+      color: var(--sun);
     }
 
     .subtitle {
-      margin: 0 0 32px;
+      margin-bottom: 32px;
       color: var(--muted);
       font-size: 13px;
       line-height: 1.7;
-      font-weight: 400;
+      animation: fadeInUp .6s .5s both;
     }
 
     .field {
       margin-bottom: 18px;
-      position: relative;
+      animation: fadeInUp .6s both;
     }
+
+    .field:nth-of-type(1) { animation-delay: .55s; }
+    .field:nth-of-type(2) { animation-delay: .62s; }
 
     label {
       display: block;
       margin-bottom: 8px;
-      color: var(--muted);
+      color: #a8c9d7;
       font-size: 10px;
       font-weight: 700;
-      letter-spacing: .14em;
+      letter-spacing: .12em;
       text-transform: uppercase;
-      font-family: var(--font);
     }
 
     input {
       width: 100%;
-      height: 50px;
-      padding: 0 16px;
-      color: var(--text);
-      background: rgba(3, 9, 20, .7);
-      border: 1.5px solid var(--line);
-      border-radius: 12px;
+      height: 52px;
+      padding: 0 15px;
       outline: none;
-      color-scheme: dark;
-      font-size: 14px;
-      font-family: var(--font);
-      transition: all .3s cubic-bezier(.4, 0, .2, 1);
-    }
-    input::placeholder { color: #5a5570; }
-    input:hover { border-color: var(--line-strong); background: rgba(3, 9, 20, .85); }
-    input:focus {
-      border-color: var(--pink);
-      box-shadow: 0 0 0 4px rgba(255, 107, 157, .1), 0 0 20px rgba(255, 107, 157, .08);
-      background: rgba(3, 9, 20, .9);
+      color: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #061522;
+      font: 13px var(--sans);
+      transition: .25s ease, box-shadow .25s ease;
     }
 
-    /* Input icon */
-    .field-icon {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--muted);
-      opacity: .5;
-      font-size: 14px;
-      pointer-events: none;
-      transition: opacity .2s;
+    input:focus {
+      border-color: var(--sky);
+      box-shadow:
+        0 0 0 4px rgba(83,199,232,.1),
+        0 0 20px rgba(83,199,232,.15);
     }
-    input:focus ~ .field-icon { opacity: .8; color: var(--pink); }
+
+    input::placeholder {
+      color: #526f7d;
+    }
 
     button {
       width: 100%;
-      min-height: 50px;
+      min-height: 52px;
       border: 0;
-      border-radius: 12px;
-      color: #1a0a1c;
-      background: linear-gradient(135deg, var(--pink), var(--yellow));
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .12em;
+      border-radius: 10px;
+      color: #172331;
+      background: linear-gradient(100deg, var(--sun), #ffe69a);
+      box-shadow: 0 8px 22px rgba(255,200,87,.2);
+      font: 700 11px var(--heading);
+      letter-spacing: .08em;
       text-transform: uppercase;
-      font-family: var(--font);
+      cursor: pointer;
+      transition: .25s ease;
       position: relative;
       overflow: hidden;
-      transition: all .3s cubic-bezier(.4, 0, .2, 1);
-      box-shadow: 0 4px 20px rgba(255, 107, 157, .25);
-    }
-    button::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
-      transform: translateX(-100%);
-      transition: transform .6s;
-    }
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(255, 107, 157, .4), 0 0 40px rgba(255, 107, 157, .1);
-    }
-    button:hover::before { transform: translateX(100%); }
-    button:active { transform: translateY(0) scale(.98); }
-    button:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
     }
 
-    .error-msg {
-      display: none;
-      margin-bottom: 16px;
-      padding: 12px 14px;
-      color: var(--red);
-      background: rgba(248, 113, 113, .08);
-      border: 1px solid rgba(248, 113, 113, .2);
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 500;
-      animation: shake .4s ease;
+    button::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.35),
+        transparent
+      );
+      transform: skewX(-25deg);
+      transition: none;
     }
-    .error-msg.show { display: block; }
+
+    button:hover:not(:disabled) {
+      box-shadow: 0 10px 30px rgba(255,200,87,.38);
+      transform: translateY(-2px);
+    }
+
+    button:hover:not(:disabled)::after {
+      animation: shimmer .7s ease-in-out;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .58;
+    }
+
+    .btn-primary {
+      animation: fadeInUp .6s .7s both;
+    }
 
     .forgot {
-      margin-top: 18px;
+      margin-top: 19px;
       text-align: center;
+      animation: fadeInUp .6s .78s both;
     }
+
     .forgot a {
-      color: var(--muted);
-      font-size: 12px;
+      color: var(--sky);
+      font-size: 11px;
       text-decoration: none;
-      position: relative;
-      transition: color .2s;
-      font-weight: 500;
+      transition: color .2s ease;
     }
-    .forgot a::after {
-      content: "";
-      position: absolute;
-      bottom: -2px; left: 0;
-      width: 0; height: 1.5px;
-      background: linear-gradient(90deg, var(--pink), var(--cyan));
-      transition: width .3s ease;
+
+    .forgot a:hover {
+      color: var(--sun);
     }
-    .forgot a:hover { color: var(--pink); }
-    .forgot a:hover::after { width: 100%; }
 
     #forgotPinPanel {
       display: none;
       margin-top: 20px;
       padding-top: 20px;
-      border-top: 1px solid var(--glass-border);
-      animation: slideDown .3s ease;
-    }
-    #forgotPinPanel p {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.6;
-      margin-bottom: 14px;
+      border-top: 1px solid var(--border);
+      animation: unfold .4s ease both;
     }
 
-    #forgotStatusMsg {
-      display: none;
-      margin-top: 12px;
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 500;
-      text-align: center;
-      animation: fadeIn .3s ease;
+    #forgotPinPanel p {
+      margin-bottom: 15px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.6;
     }
-    #forgotStatusMsg.success {
-      display: block;
-      color: var(--green);
-      background: rgba(110, 231, 183, .08);
-      border: 1px solid rgba(110, 231, 183, .2);
-    }
-    #forgotStatusMsg.error {
-      display: block;
-      color: var(--red);
-      background: rgba(248, 113, 113, .08);
-      border: 1px solid rgba(248, 113, 113, .2);
+
+    #forgotSubmitBtn {
+      min-height: 46px;
+      color: var(--white);
+      background: var(--blue);
+      box-shadow: none;
     }
 
     .secure {
       display: flex;
       justify-content: center;
-      align-items: center;
       gap: 8px;
       margin-top: 28px;
-      color: #5a5570;
+      color: #668495;
       font-size: 9px;
-      letter-spacing: .12em;
+      letter-spacing: .11em;
       text-transform: uppercase;
-      font-family: var(--mono);
-    }
-    .secure span {
-      color: var(--green);
-      font-size: 10px;
-      animation: pulseDot 2s ease-in-out infinite;
+      animation: fadeIn .8s 1s both;
     }
 
-    /* Divider */
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 20px 0;
-      color: var(--muted);
-      font-size: 11px;
-      opacity: .6;
+    .secure span {
+      color: var(--green);
     }
-    .divider::before, .divider::after {
-      content: "";
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--line), transparent);
+
+    .error-msg,
+    #forgotStatusMsg {
+      display: none;
+      margin-bottom: 16px;
+      padding: 11px 13px;
+      border: 1px solid var(--danger);
+      border-radius: 9px;
+      color: var(--danger);
+      background: rgba(255,123,123,.08);
+      font-size: 11px;
+      text-align: center;
+      animation: shake .4s ease both;
+    }
+
+    .error-msg.show,
+    #forgotStatusMsg.error,
+    #forgotStatusMsg.success {
+      display: block;
+    }
+
+    #forgotStatusMsg.success {
+      color: var(--green);
+      border-color: var(--green);
+      background: rgba(72,199,142,.08);
+      animation: none;
     }
 
     @keyframes enter {
-      from { opacity: 0; transform: translateY(20px) scale(.97); }
+      from { opacity: 0; transform: translateY(22px) scale(.98); }
       to { opacity: 1; transform: none; }
     }
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(30px); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(22px); }
       to { opacity: 1; transform: none; }
     }
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-10px); }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(14px); }
       to { opacity: 1; transform: none; }
     }
+
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
     }
-    @keyframes float {
-      0%, 100% { transform: translateY(0) rotate(0); }
-      50% { transform: translateY(-10px) rotate(1deg); }
-    }
-    @keyframes glowPulse {
-      0%, 100% { opacity: .7; transform: translate(-50%, -50%) scale(1); }
-      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-    }
-    @keyframes cardPulse {
-      0%, 100% { filter: brightness(1); box-shadow: 0 0 18px 5px var(--yellow-glow); }
-      50% { filter: brightness(1.2); box-shadow: 0 0 24px 8px var(--yellow-glow), 0 0 50px 15px rgba(255,209,102,.1); }
-    }
-    @keyframes sparkle {
-      0%, 100% { opacity: .15; transform: scale(.5); }
-      50% { opacity: 1; transform: scale(1.3); }
-    }
-    @keyframes blink {
-      0%, 88%, 100% { transform: scaleY(1); opacity: 1; }
-      92% { transform: scaleY(.1); opacity: .5; }
-    }
-    @keyframes blinkCentered {
-      0%, 88%, 100% { transform: translateX(-50%) scaleY(1); opacity: 1; }
-      92% { transform: translateX(-50%) scaleY(.1); opacity: .5; }
-    }
-    @keyframes wave {
-      0%, 100% { transform: rotate(-35deg); }
-      50% { transform: rotate(8deg); }
-    }
-    @keyframes idleRock {
-      0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(8deg); }
-    }
-    @keyframes bubbleBob {
-      0%, 100% { transform: scale(1) translateY(0); }
-      50% { transform: scale(1.05) translateY(-4px); }
-    }
-    @keyframes orbitSpin {
-      to { transform: rotate(360deg); }
-    }
-    @keyframes bgShift {
-      0%, 100% { opacity: 1; }
-      50% { opacity: .8; }
-    }
-    @keyframes pulseDot {
-      0%, 100% { opacity: 1; }
-      50% { opacity: .4; }
-    }
-    @keyframes markGlow {
-      0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 157, .4), 0 4px 12px rgba(0,0,0,.3); }
-      50% { box-shadow: 0 0 30px rgba(255, 107, 157, .6), 0 4px 12px rgba(0,0,0,.3); }
-    }
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20% { transform: translateX(-6px); }
-      40% { transform: translateX(6px); }
-      60% { transform: translateX(-4px); }
-      80% { transform: translateX(4px); }
-    }
-    @keyframes particleFloat {
-      0% { opacity: 0; transform: translateY(100vh) scale(0); }
-      10% { opacity: 1; transform: translateY(90vh) scale(1); }
-      90% { opacity: 1; transform: translateY(-10vh) scale(1); }
-      100% { opacity: 0; transform: translateY(-20vh) scale(0); }
+
+    @keyframes unfold {
+      from { opacity: 0; transform: translateY(-12px); }
+      to { opacity: 1; transform: none; }
     }
 
-    @media (max-width: 700px) {
-      body { overflow: auto; padding: 20px 0; }
-      .page { width: min(94%, 420px); display: block; min-height: 0; }
-      .visual { min-height: 280px; border-right: 0; border-bottom: 1px solid var(--glass-border); }
-      .mascot { transform: scale(.78); }
-      .login { padding: 32px 24px 28px; }
-      .brand { margin-bottom: 28px; }
-      h1 { font-size: 26px; }
+    @keyframes sunFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes sunGlow {
+      0%, 100% {
+        box-shadow: 0 0 30px rgba(255,200,87,.75), 0 0 100px rgba(255,166,36,.28);
+      }
+      50% {
+        box-shadow: 0 0 45px rgba(255,200,87,.9), 0 0 130px rgba(255,166,36,.45);
+      }
+    }
+
+    @keyframes sunRings {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.08); opacity: .6; }
+    }
+
+    @keyframes sunRaysSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes coronaPulse {
+      0%, 100% {
+        opacity: .8;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.06);
+      }
+    }
+
+    @keyframes surfaceShift {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes orbitSpin {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    @keyframes twinkle {
+      from { opacity: .6; transform: scale(.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes waveMove {
+      from { transform: translateX(0); }
+      to { transform: translateX(25%); }
+    }
+
+    @keyframes labelGlow {
+      from { text-shadow: 0 0 12px rgba(255,200,87,.3); }
+      to { text-shadow: 0 0 24px rgba(255,200,87,.65); }
+    }
+
+    @keyframes metricFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    @keyframes logoPulse {
+      0%, 100% { box-shadow: 0 0 25px rgba(255,200,87,.35); }
+      50% { box-shadow: 0 0 40px rgba(255,200,87,.55); }
+    }
+
+    @keyframes pulse {
+      50% { opacity: .35; }
+    }
+
+    @keyframes shimmer {
+      from { left: -100%; }
+      to { left: 200%; }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        overflow: auto;
+        padding: 22px 0;
+      }
+
+      .app {
+        width: min(94%, 450px);
+        display: block;
+      }
+
+      .visual {
+        min-height: 560px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .sunrise {
+        height: 415px;
+      }
+
+      .solar-system {
+        width: 280px;
+        height: 280px;
+      }
+
+      .sun-rays {
+        width: 320px;
+        height: 320px;
+      }
+
+      .corona {
+        width: 260px;
+        height: 260px;
+      }
+
+      .orbit-1 {
+        width: 230px;
+        height: 230px;
+      }
+
+      .orbit-2 {
+        width: 280px;
+        height: 180px;
+      }
+
+      .login {
+        padding: 40px 25px 34px;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
+      *,
+      *::before,
+      *::after {
         animation-duration: .01ms !important;
         transition-duration: .01ms !important;
       }
@@ -720,92 +819,111 @@
 </head>
 
 <body>
-  <div class="particles">
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-  </div>
+  <main class="app">
+    <section class="visual">
+      <div class="stars" aria-hidden="true"></div>
 
-  <main class="page">
-    <div class="top-line"></div>
+      <div class="visual-header">
+        <div class="brand-line">
+          <div class="logo">☀</div>
 
-    <section class="visual" aria-label="Checklist mascot">
-      <div class="orbit-ring orbit-ring-1"><div class="orbit-dot"></div></div>
-      <div class="orbit-ring orbit-ring-2"><div class="orbit-dot"></div></div>
-      <div class="orbit-ring orbit-ring-3"><div class="orbit-dot"></div></div>
-
-      <div class="mascot" id="mascot">
-        <span class="mascot-glow"></span>
-        <span class="antenna"><span class="antenna-bulb"></span></span>
-        <div class="mascot-head">
-          <div class="mascot-visor">
-            <span class="eye eye-l"></span>
-            <span class="eye eye-r"></span>
+          <div class="brand-name">
+            RAAA
+            <span>Renewable Specialist</span>
           </div>
         </div>
-        <div class="mascot-body">
-          <span class="chest-dot"></span>
-          <span class="panel-line"></span>
-          <span class="panel-line short"></span>
-        </div>
-        <span class="mascot-arm arm-l"></span>
-        <span class="mascot-arm arm-r"></span>
-        <span class="hi-bubble">Hi!</span>
+
+        <div class="live"><i></i>LIVE</div>
       </div>
 
-      <span class="spark one"></span>
-      <span class="spark two"></span>
-      <span class="spark three"></span>
+      <div class="sunrise">
+        <div class="solar-system">
+          <div class="corona" aria-hidden="true"></div>
+          <div class="sun-rays" aria-hidden="true"></div>
+          <div class="sun"></div>
 
-      <div class="visual-label">
-        <span>●</span> System Online
+          <div class="orbit orbit-1" aria-hidden="true">
+            <div class="satellite"></div>
+          </div>
+
+          <div class="orbit orbit-2" aria-hidden="true">
+            <div class="satellite"></div>
+          </div>
+        </div>
+
+        <div class="horizon" aria-hidden="true">
+          <div class="wave"></div>
+        </div>
+
+        <div class="forecast-label">
+          <div>TODAY'S OUTLOOK</div>
+          <strong>HIGH SOLAR AVAILABILITY</strong>
+        </div>
+      </div>
+
+      <div class="metrics">
+        <div class="metric">
+          <small>Peak Output</small>
+          <strong>103<span> GW</span></strong>
+        </div>
       </div>
     </section>
 
     <section class="login">
       <div class="login-content">
-        <div class="brand">
-          <span class="brand-mark">✓</span>
-          <span class="brand-text">Checklist</span>
-        </div>
+        <div class="eyebrow">RAAA Portal</div>
 
-        <h1>Welcome back</h1>
-        <p class="subtitle">Sign in with your employee ID to access your secure workspace.</p>
+        <h1>Welcome <span>Forecast Doctor</span></h1>
+
+        <p class="subtitle"></p>
 
         <div class="error-msg" id="errorMsg" role="alert"></div>
 
         <div class="field">
           <label for="idInput">Employee ID</label>
-          <input id="idInput" type="text" placeholder="Enter employee ID" autocomplete="username">
+          <input
+            id="idInput"
+            type="text"
+            placeholder="Enter employee ID"
+            autocomplete="username"
+          >
         </div>
 
         <div class="field">
-          <label for="pinInput">PIN</label>
-          <input id="pinInput" type="password" placeholder="Enter your PIN" autocomplete="current-password">
+          <label for="pinInput">Access PIN</label>
+          <input
+            id="pinInput"
+            type="password"
+            placeholder="Enter 4 digit PIN"
+            autocomplete="current-password"
+          >
         </div>
 
-        <button id="loginBtn" type="button">Initialize workspace</button>
+        <button id="loginBtn" class="btn-primary" type="button">LOG IN</button>
 
         <div class="forgot">
           <a href="#" id="forgotPinLink">Forgot your PIN?</a>
         </div>
 
         <div id="forgotPinPanel">
-          <p>Enter your employee ID to send a reset request to your admin.</p>
+          <p>
+            Enter your employee ID to send a PIN reset request to your administrator.
+          </p>
+
           <div class="field">
             <label for="forgotIdInput">Employee ID</label>
             <input id="forgotIdInput" type="text" placeholder="Enter employee ID">
           </div>
-          <button id="forgotSubmitBtn" type="button">Send reset request</button>
+
+          <button id="forgotSubmitBtn" type="button">
+            Send reset request
+          </button>
+
           <div id="forgotStatusMsg" role="status"></div>
         </div>
 
         <div class="secure">
-          <span>◆</span>
-          Secure workspace connection
+          <span></span>
         </div>
       </div>
     </section>
@@ -841,61 +959,89 @@
     function showError(message) {
       errorMsg.textContent = message;
       errorMsg.classList.add("show");
-      setTimeout(() => errorMsg.classList.remove("show"), 5000);
+
+      setTimeout(() => {
+        errorMsg.classList.remove("show");
+      }, 5000);
     }
 
     async function login() {
       errorMsg.classList.remove("show");
+
       const id = idInput.value.trim().toLowerCase();
       const pin = pinInput.value;
 
       if (!id || !pin) {
-        showError("Please enter both your employee ID and PIN.");
+        showError("Please enter both your employee ID and access PIN.");
         return;
       }
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Verifying access...";
 
       if (id === ADMIN_ID) {
         if (pin === ADMIN_PIN) {
           sessionStorage.setItem(ROLE_KEY, "admin");
           sessionStorage.setItem(ID_KEY, ADMIN_ID);
           sessionStorage.setItem(NAME_KEY, "Admin");
-          window.location.href = "admin_dashboard.html";
+
+          loginBtn.textContent = "Access granted";
+
+          setTimeout(() => {
+            window.location.href = "admin_dashboard.html";
+          }, 700);
         } else {
-          showError("Incorrect ID or PIN.");
+          showError("Invalid employee ID or PIN.");
           pinInput.value = "";
+          loginBtn.disabled = false;
+          loginBtn.textContent = "LOG IN";
         }
+
         return;
       }
-
-      loginBtn.disabled = true;
-      loginBtn.textContent = "Authenticating…";
 
       try {
         const employeeDoc = await db.collection("employees").doc(id).get();
         const employee = employeeDoc.data();
 
         if (!employeeDoc.exists || employee.pin !== pin || employee.active === false) {
-          showError("Incorrect ID or PIN.");
+          showError("Invalid employee ID or PIN.");
           pinInput.value = "";
+          loginBtn.disabled = false;
+          loginBtn.textContent = "LOG IN";
           return;
         }
 
         sessionStorage.setItem(ROLE_KEY, "employee");
         sessionStorage.setItem(ID_KEY, id);
         sessionStorage.setItem(NAME_KEY, employee.name || id);
-        window.location.href = "employee_dashboard.html";
+
+        loginBtn.textContent = "Access granted";
+
+        setTimeout(() => {
+          window.location.href = "employee_dashboard.html";
+        }, 700);
       } catch (error) {
         console.error(error);
-        showError("Unable to connect. Please try again.");
-      } finally {
+        showError("Unable to connect to the generation portal.");
         loginBtn.disabled = false;
-        loginBtn.textContent = "Initialize workspace";
+        loginBtn.textContent = "LOG IN";
       }
     }
 
     loginBtn.addEventListener("click", login);
-    idInput.addEventListener("keydown", e => { if (e.key === "Enter") pinInput.focus(); });
-    pinInput.addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+
+    idInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        pinInput.focus();
+      }
+    });
+
+    pinInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        login();
+      }
+    });
 
     const forgotLink = document.getElementById("forgotPinLink");
     const forgotPanel = document.getElementById("forgotPinPanel");
@@ -905,30 +1051,43 @@
 
     forgotLink.addEventListener("click", event => {
       event.preventDefault();
-      const open = forgotPanel.style.display !== "block";
-      forgotPanel.style.display = open ? "block" : "none";
-      if (open) forgotIdInput.focus();
+
+      const isOpen = forgotPanel.style.display !== "block";
+      forgotPanel.style.display = isOpen ? "block" : "none";
+
+      if (isOpen) {
+        forgotIdInput.focus();
+      }
     });
 
     forgotButton.addEventListener("click", async () => {
       const id = forgotIdInput.value.trim().toLowerCase();
+
       if (!id) {
         forgotStatus.className = "error";
         forgotStatus.textContent = "Please enter your employee ID.";
         return;
       }
+
       forgotButton.disabled = true;
-      forgotButton.textContent = "Sending…";
+      forgotButton.textContent = "Sending...";
+
       try {
         const employeeDoc = await db.collection("employees").doc(id).get();
-        if (!employeeDoc.exists) throw new Error("Employee not found");
+
+        if (!employeeDoc.exists) {
+          throw new Error("Employee not found");
+        }
+
         const employee = employeeDoc.data();
+
         await db.collection("pinResetRequests").doc(id).set({
           employeeId: id,
           employeeName: employee.name || id,
           requestedAt: new Date().toISOString(),
           resolved: false
         });
+
         forgotStatus.className = "success";
         forgotStatus.textContent = "Reset request sent successfully.";
         forgotIdInput.value = "";
