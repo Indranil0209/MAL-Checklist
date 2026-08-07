@@ -3035,7 +3035,9 @@ function showPssInfo(site){
   document.getElementById('pssInfoBody').innerHTML =
     '<div class="pss-info-row"><span class="pss-info-label">Latitude</span><span class="pss-info-val">'+escapeHtml(fmt(site.lat))+'</span></div>' +
     '<div class="pss-info-row"><span class="pss-info-label">Longitude</span><span class="pss-info-val">'+escapeHtml(fmt(site.lng))+'</span></div>' +
-    '<div class="pss-info-row"><span class="pss-info-label">Capacity</span><span class="pss-info-val">'+escapeHtml(capVal === '\u2014' ? '\u2014' : capVal + ' MW')+'</span></div>';
+    '<div class="pss-info-row"><span class="pss-info-label">Capacity</span><span class="pss-info-val">'+escapeHtml(capVal === '\u2014' ? '\u2014' : capVal + ' MW')+'</span></div>' +
+    '<div class="pss-info-row"><span class="pss-info-label">KAM</span><span class="pss-info-val">'+escapeHtml(fmt(site.kam))+'</span></div>' +
+    '<div class="pss-info-row"><span class="pss-info-label">KAM 1 (backup)</span><span class="pss-info-val">'+escapeHtml(fmt(site.kam1))+'</span></div>';
   document.getElementById('pssInfoOverlay').classList.add('open');
 }
 document.getElementById('pssInfoCloseBtn').addEventListener('click', ()=> document.getElementById('pssInfoOverlay').classList.remove('open'));

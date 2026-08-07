@@ -535,9 +535,11 @@
           <input type="file" id="sheetFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
           <button class="btn-outline" id="updateCoordsBtn" type="button">Update Lat/Long/Capacity Only</button>
           <input type="file" id="coordsFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+          <button class="btn-outline" id="updateKamBtn" type="button">Update KAM Only</button>
+          <input type="file" id="kamFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
           <button class="btn-outline btn-danger" id="clearSheetBtn" type="button">Clear All PSS</button>
         </div>
-        <p class="section-sub" style="margin-top:6px; margin-bottom:0;">"Update Lat/Long/Capacity Only" matches PSS by name and refreshes just those three fields &mdash; it never touches frequency, priority, assignments, or the daily rotation order.</p>
+        <p class="section-sub" style="margin-top:6px; margin-bottom:0;">"Update Lat/Long/Capacity Only" matches PSS by name and refreshes just those three fields &mdash; it never touches frequency, priority, assignments, or the daily rotation order. "Update KAM Only" does the same for KAM / KAM 1 (accepts a sheet with PSS Name, KAM, and KAM 1 columns).</p>
         <div class="sheet-info-lbl" id="sheetInfoLbl">No sheet loaded.</div>
 
         <div class="row" style="margin:4px 0 10px; justify-content:flex-end;">
@@ -569,6 +571,8 @@
           <input type="text" id="newPssCapacity" placeholder="Capacity (MW)">
           <input type="text" id="newPssLat" placeholder="Latitude">
           <input type="text" id="newPssLng" placeholder="Longitude">
+          <input type="text" id="newPssKam" placeholder="KAM (relationship owner)">
+          <input type="text" id="newPssKam1" placeholder="KAM 1 (backup)">
           <select id="newPssFreq">
             <option value="E">Everyday</option>
             <option value="Alt">Alt</option>
@@ -1926,6 +1930,92 @@ document.getElementById('coordsFileInput').addEventListener('change', (e)=>{
   e.target.value = '';
 });
 
+// ---- Update KAM only: same idea as coords-only, but for the KAM / KAM 1
+// (Key Account Manager) relationship-ownership fields. Different sheet
+// layout (Sl.No / PSS Name / Utility / State / Capacity / KAM / KAM 1) so
+// it gets its own light parser rather than reusing parseSheetRows, which is
+// tied to the intimation-sheet column set (frequency/priority/assignee). ----
+function parseKamSheetRows(rows){
+  let headerRowIdx = -1;
+  for(let i=0; i<Math.min(rows.length, 15); i++){
+    const r = rows[i] || [];
+    if(r.some(c=>{
+      const v = String(c).trim().toLowerCase();
+      return v.includes('pss name') || v === 'pss';
+    })){
+      headerRowIdx = i;
+      break;
+    }
+  }
+  if(headerRowIdx === -1) return null;
+
+  const header = rows[headerRowIdx].map(c=>String(c).trim().toLowerCase());
+  const nameCol = header.findIndex(h=>h.includes('pss name') || h === 'name' || h === 'pss');
+  const kamCol = header.findIndex(h=>h === 'kam');
+  const kam1Col = header.findIndex(h=>h === 'kam 1' || h === 'kam1');
+  if(nameCol === -1 || (kamCol === -1 && kam1Col === -1)) return null;
+
+  // Fixes the casing inconsistencies seen in real KAM sheets (e.g. "manoj"
+  // vs "Manoj" for the same person) so they don't show up as different KAMs.
+  const capitalize = (s)=> s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+
+  const entries = [];
+  for(let i=headerRowIdx+1; i<rows.length; i++){
+    const r = rows[i] || [];
+    const name = String(r[nameCol] || '').trim();
+    if(!name) continue;
+    const kam = kamCol !== -1 ? capitalize(String(r[kamCol] || '').trim()) : '';
+    const kam1 = kam1Col !== -1 ? capitalize(String(r[kam1Col] || '').trim()) : '';
+    entries.push({ name, kam, kam1 });
+  }
+  return entries.length ? entries : null;
+}
+
+async function handleKamOnlyFile(file){
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    let parsed = null;
+    for(const sn of wb.SheetNames){
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: false, defval: '' });
+      parsed = parseKamSheetRows(rows);
+      if(parsed) break;
+    }
+    if(!parsed){
+      showToast('Could not find "PSS Name" and "KAM" columns in that file.');
+      return;
+    }
+    const byName = new Map();
+    parsed.forEach(p=>{ if(!byName.has(normName(p.name))) byName.set(normName(p.name), p); });
+
+    let updatedCount = 0;
+    const unmatched = [];
+    SITES = SITES.map(site=>{
+      const match = byName.get(normName(site.name));
+      if(!match) { unmatched.push(site.name); return site; }
+      const changed = (match.kam || '') !== (site.kam || '') || (match.kam1 || '') !== (site.kam1 || '');
+      if(changed) updatedCount++;
+      return { ...site, kam: match.kam || '', kam1: match.kam1 || '' };
+    });
+    await saveSheetDoc();
+    let msg = 'Updated KAM assignment for ' + updatedCount + ' of ' + SITES.length + ' PSS.';
+    if(unmatched.length) msg += ' ' + unmatched.length + ' PSS not found in that sheet by name.';
+    showToast(msg, unmatched.length ? 6000 : 2400);
+  }catch(e){
+    console.error('KAM-only parse failed', e);
+    showToast('Could not read that file. Please upload a valid .xlsx, .xls, or .csv sheet.');
+  }
+}
+
+document.getElementById('updateKamBtn').addEventListener('click', ()=>{
+  document.getElementById('kamFileInput').click();
+});
+document.getElementById('kamFileInput').addEventListener('change', (e)=>{
+  const file = e.target.files && e.target.files[0];
+  if(file) handleKamOnlyFile(file);
+  e.target.value = '';
+});
+
 document.getElementById('clearSheetBtn').addEventListener('click', async ()=>{
   const proceed = await showConfirm('Remove all PSS?', 'This clears the shared checklist for every employee. Their check-off history stays saved by date.');
   if(!proceed) return;
@@ -1972,6 +2062,8 @@ document.getElementById('addPssBtn').addEventListener('click', async ()=>{
   const latInput = document.getElementById('newPssLat');
   const lngInput = document.getElementById('newPssLng');
   const capInput = document.getElementById('newPssCapacity');
+  const kamInput = document.getElementById('newPssKam');
+  const kam1Input = document.getElementById('newPssKam1');
   const name = nameInput.value.trim();
   const latVal = latInput.value.trim();
   const lngVal = lngInput.value.trim();
@@ -2013,12 +2105,12 @@ document.getElementById('addPssBtn').addEventListener('click', async ()=>{
       assignedTo: assignedEmp ? (assignedEmp.name || assignedEmp.id) : '',
       secondaryToId: secondaryToId || '',
       secondaryTo: secondaryEmp ? (secondaryEmp.name || secondaryEmp.id) : '',
-      lat: latVal, lng: lngVal, capacityMw: capVal
+      lat: latVal, lng: lngVal, capacityMw: capVal, kam: kamInput.value.trim(), kam1: kam1Input.value.trim()
     }];
     await saveSheetDoc();
     renderManageList();
     nameInput.value = ''; stateInput.value = ''; assignSel.value = ''; secSel.value = '';
-    latInput.value = ''; lngInput.value = ''; capInput.value = '';
+    latInput.value = ''; lngInput.value = ''; capInput.value = ''; kamInput.value = ''; kam1Input.value = '';
     document.getElementById('addPssOverlay').classList.remove('open');
     showToast('PSS added.');
   } finally {
@@ -2041,7 +2133,7 @@ async function deletePss(id){
 function editPssSite(id){ editingSiteId = id; renderManageList(); }
 function cancelPssEdit(){ editingSiteId = null; renderManageList(); }
 
-async function savePssEdit(id, newFreq, newPriority, newState, newAssignedToId, newSecondaryToId, newLat, newLng, newCapacityMw){
+async function savePssEdit(id, newFreq, newPriority, newState, newAssignedToId, newSecondaryToId, newLat, newLng, newCapacityMw, newKam, newKam1){
   const empMatch = employees.find(e=>e.id === newAssignedToId);
   const secMatch = employees.find(e=>e.id === newSecondaryToId);
   SITES = SITES.map(s => s.id === id ? {
@@ -2050,21 +2142,24 @@ async function savePssEdit(id, newFreq, newPriority, newState, newAssignedToId, 
     assignedTo: empMatch ? (empMatch.name || empMatch.id) : '',
     secondaryToId: newSecondaryToId || '',
     secondaryTo: secMatch ? (secMatch.name || secMatch.id) : '',
-    lat: (newLat || '').trim(), lng: (newLng || '').trim(), capacityMw: (newCapacityMw || '').trim()
+    lat: (newLat || '').trim(), lng: (newLng || '').trim(), capacityMw: (newCapacityMw || '').trim(),
+    kam: (newKam || '').trim(), kam1: (newKam1 || '').trim()
   } : s);
   editingSiteId = null;
   await saveSheetDoc();
   showToast('PSS updated.');
 }
 
-// ---- PSS info popup: Lat / Long / Capacity (MW) ----
+// ---- PSS info popup: Lat / Long / Capacity (MW) / KAM ----
 function showPssInfo(site){
   document.getElementById('pssInfoTitle').textContent = site.name;
   const fmt = v => (v !== undefined && v !== null && String(v).trim() !== '') ? String(v).trim() : '\u2014';
   document.getElementById('pssInfoBody').innerHTML =
     '<div class="pss-info-row"><span class="pss-info-label">Latitude</span><span class="pss-info-val">'+escapeHtml(fmt(site.lat))+'</span></div>' +
     '<div class="pss-info-row"><span class="pss-info-label">Longitude</span><span class="pss-info-val">'+escapeHtml(fmt(site.lng))+'</span></div>' +
-    '<div class="pss-info-row"><span class="pss-info-label">Capacity</span><span class="pss-info-val">'+escapeHtml(fmt(site.capacityMw) === '\u2014' ? '\u2014' : fmt(site.capacityMw) + ' MW')+'</span></div>';
+    '<div class="pss-info-row"><span class="pss-info-label">Capacity</span><span class="pss-info-val">'+escapeHtml(fmt(site.capacityMw) === '\u2014' ? '\u2014' : fmt(site.capacityMw) + ' MW')+'</span></div>' +
+    '<div class="pss-info-row"><span class="pss-info-label">KAM</span><span class="pss-info-val">'+escapeHtml(fmt(site.kam))+'</span></div>' +
+    '<div class="pss-info-row"><span class="pss-info-label">KAM 1 (backup)</span><span class="pss-info-val">'+escapeHtml(fmt(site.kam1))+'</span></div>';
   document.getElementById('pssInfoOverlay').classList.add('open');
 }
 document.getElementById('pssInfoCloseBtn').addEventListener('click', ()=> document.getElementById('pssInfoOverlay').classList.remove('open'));
@@ -2208,6 +2303,12 @@ function renderManageList(){
       const capInput = document.createElement('input');
       capInput.type = 'text'; capInput.value = site.capacityMw || ''; capInput.placeholder = 'Capacity MW'; capInput.style.width = '90px';
       capInput.className = 'manage-edit-select';
+      const kamInput = document.createElement('input');
+      kamInput.type = 'text'; kamInput.value = site.kam || ''; kamInput.placeholder = 'KAM'; kamInput.style.width = '90px';
+      kamInput.className = 'manage-edit-select';
+      const kam1Input = document.createElement('input');
+      kam1Input.type = 'text'; kam1Input.value = site.kam1 || ''; kam1Input.placeholder = 'KAM 1 (backup)'; kam1Input.style.width = '110px';
+      kam1Input.className = 'manage-edit-select';
       row.appendChild(stateInput);
       row.appendChild(freqSel);
       row.appendChild(prioSel);
@@ -2216,9 +2317,11 @@ function renderManageList(){
       row.appendChild(latInput);
       row.appendChild(lngInput);
       row.appendChild(capInput);
+      row.appendChild(kamInput);
+      row.appendChild(kam1Input);
       const saveBtn = document.createElement('button');
       saveBtn.className = 'm-btn'; saveBtn.textContent = 'Save';
-      saveBtn.onclick = ()=> savePssEdit(site.id, freqSel.value, prioSel.value, stateInput.value.trim(), assignSel.value, secSel.value, latInput.value.trim(), lngInput.value.trim(), capInput.value.trim());
+      saveBtn.onclick = ()=> savePssEdit(site.id, freqSel.value, prioSel.value, stateInput.value.trim(), assignSel.value, secSel.value, latInput.value.trim(), lngInput.value.trim(), capInput.value.trim(), kamInput.value.trim(), kam1Input.value.trim());
       row.appendChild(saveBtn);
       const cancelBtn = document.createElement('button');
       cancelBtn.className = 'm-btn'; cancelBtn.textContent = 'Cancel';
