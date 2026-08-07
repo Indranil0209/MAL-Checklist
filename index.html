@@ -916,6 +916,7 @@
     const ROLE_KEY = "intimation-tracker-role";
     const ID_KEY = "intimation-tracker-userid";
     const NAME_KEY = "intimation-tracker-loginname";
+    const PIN_REGEX = /^\d{4}$/;
 
     const idInput = document.getElementById("idInput");
     const pinInput = document.getElementById("pinInput");
@@ -925,20 +926,32 @@
     function showError(message) {
       errorMsg.textContent = message;
       errorMsg.classList.add("show");
+      setTimeout(() => errorMsg.classList.remove("show"), 5000);
+    }
 
-      setTimeout(() => {
-        errorMsg.classList.remove("show");
-      }, 5000);
+    function setForgotStatus(type, message) {
+      forgotStatus.classList.remove("error", "success");
+      if (!type) {
+        forgotStatus.textContent = "";
+        return;
+      }
+      forgotStatus.classList.add(type);
+      forgotStatus.textContent = message;
     }
 
     async function login() {
       errorMsg.classList.remove("show");
 
       const id = idInput.value.trim().toLowerCase();
-      const pin = pinInput.value;
+      const pin = pinInput.value.trim();
 
       if (!id || !pin) {
         showError("Please enter both your employee ID and access PIN.");
+        return;
+      }
+
+      if (!PIN_REGEX.test(pin)) {
+        showError("PIN must be exactly 4 digits.");
         return;
       }
 
@@ -950,19 +963,14 @@
           sessionStorage.setItem(ROLE_KEY, "admin");
           sessionStorage.setItem(ID_KEY, ADMIN_ID);
           sessionStorage.setItem(NAME_KEY, "Admin");
-
           loginBtn.textContent = "Access granted";
-
-          setTimeout(() => {
-            window.location.href = "admin_dashboard.html";
-          }, 700);
+          setTimeout(() => { window.location.href = "admin_dashboard.html"; }, 700);
         } else {
           showError("Invalid employee ID or PIN.");
           pinInput.value = "";
           loginBtn.disabled = false;
           loginBtn.textContent = "LOG IN";
         }
-
         return;
       }
 
@@ -983,10 +991,7 @@
         sessionStorage.setItem(NAME_KEY, employee.name || id);
 
         loginBtn.textContent = "Access granted";
-
-        setTimeout(() => {
-          window.location.href = "employee_dashboard.html";
-        }, 700);
+        setTimeout(() => { window.location.href = "employee_dashboard.html"; }, 700);
       } catch (error) {
         console.error(error);
         showError("Unable to connect to the generation portal.");
@@ -998,15 +1003,11 @@
     loginBtn.addEventListener("click", login);
 
     idInput.addEventListener("keydown", event => {
-      if (event.key === "Enter") {
-        pinInput.focus();
-      }
+      if (event.key === "Enter") pinInput.focus();
     });
 
     pinInput.addEventListener("keydown", event => {
-      if (event.key === "Enter") {
-        login();
-      }
+      if (event.key === "Enter") login();
     });
 
     const forgotLink = document.getElementById("forgotPinLink");
@@ -1017,21 +1018,17 @@
 
     forgotLink.addEventListener("click", event => {
       event.preventDefault();
-
-      const isOpen = forgotPanel.style.display !== "block";
-      forgotPanel.style.display = isOpen ? "block" : "none";
-
-      if (isOpen) {
-        forgotIdInput.focus();
-      }
+      const isOpening = forgotPanel.style.display !== "block";
+      forgotPanel.style.display = isOpening ? "block" : "none";
+      setForgotStatus(null, "");
+      if (isOpening) forgotIdInput.focus();
     });
 
     forgotButton.addEventListener("click", async () => {
       const id = forgotIdInput.value.trim().toLowerCase();
 
       if (!id) {
-        forgotStatus.className = "error";
-        forgotStatus.textContent = "Please enter your employee ID.";
+        setForgotStatus("error", "Please enter your employee ID.");
         return;
       }
 
@@ -1040,26 +1037,22 @@
 
       try {
         const employeeDoc = await db.collection("employees").doc(id).get();
-
-        if (!employeeDoc.exists) {
-          throw new Error("Employee not found");
-        }
+        if (!employeeDoc.exists) throw new Error("Employee not found");
 
         const employee = employeeDoc.data();
 
-        await db.collection("pinResetRequests").doc(id).set({
+        await db.collection("pinResetRequests").add({
           employeeId: id,
           employeeName: employee.name || id,
           requestedAt: new Date().toISOString(),
           resolved: false
         });
 
-        forgotStatus.className = "success";
-        forgotStatus.textContent = "Reset request sent successfully.";
+        setForgotStatus("success", "Reset request sent successfully.");
         forgotIdInput.value = "";
       } catch (error) {
-        forgotStatus.className = "error";
-        forgotStatus.textContent = "Unable to send request. Please try again.";
+        console.error(error);
+        setForgotStatus("error", "Unable to send request. Please try again.");
       } finally {
         forgotButton.disabled = false;
         forgotButton.textContent = "Send reset request";
