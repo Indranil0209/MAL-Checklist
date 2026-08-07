@@ -3936,6 +3936,17 @@ function reportDateLabel(d){
   return d.getDate() + ' ' + MONTH_NAMES[d.getMonth()];
 }
 
+// Used only in the exported report text/doc itself, matching the required
+// "Date – DD-MM-YYYY" header format. Kept separate from reportDateLabel()
+// above, which stays as the compact "29 July" label used in the on-screen
+// date-picker checkbox list.
+function reportFileDateLabel(d){
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth()+1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return 'Date \u2013 ' + dd + '-' + mm + '-' + yyyy;
+}
+
 let reportPanelOpen = false;
 let reportSelectedDates = new Set();
 
@@ -4069,7 +4080,7 @@ function buildWorkReportText(dateKeys){
 
     if(!cats.length && !extraWorkLines.length) return;
 
-    const lines = [reportDateLabel(d), ''];
+    const lines = [reportFileDateLabel(d), ''];
     let num = 0;
     cats.forEach(([label, entries])=>{
       num++;
@@ -4182,7 +4193,7 @@ function buildWorkReportHtml(dateKeys){
 
     const esc = (s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     let num = 0;
-    const parts = ['<p><b>' + esc(reportDateLabel(d)) + '</b></p>'];
+    const parts = ['<p><b>' + esc(reportFileDateLabel(d)) + '</b></p>'];
     cats.forEach(([label, entries])=>{
       num++;
       parts.push('<p><b>' + num + '. ' + esc(label) + '</b></p>');
