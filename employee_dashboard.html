@@ -3028,16 +3028,46 @@ function getSite(id){ return SITE_BY_ID[id] || customSites.find(c=>c.id===id); }
 function allSites(){ return [...SITES, ...customSites]; }
 
 // ---- PSS info popup: Lat / Long / Capacity (MW), read-only ----
+const KAM_EMAIL_LOOKUP = {
+  'Manish': 'manish.r@50hertz.in',
+  'Ajeesh': 'bd.d3@manikarananalytics.in',
+  'Bhawna': 'bd.d5@manikarananalytics.in',
+  'Deepika': 'bd.d6@manikarananalytics.in',
+  'Joel': 'bd.d7@manikarananalytics.in',
+  'Manoj': 'bd.d8@manikarananalytics.in',
+  'Vaishali': 'bd.d9@manikarananalytics.in',
+  'Nirmala': 'bd.d11@manikarananalytics.in',
+  'Himanshu': 'bd.d14@manikaranpowerltd.in',
+  'Ram': 'bd.d14@manikarananalytics.in',
+  'Sanchali': 'bd.d15@manikarananalytics.in',
+  'Bhupendra': 'bd.d16@manikarananalytics.in',
+  'Vipul': 'bd.d18@manikarananalytics.in',
+  'Shouvik': 'bd.d19@manikarananalytics.in',
+  'Sonia': 'bd.d20@manikarananalytics.in',
+  'Ravindra': 'ravindra.p@manikarananalytics.in'
+};
+
+// Looks up a KAM/KAM1 name's email by matching the first word of the stored
+// name (KAM/KAM1 fields are first-name-only, e.g. "Ravindra Sir" -> looks up
+// "Ravindra"). Single source of truth for emails.
+function kamEmail(kamName){
+  if(!kamName) return '';
+  const firstWord = String(kamName).trim().split(/\s+/)[0];
+  return KAM_EMAIL_LOOKUP[firstWord] || '';
+}
+
 function showPssInfo(site){
   document.getElementById('pssInfoTitle').textContent = site.name;
   const fmt = v => (v !== undefined && v !== null && String(v).trim() !== '') ? String(v).trim() : '\u2014';
   const capVal = fmt(site.capacityMw);
+  const kamEmailVal = kamEmail(site.kam);
+  const kam1EmailVal = kamEmail(site.kam1);
   document.getElementById('pssInfoBody').innerHTML =
     '<div class="pss-info-row"><span class="pss-info-label">Latitude</span><span class="pss-info-val">'+escapeHtml(fmt(site.lat))+'</span></div>' +
     '<div class="pss-info-row"><span class="pss-info-label">Longitude</span><span class="pss-info-val">'+escapeHtml(fmt(site.lng))+'</span></div>' +
     '<div class="pss-info-row"><span class="pss-info-label">Capacity</span><span class="pss-info-val">'+escapeHtml(capVal === '\u2014' ? '\u2014' : capVal + ' MW')+'</span></div>' +
-    '<div class="pss-info-row"><span class="pss-info-label">KAM</span><span class="pss-info-val">'+escapeHtml(fmt(site.kam))+'</span></div>' +
-    '<div class="pss-info-row"><span class="pss-info-label">KAM 1 (backup)</span><span class="pss-info-val">'+escapeHtml(fmt(site.kam1))+'</span></div>';
+    '<div class="pss-info-row"><span class="pss-info-label">KAM</span><span class="pss-info-val">'+escapeHtml(fmt(site.kam))+(kamEmailVal ? '<br><span style="font-size:10px; opacity:.7;">'+escapeHtml(kamEmailVal)+'</span>' : '')+'</span></div>' +
+    '<div class="pss-info-row"><span class="pss-info-label">KAM 1 (backup)</span><span class="pss-info-val">'+escapeHtml(fmt(site.kam1))+(kam1EmailVal ? '<br><span style="font-size:10px; opacity:.7;">'+escapeHtml(kam1EmailVal)+'</span>' : '')+'</span></div>';
   document.getElementById('pssInfoOverlay').classList.add('open');
 }
 document.getElementById('pssInfoCloseBtn').addEventListener('click', ()=> document.getElementById('pssInfoOverlay').classList.remove('open'));
