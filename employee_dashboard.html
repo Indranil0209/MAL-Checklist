@@ -1750,7 +1750,20 @@
     <div class="pending-list" id="pendingList"></div>
   </div>
 
-  <div id="reportPanel" class="manage-panel" style="display:none;">
+  <div class="toolbar">
+    <input type="text" id="searchBox" placeholder="Search site name&hellip;">
+  </div>
+  <div class="date-lbl" id="sheetInfoLbl" style="margin:-4px 0 10px;"></div>
+  <div id="activeFilterRow" class="active-filter-row" style="display:none;"></div>
+
+  <div id="daypanel"></div>
+
+  <div class="date-lbl" id="absentBanner" style="display:none; color:var(--red); font-weight:600; margin-bottom:8px;"></div>
+  <div class="foot-note" id="foot-note">Loading your saved progress&hellip;</div>
+</div>
+
+<div class="confirm-overlay" id="reportOverlay">
+  <div class="confirm-box" id="reportPanel" style="max-width:520px; text-align:left;">
     <h3 style="margin:0 0 8px; font-size:11px; font-weight:600; color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em;">Export Work Report</h3>
     <div class="report-presets">
       <button id="presetTueBtn" class="reset-btn" type="button">Tue submission (Fri&ndash;Tue)</button>
@@ -1764,19 +1777,11 @@
       <input type="date" id="reportAddDate">
       <button id="reportAddDateBtn" class="reset-btn" type="button">Add date</button>
     </div>
-    <button id="doExportReportDocBtn" type="button">Export .doc</button>
+    <div class="confirm-actions" style="margin-top:14px;">
+      <button type="button" class="confirm-no" id="reportCloseBtn">Close</button>
+      <button id="doExportReportDocBtn" type="button">Export .doc</button>
+    </div>
   </div>
-
-  <div class="toolbar">
-    <input type="text" id="searchBox" placeholder="Search site name&hellip;">
-  </div>
-  <div class="date-lbl" id="sheetInfoLbl" style="margin:-4px 0 10px;"></div>
-  <div id="activeFilterRow" class="active-filter-row" style="display:none;"></div>
-
-  <div id="daypanel"></div>
-
-  <div class="date-lbl" id="absentBanner" style="display:none; color:var(--red); font-weight:600; margin-bottom:8px;"></div>
-  <div class="foot-note" id="foot-note">Loading your saved progress&hellip;</div>
 </div>
 
 <div class="confirm-overlay" id="confirmOverlay">
@@ -4316,14 +4321,14 @@ function exportWorkReportDoc(){
 function closeAllPanels(except){
   if(except !== 'report'){
     reportPanelOpen = false;
-    document.getElementById('reportPanel').style.display = 'none';
+    document.getElementById('reportOverlay').classList.remove('open');
   }
 }
 
 document.getElementById('exportWorkReportBtn').addEventListener('click', ()=>{
   reportPanelOpen = !reportPanelOpen;
   closeAllPanels(reportPanelOpen ? 'report' : null);
-  document.getElementById('reportPanel').style.display = reportPanelOpen ? 'block' : 'none';
+  document.getElementById('reportOverlay').classList.toggle('open', reportPanelOpen);
   if(reportPanelOpen){
     if(reportSelectedDates.size === 0){
       const dow = new Date().getDay();
@@ -4331,6 +4336,19 @@ document.getElementById('exportWorkReportBtn').addEventListener('click', ()=>{
       else if(dow === 4) applyPresetThu();
     }
     renderReportDaysList();
+  }
+});
+document.getElementById('reportCloseBtn').addEventListener('click', ()=>{
+  reportPanelOpen = false;
+  document.getElementById('reportOverlay').classList.remove('open');
+});
+document.getElementById('reportOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'reportOverlay'){ reportPanelOpen = false; e.currentTarget.classList.remove('open'); }
+});
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && document.getElementById('reportOverlay').classList.contains('open')){
+    reportPanelOpen = false;
+    document.getElementById('reportOverlay').classList.remove('open');
   }
 });
 document.getElementById('presetTueBtn').addEventListener('click', applyPresetTue);
