@@ -1100,11 +1100,21 @@
      Fixed to the unused viewport space beside the centered .wrap
      (max-width:960px). Hidden below 1300px so it never competes with
      the main dashboard on smaller screens. */
+  /* Width tracks the ACTUAL available margin next to the centered 1060px-wide
+     .wrap (not a guessed vw%): available-per-side = (viewport-1060)/2, minus
+     the 18px right offset and a 20px safety gap = 50vw - 568px. Shrinks
+     smoothly from 184px down to a 130px floor (the narrowest a card can go
+     and still fit a native time-input control without clipping) as the
+     window narrows. Below the viewport width where that floor is reached
+     (~1396px), there's no safe room left at all -- falls back to the header
+     dropdown (#headerBreaksWrap below), same pattern as Quick Links. */
   .side-widget{
     position:fixed; top:50%; right:18px; transform:translateY(-50%);
-    width:184px; z-index:40; display:flex; flex-direction:column; gap:10px;
+    width:clamp(130px, calc(50vw - 568px), 184px);
+    z-index:40; display:flex; flex-direction:column; gap:10px;
+    transition:width .25s ease;
   }
-  @media (max-width: 1550px){ .side-widget{ display:none; } }
+  @media (max-width: 1420px){ .side-widget{ display:none; } }
 
   /* ---- Quick Links widget: fixed to the unused viewport space on the
      LEFT of the centered .wrap, mirroring .side-widget on the right.
@@ -1184,6 +1194,47 @@
     background: var(--card-top-accent);
   }
   #headerQuickLinksMenu.open{ display:block; }
+
+  /* Header "Breaks" dropdown: fallback for the side clock/break widget once
+     the viewport is too narrow to fit it beside the centered content (see
+     .side-widget's fluid-width comment above for the exact threshold).
+     Mirrors #headerQuickLinksWrap's structure exactly. */
+  #headerBreaksWrap{ display:none; position:relative; }
+  @media (max-width: 1420px){ #headerBreaksWrap{ display:block; } }
+  #headerBreaksBtn{
+    display:flex; align-items:center; gap:5px; height:28px; padding:0 10px; border-radius:8px;
+    border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--text-dim);
+    cursor:pointer; font-size:11px; font-family:var(--font);
+    transition:border-color .15s ease, color .15s ease, background .15s ease;
+    background: rgba(255,255,255,.04) !important;
+    border-color: var(--line) !important;
+    color: var(--text-dim) !important;
+  }
+  #headerBreaksBtn:hover, #headerBreaksBtn.open{
+    border-color: var(--amber) !important;
+    color: var(--amber) !important;
+    background: rgba(245,158,11,.08) !important;
+  }
+  #headerBreaksBtn svg{ width:13px; height:13px; flex:none; }
+  #headerBreaksMenu{
+    display:none; position:absolute; top:calc(100% + 6px); right:0; width:200px; z-index:60;
+    background:var(--panel); border:var(--border-w) solid var(--line); border-radius:var(--radius-card);
+    padding:12px; box-shadow:var(--shadow-card);
+    background: rgba(5,19,32,.88) !important;
+    border-color: var(--line) !important;
+    box-shadow: var(--shadow-card) !important;
+    position: relative;
+    border-radius: var(--radius-card) !important;
+    border-width: var(--border-w) !important;
+  }
+  #headerBreaksMenu::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background: var(--card-top-accent);
+  }
+  #headerBreaksMenu.open{ display:block; }
+  #headerBreaksMenu .sw-clock-time{ font-size:18px; }
+  #headerBreaksMenu .sw-break-card{ margin-top:10px; padding:0; border:none; box-shadow:none; background:none !important; }
+  #headerBreaksMenu .sw-break-card::before{ display:none; }
 
   .sw-card{
     background:var(--panel); border:var(--border-w) solid var(--line); border-radius:var(--radius-card);
@@ -1640,6 +1691,28 @@
             Links
           </button>
           <div id="headerQuickLinksMenu"></div>
+        </div>
+        <div id="headerBreaksWrap">
+          <button id="headerBreaksBtn" type="button" aria-label="Clock and break reminders">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Breaks
+          </button>
+          <div id="headerBreaksMenu">
+            <div class="sw-card" style="border:none; box-shadow:none; padding:0; background:none !important;">
+              <div class="sw-clock-time" id="hbClockTime">--:--:--</div>
+              <div class="sw-clock-date" id="hbClockDate">&hellip;</div>
+            </div>
+            <div class="sw-card sw-break-card">
+              <div class="sw-break-label">&#9749; Tea Break</div>
+              <div class="sw-break-next">Next reminder: <span id="hbTeaNext">--</span></div>
+              <input type="time" id="hbTeaTime" class="sw-break-input" aria-label="Tea break reminder time">
+            </div>
+            <div class="sw-card sw-break-card">
+              <div class="sw-break-label">&#128167; Water Break</div>
+              <div class="sw-break-next">Next reminder: <span id="hbWaterNext">--</span></div>
+              <input type="time" id="hbWaterTime" class="sw-break-input" aria-label="Water break reminder time">
+            </div>
+          </div>
         </div>
         <button id="extDirBtn" type="button" aria-label="Search extension numbers">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
@@ -4494,6 +4567,27 @@ loadState();
   });
 })();
 
+(function initHeaderBreaks(){
+  const wrap = document.getElementById('headerBreaksWrap');
+  const btn = document.getElementById('headerBreaksBtn');
+  const menu = document.getElementById('headerBreaksMenu');
+  if(!wrap || !btn || !menu) return;
+  btn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const open = menu.classList.toggle('open');
+    btn.classList.toggle('open', open);
+  });
+  document.addEventListener('click', (e)=>{
+    if(!wrap.contains(e.target)){
+      menu.classList.remove('open');
+      btn.classList.remove('open');
+    }
+  });
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape'){ menu.classList.remove('open'); btn.classList.remove('open'); }
+  });
+})();
+
 // ---- Extension Directory: static company phone-extension list, searchable
 // by name/designation/extension/department. Data embedded directly (not
 // Firestore) since it changes rarely and this keeps search instant with no
@@ -4756,9 +4850,14 @@ const EXTENSION_DIRECTORY = [
 })();
 
 (function initSideWidget(){
-  const timeEl = document.getElementById('swClockTime');
-  if(!timeEl) return; // widget markup not present, nothing to do
-  const dateEl = document.getElementById('swClockDate');
+  // Drives BOTH the fixed sidebar (.side-widget, shown on wide screens) and
+  // the header "Breaks" dropdown (#headerBreaksMenu, shown on narrower ones)
+  // from the same tick/reminder logic, since only one is ever visible at a
+  // time (see .side-widget's CSS comment for the exact breakpoint) but both
+  // need to stay live and in sync with each other and with localStorage.
+  const timeEls = [document.getElementById('swClockTime'), document.getElementById('hbClockTime')].filter(Boolean);
+  if(!timeEls.length) return; // widget markup not present, nothing to do
+  const dateEls = [document.getElementById('swClockDate'), document.getElementById('hbClockDate')].filter(Boolean);
 
   function fmtTime12(d){
     let h = d.getHours(); const m = d.getMinutes(); const s = d.getSeconds();
@@ -4782,34 +4881,42 @@ const EXTENSION_DIRECTORY = [
 
   function tickClock(){
     const now = new Date();
-    timeEl.textContent = fmtTime12(now);
-    if(dateEl) dateEl.textContent = fmtDateLong(now);
+    const timeStr = fmtTime12(now);
+    const dateStr = fmtDateLong(now);
+    timeEls.forEach(el=> el.textContent = timeStr);
+    dateEls.forEach(el=> el.textContent = dateStr);
   }
   tickClock();
   setInterval(tickClock, 1000);
 
-  const teaInput = document.getElementById('swTeaTime');
-  const waterInput = document.getElementById('swWaterTime');
-  const teaNextEl = document.getElementById('swTeaNext');
-  const waterNextEl = document.getElementById('swWaterNext');
-  if(!teaInput || !waterInput) return;
+  const teaInputs = [document.getElementById('swTeaTime'), document.getElementById('hbTeaTime')].filter(Boolean);
+  const waterInputs = [document.getElementById('swWaterTime'), document.getElementById('hbWaterTime')].filter(Boolean);
+  const teaNextEls = [document.getElementById('swTeaNext'), document.getElementById('hbTeaNext')].filter(Boolean);
+  const waterNextEls = [document.getElementById('swWaterNext'), document.getElementById('hbWaterNext')].filter(Boolean);
+  if(!teaInputs.length || !waterInputs.length) return;
 
   const savedTea = localStorage.getItem('checklist_teaBreakTime') || '16:30';
   const savedWater = localStorage.getItem('checklist_waterBreakTime') || '15:00';
-  teaInput.value = savedTea;
-  waterInput.value = savedWater;
-  teaNextEl.textContent = to12hLabel(savedTea);
-  waterNextEl.textContent = to12hLabel(savedWater);
+  teaInputs.forEach(el=> el.value = savedTea);
+  waterInputs.forEach(el=> el.value = savedWater);
+  teaNextEls.forEach(el=> el.textContent = to12hLabel(savedTea));
+  waterNextEls.forEach(el=> el.textContent = to12hLabel(savedWater));
 
-  teaInput.addEventListener('change', ()=>{
-    localStorage.setItem('checklist_teaBreakTime', teaInput.value);
-    teaNextEl.textContent = to12hLabel(teaInput.value);
-    localStorage.removeItem('checklist_teaBreakFiredOn');
+  teaInputs.forEach(input=>{
+    input.addEventListener('change', ()=>{
+      localStorage.setItem('checklist_teaBreakTime', input.value);
+      teaNextEls.forEach(el=> el.textContent = to12hLabel(input.value));
+      teaInputs.forEach(other=>{ if(other !== input) other.value = input.value; }); // keep sidebar + header in sync live
+      localStorage.removeItem('checklist_teaBreakFiredOn');
+    });
   });
-  waterInput.addEventListener('change', ()=>{
-    localStorage.setItem('checklist_waterBreakTime', waterInput.value);
-    waterNextEl.textContent = to12hLabel(waterInput.value);
-    localStorage.removeItem('checklist_waterBreakFiredOn');
+  waterInputs.forEach(input=>{
+    input.addEventListener('change', ()=>{
+      localStorage.setItem('checklist_waterBreakTime', input.value);
+      waterNextEls.forEach(el=> el.textContent = to12hLabel(input.value));
+      waterInputs.forEach(other=>{ if(other !== input) other.value = input.value; });
+      localStorage.removeItem('checklist_waterBreakFiredOn');
+    });
   });
 
   function showBreakPopup(message){
@@ -4838,13 +4945,15 @@ const EXTENSION_DIRECTORY = [
     const now = new Date();
     const hhmm = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
     const todayKey = now.toDateString();
+    const teaVal = teaInputs[0].value;
+    const waterVal = waterInputs[0].value;
 
-    if(teaInput.value && teaInput.value === hhmm && localStorage.getItem('checklist_teaBreakFiredOn') !== todayKey){
+    if(teaVal && teaVal === hhmm && localStorage.getItem('checklist_teaBreakFiredOn') !== todayKey){
       const msg = TEA_MESSAGES[Math.floor(Math.random()*TEA_MESSAGES.length)];
       showBreakPopup(msg);
       localStorage.setItem('checklist_teaBreakFiredOn', todayKey);
     }
-    if(waterInput.value && waterInput.value === hhmm && localStorage.getItem('checklist_waterBreakFiredOn') !== todayKey){
+    if(waterVal && waterVal === hhmm && localStorage.getItem('checklist_waterBreakFiredOn') !== todayKey){
       showBreakPopup(WATER_MESSAGE);
       localStorage.setItem('checklist_waterBreakFiredOn', todayKey);
     }
