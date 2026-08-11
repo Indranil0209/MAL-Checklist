@@ -1570,10 +1570,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5z"/><path d="M15 3v6h6"/></svg>
           Notes
         </a>
-        <a class="ql-link" href="#" id="qlExtraWork">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 9h1"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>
-          Extra Work
-        </a>
         <a class="ql-link" href="https://indranil0209.github.io/Missing-Data-Check/" target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L14.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
           Missing Data
@@ -1728,20 +1724,6 @@
     </div>
   </div>
 
-  <div class="toolbar">
-    <input type="text" id="searchBox" placeholder="Search site name&hellip;">
-  </div>
-  <div class="date-lbl" id="sheetInfoLbl" style="margin:-4px 0 10px;"></div>
-  <div id="activeFilterRow" class="active-filter-row" style="display:none;"></div>
-
-  <div id="daypanel"></div>
-
-  <div class="date-lbl" id="absentBanner" style="display:none; color:var(--red); font-weight:600; margin-bottom:8px;"></div>
-  <div class="foot-note" id="foot-note">Loading your saved progress&hellip;</div>
-</div>
-
-<div class="confirm-overlay" id="extraWorkOverlay">
-  <div class="confirm-box" style="max-width:560px; text-align:left;">
   <div id="extraWorkPanel" style="background:var(--panel); border:1px solid var(--amber-dim); border-left:4px solid var(--amber); border-radius:10px; padding:14px 16px; margin-bottom:16px;">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
       <h3 style="margin:0; font-size:13px; color:var(--amber);">&#128221; Other Works &mdash; <span id="extraWorkDateLbl"></span></h3>
@@ -1768,10 +1750,17 @@
     </div>
     <div id="extraWorkText" class="rte-editor" contenteditable="true" spellcheck="false" data-placeholder="e.g. Helped troubleshoot SCADA connectivity at site X. Attended vendor call re: meter replacement" role="textbox" aria-multiline="true" aria-label="Other Works notes"></div>
   </div>
-    <div class="confirm-actions" style="margin-top:14px;">
-      <button type="button" class="confirm-yes confirm-ok" id="extraWorkCloseBtn">Close</button>
-    </div>
+
+  <div class="toolbar">
+    <input type="text" id="searchBox" placeholder="Search site name&hellip;" autocomplete="off" name="pss-site-search">
   </div>
+  <div class="date-lbl" id="sheetInfoLbl" style="margin:-4px 0 10px;"></div>
+  <div id="activeFilterRow" class="active-filter-row" style="display:none;"></div>
+
+  <div id="daypanel"></div>
+
+  <div class="date-lbl" id="absentBanner" style="display:none; color:var(--red); font-weight:600; margin-bottom:8px;"></div>
+  <div class="foot-note" id="foot-note">Loading your saved progress&hellip;</div>
 </div>
 
 <div class="confirm-overlay" id="notesOverlay">
@@ -1903,7 +1892,7 @@
   <div class="confirm-box ext-dir-box">
     <div class="ext-dir-header">
       <h4>&#9742; Extension Directory</h4>
-      <input type="text" id="extDirSearch" class="ext-dir-search" placeholder="Search by name, designation, extension, or department&hellip;">
+      <input type="text" id="extDirSearch" class="ext-dir-search" placeholder="Search by name, designation, extension, or department&hellip;" autocomplete="off" name="ext-dir-search">
     </div>
     <div class="ext-dir-list" id="extDirList"></div>
   </div>
@@ -3424,7 +3413,7 @@ function renderPanel(){
       '</button>' +
       '<div class="site-text"><div class="site-name">'+site.name+'</div>' +
         '<div class="site-meta"><span>'+site.state+'</span></div>' + timeStr +
-        '<input type="text" class="remark-input" placeholder="Add remark&hellip;" value="'+escapeHtml(remarkVal)+'">' +
+        '<input type="text" class="remark-input" placeholder="Add remark&hellip;" value="'+escapeHtml(remarkVal)+'" autocomplete="off">' +
       '</div>' +
       '<div class="badge-row">' +
         '<span class="badge '+fb.cls+'">'+fb.txt+'</span>' +
@@ -3643,7 +3632,7 @@ function renderPendingPanel(){
       '<div class="p-text">' +
         '<div class="p-name">'+escapeHtml(site.name)+'</div>' +
         '<div class="p-meta">'+escapeHtml(site.state)+' &middot; '+escapeHtml(site.freq)+'</div>' +
-        '<input type="text" class="remark-input p-remark-input" placeholder="Add remark&hellip;" value="'+escapeHtml(remark)+'">' +
+        '<input type="text" class="remark-input p-remark-input" placeholder="Add remark&hellip;" value="'+escapeHtml(remark)+'" autocomplete="off">' +
       '</div>' +
       (since ? '<div class="p-since">since '+since+'</div>' : '');
     const remarkInput = item.querySelector('.p-remark-input');
@@ -4625,7 +4614,6 @@ function initSimpleOverlay(overlayId, closeBtnId){
   document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') overlay.classList.remove('open'); });
   return overlay;
 }
-const extraWorkOverlayEl = initSimpleOverlay('extraWorkOverlay', 'extraWorkCloseBtn');
 const notesOverlayEl = initSimpleOverlay('notesOverlay', 'notesCloseBtn');
 const pendingOverlayEl = initSimpleOverlay('pendingOverlay', 'pendingCloseBtn');
 
@@ -4633,7 +4621,8 @@ const pendingOverlayEl = initSimpleOverlay('pendingOverlay', 'pendingCloseBtn');
 // Team Chat and Export Work Report already have their own working open
 // logic elsewhere (chatLauncherBtn / exportWorkReportBtn) -- reused via
 // .click() rather than duplicated here. Missing Data is a plain external
-// link and needs no JS. ----
+// link and needs no JS. Extra Work is a regular always-visible inline
+// section again (not a popup), so it has no Quick Links entry or handler. ----
 document.getElementById('qlTeamChat').addEventListener('click', (e)=>{
   e.preventDefault();
   const btn = document.getElementById('chatLauncherBtn');
@@ -4642,10 +4631,6 @@ document.getElementById('qlTeamChat').addEventListener('click', (e)=>{
 document.getElementById('qlNotes').addEventListener('click', (e)=>{
   e.preventDefault();
   if(notesOverlayEl) notesOverlayEl.classList.add('open');
-});
-document.getElementById('qlExtraWork').addEventListener('click', (e)=>{
-  e.preventDefault();
-  if(extraWorkOverlayEl) extraWorkOverlayEl.classList.add('open');
 });
 document.getElementById('qlPendingTasks').addEventListener('click', (e)=>{
   e.preventDefault();
