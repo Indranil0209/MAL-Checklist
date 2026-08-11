@@ -1574,10 +1574,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L14.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
           Missing Data
         </a>
-        <a class="ql-link" href="#" id="qlPendingTasks">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Pending Tasks
-        </a>
         <a class="ql-link" href="#" id="qlExportReport">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Export Work Report
@@ -1751,6 +1747,15 @@
     <div id="extraWorkText" class="rte-editor" contenteditable="true" spellcheck="false" data-placeholder="e.g. Helped troubleshoot SCADA connectivity at site X. Attended vendor call re: meter replacement" role="textbox" aria-multiline="true" aria-label="Other Works notes"></div>
   </div>
 
+  <div id="pendingPanel" class="pending-panel collapsed" style="display:none;">
+    <h3 id="pendingPanelHead" style="cursor:pointer; user-select:none;">
+      <span class="pending-caret" id="pendingCaret">&#9660;</span>
+      Pending Tasks <span class="count-pill" id="pendingCount">0</span>
+      <button type="button" id="pendingClearAllBtn" class="clear-all-btn">Clear All</button>
+    </h3>
+    <div class="pending-list" id="pendingList"></div>
+  </div>
+
   <div class="toolbar">
     <input type="text" id="searchBox" placeholder="Search site name&hellip;" autocomplete="off" name="pss-site-search">
   </div>
@@ -1794,21 +1799,6 @@
   </div>
 </div>
 
-<div class="confirm-overlay" id="pendingOverlay">
-  <div class="confirm-box" style="max-width:520px; text-align:left;">
-  <div id="pendingPanel" class="pending-panel collapsed" style="display:none;">
-    <h3 id="pendingPanelHead" style="cursor:pointer; user-select:none;">
-      <span class="pending-caret" id="pendingCaret">&#9660;</span>
-      Pending Tasks <span class="count-pill" id="pendingCount">0</span>
-      <button type="button" id="pendingClearAllBtn" class="clear-all-btn">Clear All</button>
-    </h3>
-    <div class="pending-list" id="pendingList"></div>
-  </div>
-    <div class="confirm-actions" style="margin-top:14px;">
-      <button type="button" class="confirm-yes confirm-ok" id="pendingCloseBtn">Close</button>
-    </div>
-  </div>
-</div>
 
 <div class="confirm-overlay" id="breaksOverlay">
   <div class="confirm-box" id="breaksPanel">
@@ -4615,14 +4605,14 @@ function initSimpleOverlay(overlayId, closeBtnId){
   return overlay;
 }
 const notesOverlayEl = initSimpleOverlay('notesOverlay', 'notesCloseBtn');
-const pendingOverlayEl = initSimpleOverlay('pendingOverlay', 'pendingCloseBtn');
 
 // ---- Quick Links click wiring: each item opens its real existing feature.
 // Team Chat and Export Work Report already have their own working open
 // logic elsewhere (chatLauncherBtn / exportWorkReportBtn) -- reused via
 // .click() rather than duplicated here. Missing Data is a plain external
-// link and needs no JS. Extra Work is a regular always-visible inline
-// section again (not a popup), so it has no Quick Links entry or handler. ----
+// link and needs no JS. Extra Work and Pending Tasks are regular
+// always-visible inline sections again (not popups), so they have no Quick
+// Links entry or handler. ----
 document.getElementById('qlTeamChat').addEventListener('click', (e)=>{
   e.preventDefault();
   const btn = document.getElementById('chatLauncherBtn');
@@ -4631,10 +4621,6 @@ document.getElementById('qlTeamChat').addEventListener('click', (e)=>{
 document.getElementById('qlNotes').addEventListener('click', (e)=>{
   e.preventDefault();
   if(notesOverlayEl) notesOverlayEl.classList.add('open');
-});
-document.getElementById('qlPendingTasks').addEventListener('click', (e)=>{
-  e.preventDefault();
-  if(pendingOverlayEl) pendingOverlayEl.classList.add('open');
 });
 document.getElementById('qlExportReport').addEventListener('click', (e)=>{
   e.preventDefault();
