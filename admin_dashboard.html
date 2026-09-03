@@ -1293,6 +1293,55 @@ summaryFromDate.addEventListener('change', validateSummaryDateRange);
 summaryToDate.addEventListener('change', validateSummaryDateRange);
 validateSummaryDateRange();
 
+// Splits rich-text HTML into an array of plain-text lines: one line per
+// list item, or per block-level element, with formatting tags stripped.
+// (Mirrors the employee dashboard's version -- needed here because the
+// summary/report downloads must read employees' raw Other-Works notes
+// straight from Firestore, not the pre-flattened progress.extraWork copy.)
+function htmlNotesToLines(html){
+  const container = document.createElement('div');
+  container.innerHTML = html || '';
+  const lines = [];
+  function blockText(el){ return (el.textContent || '').replace(/\s+/g, ' ').trim(); }
+  const listItems = container.querySelectorAll('li');
+  if(listItems.length){
+    listItems.forEach(li=>{ const t = blockText(li); if(t) lines.push(t); });
+    container.querySelectorAll('li').forEach(li=>li.remove());
+  }
+  const blocks = container.querySelectorAll('div, p');
+  if(blocks.length){
+    blocks.forEach(b=>{ const t = blockText(b); if(t) lines.push(t); });
+  } else {
+    container.querySelectorAll('br').forEach(br=>br.replaceWith('\n'));
+    const raw = (container.textContent || '').split('\n').map(s=>s.trim()).filter(Boolean);
+    lines.push(...raw);
+  }
+  return lines.filter(Boolean);
+}
+
+// The employee dashboard stores the full rich-text Other-Works notes per
+// date in employees/{id}/state/main.extraWorkByDate -- that copy is never
+// flattened. employees/{id}.progress[date].extraWork is a plain-text copy
+// used for quick display; for older entries saved before a since-fixed bug,
+// that copy may have its line breaks collapsed into one run-on line. Fetch
+// the raw per-date HTML once per employee so reports always split it back
+// into separate lines correctly, regardless of when it was saved.
+const rawExtraWorkCache = {};
+async function getRawExtraWorkByDate(empId){
+  if(rawExtraWorkCache[empId]) return rawExtraWorkCache[empId];
+  try{
+    const doc = await db.collection('employees').doc(empId).collection('state').doc('main').get();
+    const data = doc.exists ? doc.data() : {};
+    const map = (data && typeof data.extraWorkByDate === 'object') ? data.extraWorkByDate : {};
+    rawExtraWorkCache[empId] = map;
+    return map;
+  }catch(e){
+    console.error('getRawExtraWorkByDate failed for', empId, e);
+    rawExtraWorkCache[empId] = {};
+    return {};
+  }
+}
+
 function dateRangeKeys(fromStr, toStr){
   const keys = [];
   if(!fromStr || !toStr) return keys;
@@ -1404,15 +1453,18 @@ function buildDayWorkSection(workItems, extraWorkLines){
   return lines;
 }
 
-function buildEmployeeSummaryBlock(emp, dKeys){
+async function buildEmployeeSummaryBlock(emp, dKeys){
   const STATUS_LABEL = { shortLeave: 'Short Leave', lateAttendance: 'Late Attendance' };
   const lines = [(emp.name || emp.id) + " (" + emp.id + ")", ""];
+  const rawMap = await getRawExtraWorkByDate(emp.id);
   let anyContent = false;
   dKeys.forEach(dKey=>{
     const status = attendanceStatus(emp, dKey);
     const prog = emp.progress && emp.progress[dKey];
-    const extraWorkText = (prog && prog.extraWork) ? String(prog.extraWork).trim() : '';
-    const extraWorkLines = extraWorkText ? extraWorkText.split('\n').map(s=>s.trim()).filter(Boolean) : [];
+    const rawHtml = rawMap[dKey];
+    const extraWorkLines = rawHtml
+      ? htmlNotesToLines(rawHtml)
+      : ((prog && prog.extraWork) ? String(prog.extraWork).trim().split('\n').map(s=>s.trim()).filter(Boolean) : []);
 
     if(status === 'absent' && !prog){
       lines.push("Date \u2013 " + dKey);
@@ -1447,7 +1499,7 @@ function buildEmployeeSummaryBlock(emp, dKeys){
   return lines.join("\n");
 }
 
-function downloadAllSummaries(){
+async function downloadAllSummaries(){
   const dKeys = dateRangeKeys(summaryFromDate.value, summaryToDate.value);
   if(!dKeys.length){
     showToast('Pick a valid From/To date range first.');
@@ -1458,10 +1510,10 @@ function downloadAllSummaries(){
     return;
   }
   const header = "Employee Work Summaries: " + dKeys[0] + (dKeys.length>1 ? " to " + dKeys[dKeys.length-1] : "") + "\n" + "=".repeat(40) + "\n\n";
-  const body = employees.slice()
+  const blocks = await Promise.all(employees.slice()
     .sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id))
-    .map(emp => buildEmployeeSummaryBlock(emp, dKeys))
-    .join("-".repeat(40) + "\n\n");
+    .map(emp => buildEmployeeSummaryBlock(emp, dKeys)));
+  const body = blocks.join("-".repeat(40) + "\n\n");
   downloadFile("Employee_Work_Summaries_" + dKeys[0] + "_to_" + dKeys[dKeys.length-1] + ".txt", header + body, "text/plain");
 }
 
@@ -1472,12 +1524,15 @@ function buildEmployeeSummaryBlockHtml(emp, dKeys){
   const STATUS_LABEL = { shortLeave: 'Short Leave', lateAttendance: 'Late Attendance' };
   const esc = (s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const parts = ['<p><b style="font-size:13pt;">' + esc(emp.name || emp.id) + ' (' + esc(emp.id) + ')</b></p>'];
+  return getRawExtraWorkByDate(emp.id).then(rawMap=>{
   let anyContent = false;
   dKeys.forEach(dKey=>{
     const status = attendanceStatus(emp, dKey);
     const prog = emp.progress && emp.progress[dKey];
-    const extraWorkText = (prog && prog.extraWork) ? String(prog.extraWork).trim() : '';
-    const extraWorkLines = extraWorkText ? extraWorkText.split('\n').map(s=>s.trim()).filter(Boolean) : [];
+    const rawHtml = rawMap[dKey];
+    const extraWorkLines = rawHtml
+      ? htmlNotesToLines(rawHtml)
+      : ((prog && prog.extraWork) ? String(prog.extraWork).trim().split('\n').map(s=>s.trim()).filter(Boolean) : []);
 
     if(status === 'absent' && !prog){
       parts.push('<p><b>Date \u2013 ' + esc(dKey) + '</b></p><p>Absent</p>');
@@ -1509,6 +1564,7 @@ function buildEmployeeSummaryBlockHtml(emp, dKeys){
   });
   if(!anyContent) parts.push('<p>No activity or attendance record in this range.</p>');
   return parts.join('');
+  });
 }
 
 // Verification-only log: same check-off data as buildDayWorkSection's
@@ -1581,7 +1637,7 @@ function downloadVerificationDoc(){
 }
 document.getElementById('downloadVerificationDocBtn').addEventListener('click', downloadVerificationDoc);
 
-function downloadAllSummariesDoc(){
+async function downloadAllSummariesDoc(){
   if(!validateSummaryDateRange()){
     showToast('"To" date can\'t be earlier than "From" date.');
     return;
@@ -1597,10 +1653,10 @@ function downloadAllSummariesDoc(){
     return;
   }
   const headerHtml = '<h2>Employee Work Summaries: ' + dKeys[0] + (dKeys.length>1 ? ' to ' + dKeys[dKeys.length-1] : '') + '</h2>';
-  const bodyHtml = solarEmployees.slice()
+  const blocks = await Promise.all(solarEmployees.slice()
     .sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id))
-    .map(emp => buildEmployeeSummaryBlockHtml(emp, dKeys))
-    .join('<p>&nbsp;</p><hr><p>&nbsp;</p>');
+    .map(emp => buildEmployeeSummaryBlockHtml(emp, dKeys)));
+  const bodyHtml = blocks.join('<p>&nbsp;</p><hr><p>&nbsp;</p>');
   const docHtml =
     '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
     '<head><meta charset="utf-8"><title>Employee Work Summaries</title></head>' +
