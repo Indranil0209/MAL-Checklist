@@ -640,9 +640,10 @@
       <label style="font-size:10.5px; color:var(--text-faint);">To:</label>
       <input type="date" id="summaryToDate">
       <button class="btn" id="downloadAllDocBtn" type="button">Download All Employees Summary</button>
+      <button class="btn" id="downloadVerificationDocBtn" type="button">Download Verification Report</button>
     </div>
     <p class="section-sub" id="summaryDateError" style="margin-top:8px; margin-bottom:0; color:var(--red); display:none;">"To" date can't be earlier than "From" date.</p>
-    <p class="section-sub" style="margin-top:8px; margin-bottom:0;">Includes every Solar Team employee &mdash; their attendance and the PSS work completed each day in the selected range. Not limited to any filtered or currently-open view.</p>
+    <p class="section-sub" style="margin-top:8px; margin-bottom:0;">Includes every Solar Team employee &mdash; their attendance and the PSS work completed each day in the selected range. Not limited to any filtered or currently-open view. The Verification Report is a separate file containing only the per-check timing log.</p>
   </div>
 
 </div>
@@ -1369,17 +1370,8 @@ function buildDayWorkSection(workItems, extraWorkLines){
   // show up somewhere, so it isn't silently dropped from the report.
   const uncategorized = workItems.filter(item=>!item.work && item.remark).map(item=>item.name + ': ' + item.remark);
 
-  // Verification log: every single check-off gets a line here regardless of
-  // category, flagging any that were completed suspiciously fast after the
-  // previous one -- since we have no visibility into what they did inside
-  // the separate SCADA portal.
-  const QUICK_CHECK_THRESHOLD_SEC = 20;
-  const verification = workItems.map(item=>{
-    const timePart = item.time ? (' @ ' + item.time) : '';
-    const flagPart = (typeof item.gapSec === 'number' && item.gapSec < QUICK_CHECK_THRESHOLD_SEC)
-      ? '  \u26A0 checked ' + item.gapSec + 's after the previous one' : '';
-    return item.name + timePart + flagPart;
-  });
+  // Verification data (per-check timing/flags) now lives only in the
+  // separate Verification Report download, not in the work summary.
 
   const cats = [];
   if(lc.length) cats.push(['Loss Correction', lc]);
@@ -1391,7 +1383,6 @@ function buildDayWorkSection(workItems, extraWorkLines){
   if(pref.length) cats.push(['Preference Change', pref]);
   if(others.length) cats.push(['Others', others]);
   if(uncategorized.length) cats.push(['Other logged work', uncategorized]);
-  if(verification.length) cats.push(['Verification Log (every PSS checked)', verification]);
 
   if(!cats.length && !extraWorkLines.length) return [];
 
@@ -1519,6 +1510,76 @@ function buildEmployeeSummaryBlockHtml(emp, dKeys){
   if(!anyContent) parts.push('<p>No activity or attendance record in this range.</p>');
   return parts.join('');
 }
+
+// Verification-only log: same check-off data as buildDayWorkSection's
+// verification section, but pulled out standalone so it can be downloaded
+// as its own report instead of buried inside the full work summary.
+const QUICK_CHECK_THRESHOLD_SEC = 20;
+function buildDayVerificationLines(workItems){
+  if(!workItems || !workItems.length) return [];
+  return workItems.map(item=>{
+    const timePart = item.time ? (' @ ' + item.time) : '';
+    const flagPart = (typeof item.gapSec === 'number' && item.gapSec < QUICK_CHECK_THRESHOLD_SEC)
+      ? '  \u26A0 checked ' + item.gapSec + 's after the previous one' : '';
+    return item.name + timePart + flagPart;
+  });
+}
+
+function buildEmployeeVerificationBlockHtml(emp, dKeys){
+  const esc = (s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const parts = ['<p><b style="font-size:13pt;">' + esc(emp.name || emp.id) + ' (' + esc(emp.id) + ')</b></p>'];
+  let anyContent = false;
+  dKeys.forEach(dKey=>{
+    const prog = emp.progress && emp.progress[dKey];
+    if(!prog || !prog.workItems || !prog.workItems.length) return;
+    const lines = buildDayVerificationLines(prog.workItems);
+    if(!lines.length) return;
+    anyContent = true;
+    parts.push('<p><b>Date \u2013 ' + esc(dKey) + '</b></p>');
+    lines.forEach((line,i)=>{
+      parts.push('<p style="margin-left:20px;">' + (LETTERS[i] || (i+1)) + '. ' + esc(line) + '</p>');
+    });
+  });
+  if(!anyContent) parts.push('<p>No checked PSS items in this range.</p>');
+  return parts.join('');
+}
+
+function downloadVerificationDoc(){
+  if(!validateSummaryDateRange()){
+    showToast('"To" date can\'t be earlier than "From" date.');
+    return;
+  }
+  const dKeys = dateRangeKeys(summaryFromDate.value, summaryToDate.value);
+  if(!dKeys.length){
+    showToast('Pick a valid From/To date range first.');
+    return;
+  }
+  const solarEmployees = employees.filter(e => empTeam(e) === 'SOLAR');
+  if(!solarEmployees.length){
+    showToast('No Solar-team employees yet.');
+    return;
+  }
+  const headerHtml = '<h2>Verification Report: ' + dKeys[0] + (dKeys.length>1 ? ' to ' + dKeys[dKeys.length-1] : '') + '</h2>' +
+    '<p>Every PSS checked, with time-of-check. \u26A0 flags checks completed under ' + QUICK_CHECK_THRESHOLD_SEC + 's after the previous one.</p>';
+  const bodyHtml = solarEmployees.slice()
+    .sort((a,b)=>(a.name||a.id).localeCompare(b.name||b.id))
+    .map(emp => buildEmployeeVerificationBlockHtml(emp, dKeys))
+    .join('<p>&nbsp;</p><hr><p>&nbsp;</p>');
+  const docHtml =
+    '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
+    '<head><meta charset="utf-8"><title>Verification Report</title></head>' +
+    '<body style="font-family:Calibri,Arial,sans-serif; font-size:11pt;">' + headerHtml + bodyHtml + '</body></html>';
+  const blob = new Blob(['\ufeff', docHtml], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Verification_Report_' + dKeys[0] + '_to_' + dKeys[dKeys.length-1] + '.doc';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+document.getElementById('downloadVerificationDocBtn').addEventListener('click', downloadVerificationDoc);
 
 function downloadAllSummariesDoc(){
   if(!validateSummaryDateRange()){
