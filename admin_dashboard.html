@@ -1431,7 +1431,7 @@ function buildDayWorkSection(workItems, extraWorkLines){
   if(enc.length) cats.push(['EN Combination Change', enc]);
   if(pref.length) cats.push(['Preference Change', pref]);
   if(others.length) cats.push(['Others', others]);
-  if(uncategorized.length) cats.push(['Other logged work', uncategorized]);
+  if(uncategorized.length) cats.push(['Other work', uncategorized]);
 
   if(!cats.length && !extraWorkLines.length) return [];
 
