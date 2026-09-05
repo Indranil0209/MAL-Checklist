@@ -3069,12 +3069,16 @@ document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape') closeWorkPopup();
 });
 
-function isOffSaturday(d){
+function isOffSaturdayForMode(d, mode){
   if(weekdayName(d) !== 'Sat') return false;
-  if(saturdayOffMode === 'none') return false;
+  if(mode === 'none') return false;
   const weekOfMonth = Math.ceil(d.getDate() / 7);
-  if(saturdayOffMode === 'secondFourth') return weekOfMonth === 2 || weekOfMonth === 4;
+  if(mode === 'secondFourth') return weekOfMonth === 2 || weekOfMonth === 4;
   return weekOfMonth === 1 || weekOfMonth === 3;
+}
+
+function isOffSaturday(d){
+  return isOffSaturdayForMode(d, saturdayOffMode);
 }
 
 function saturdayOffLabel(){
@@ -3201,13 +3205,14 @@ if(db){
 
 function isPrimaryAbsentOn(primaryEmpId, d){
   const abs = employeeAbsences[primaryEmpId];
-  if(!abs) return false;
-  const status = abs[dateKey(d)];
-  return status === 'absent' || status === 'half';
+  const status = abs ? abs[dateKey(d)] : undefined;
+  if(status === 'absent' || status === 'half') return true;
+  return isPrimaryOffSaturday(primaryEmpId, d);
 }
 
 let primaryStateSubs = {};
 let primaryDoneMap = {};
+let primarySaturdayOffMode = {};
 
 function ensurePrimarySubscriptions(){
   const needed = new Set(
@@ -3217,8 +3222,9 @@ function ensurePrimarySubscriptions(){
     if(primaryStateSubs[pid]) return;
     primaryStateSubs[pid] = db.collection('employees').doc(pid).collection('state').doc('main')
       .onSnapshot(doc=>{
-        primaryDoneMap[pid] = (doc.exists && doc.data().allDatesState && typeof doc.data().allDatesState === 'object')
-          ? doc.data().allDatesState : {};
+        const d = doc.exists ? doc.data() : {};
+        primaryDoneMap[pid] = (d.allDatesState && typeof d.allDatesState === 'object') ? d.allDatesState : {};
+        primarySaturdayOffMode[pid] = ['firstThird','secondFourth','none'].includes(d.saturdayOffMode) ? d.saturdayOffMode : 'firstThird';
         renderAll();
       }, err=>console.error('primary state subscription failed', pid, err));
   });
@@ -3227,8 +3233,15 @@ function ensurePrimarySubscriptions(){
       primaryStateSubs[pid]();
       delete primaryStateSubs[pid];
       delete primaryDoneMap[pid];
+      delete primarySaturdayOffMode[pid];
     }
   });
+}
+
+function isPrimaryOffSaturday(primaryEmpId, d){
+  const mode = primarySaturdayOffMode[primaryEmpId];
+  if(!mode) return false;
+  return isOffSaturdayForMode(d, mode);
 }
 
 function isPrimaryDoneWithSite(primaryEmpId, d, siteId){
